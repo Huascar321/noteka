@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "blocks": [
+    {"id":"p","type":"paragraph","content":[{"type":"text","text":"Texto marcado","marks":[{"type":"bold"},{"type":"italic"}]},{"type":"hard_break","text":""},{"type":"text","text":"Enlace","marks":[{"type":"link","href":"https://example.org"}]}]},
+    {"id":"h","type":"heading","attrs":{"level":2},"content":[{"type":"text","text":"Título"}]},
+    {"id":"bl","type":"bullet_list","content":[],"children":[{"id":"li","type":"list_item","content":[],"children":[{"id":"lp","type":"paragraph","content":[{"type":"text","text":"Item"}]}]}]},
+    {"id":"ol","type":"ordered_list","attrs":{"start":3},"content":[],"children":[{"id":"oli","type":"list_item","content":[],"children":[{"id":"olp","type":"paragraph","content":[{"type":"text","text":"Numerado"}]}]}]},
+    {"id":"tl","type":"task_list","content":[],"children":[{"id":"ti","type":"task_item","attrs":{"checked":true},"content":[],"children":[{"id":"tp","type":"paragraph","content":[{"type":"text","text":"Hecho"}]}]}]},
+    {"id":"q","type":"blockquote","content":[],"children":[{"id":"qp","type":"paragraph","content":[{"type":"text","text":"Cita","marks":[{"type":"strike"}]}]}]},
+    {"id":"hr","type":"horizontal_rule","content":[]},
+    {"id":"c","type":"code_block","attrs":{"language":"rust"},"content":[{"type":"text","text":"let x = 1;\n// ```"}]},
+    {"id":"pc","type":"paragraph","content":[{"type":"text","text":"inline","marks":[{"type":"code"}]}]}
+  ]
+}

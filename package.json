@@ -1,0 +1,49 @@
+{
+  "name": "noteka",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "build": "npm run contracts:check && npm run check && vite build",
+    "tauri": "tauri",
+    "pdf:prepare": "node scripts/prepare-pdf-worker.mjs",
+    "contracts:generate": "node scripts/contracts.mjs",
+    "contracts:check": "node scripts/contracts.mjs --check",
+    "test:native": "node scripts/native-smoke.mjs",
+    "test:headless": "node scripts/headless-smoke.mjs",
+    "test:headless-bridge": "node --test tests/headless-bridge.mjs",
+    "test:attachment-search": "node --experimental-strip-types --test tests/attachment-search.mjs",
+    "test:headless-evidence": "node scripts/headless-evidence-smoke.mjs",
+    "test:batches": "node --test tests/subscription-batch.mjs",
+    "test:mcp": "node --test tests/local-mcp.mjs",
+    "test:editor": "node --experimental-strip-types --test tests/editor-adapter.mjs tests/embedded-reads.mjs tests/home-reads.mjs",
+    "extraction:prepare": "node scripts/prepare-extraction-workers.mjs",
+    "test:attachment-preparation": "node --experimental-strip-types --test tests/attachment-preparation.mjs",
+    "test:headless-preparation": "node scripts/headless-preparation-smoke.mjs",
+    "test:generation-reader": "node --experimental-strip-types --test tests/attachment-generation-reader.mjs",
+    "test:headless-reader": "node scripts/headless-reader-smoke.mjs"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "2.12.3",
+    "@tiptap/core": "3.31.4",
+    "@tiptap/extension-task-item": "3.31.4",
+    "@tiptap/extension-task-list": "3.31.4",
+    "@tiptap/extension-unique-id": "3.31.4",
+    "@tiptap/pm": "3.31.4",
+    "@tiptap/starter-kit": "3.31.4",
+    "svelte": "5.57.2"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.3.1",
+    "@sveltejs/vite-plugin-svelte": "7.3.1",
+    "@tauri-apps/cli": "2.12.2",
+    "@types/node": "^22.0.0",
+    "ajv": "8.20.0",
+    "json-schema-to-typescript": "16.0.0",
+    "svelte-check": "4.7.6",
+    "typescript": "6.0.3",
+    "vite": "8.3.4"
+  }
+}

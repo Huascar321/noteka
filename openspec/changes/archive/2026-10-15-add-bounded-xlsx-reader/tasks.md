@@ -1,0 +1,23 @@
+# Tasks
+
+## 1. Private contracts and containment
+
+- [x] 1.1 Implementar protocolo/DTOs estrictos, límites y validador independiente de salida; verificar framing, versiones, hash, coordenadas/tipos/fórmulas y fronteras con tests. Trazabilidad: lector independiente, celdas, fórmulas, presupuestos. Evidencia inicial: seis tests de protocolo, diecisiete salidas adulteradas + dos límites/truncamiento y dieciséis entradas crudas rechazadas, corpus debug review2.
+- [x] 1.2 Extraer runtime común sin alterar contención PDF; verificar allocator concurrente y procesos reales ante stdin/stdout bloqueados, deadline, panic y heap. Documentar códigos/límites. Trazabilidad: vida acotada. Runtime idéntico salvo nombre del thread, comprobado contra baseline; dos tests allocator y doce probes PDF en debug/release final1 aprobados; contención XLSX aprobada en debug final2. Guía de códigos/límites entregada.
+
+## 2. Container and workbook
+
+- [x] 2.1 Implementar preflight ZIP, CRC/expansión, XML/relaciones/content types y rechazo activo/externo; verificar corpus negativo independiente, métodos Stored/Deflate y fronteras. Documentar dependencias/licencias/fuentes investigadas. Trazabilidad: contenedor y presupuestos. Reabierta tras review2 por declaración XML con tabulador y profundidad 64 con texto; corregidas y comprobadas con doce casos nuevos, sin cambiar ninguno de los 198 anteriores. Corpus debug final2: 210 casos × parser/helper más 512 mutaciones aprobados. Guía e investigación entregadas.
+- [x] 2.2 Implementar lectura tipada de hojas/celdas/strings/estilos/rangos/merges/fórmulas; verificar golden independiente con números exactos, Unicode, vacíos, caches, shared/array y rechazos sin pérdida. Documentar subconjunto y limitaciones. Trazabilidad: celdas y fórmulas. Reabierta por frontera lógica escapada; corregida sin subir caps. Final3 debug/release: 216 casos × parser/helper, con seis casos nuevos inline/shared/str frontera/+1 y los 210 anteriores idénticos; cuatro tests parser y seis protocolo aprobados. Guía distingue estilos declarados/caches de cálculo visual.
+- [x] 2.3 Implementar helper real de una solicitud sin rutas/logs sensibles y respuesta validada/limitada; verificar protocolo crudo, EOF/errores y lectores simultáneos con red denegada. Trazabilidad: lector independiente y vida acotada. Evidencia inicial: 12 lecturas simultáneas, 16 errores de framing, tres bloqueos stdin, stdout bloqueado, consumidor cerrado y padre muerto, sin archivos ni stderr en debug review2.
+
+## 3. Acceptance and closure
+
+- [x] 3.1 Ejecutar corpus y contención de XLSX/PDF en debug/release, tests Rust/fmt/check/Clippy y contratos/frontend pertinentes; comprobar v10/API v1/51 contra baseline y preservación Home/archivos ajenos. Trazabilidad: regresión y conservación. Final3: 245 tests Rust/perfil, 216 casos XLSX × parser/helper, 235 casos PDF × parser/CLI y doce probes PDF/perfil, 17 SDK y trece grupos raw MCP/perfil. Contratos/build, trece adaptador/tema y tres puente aprobados; 606 checks headless en repetición con socket corto, sin solicitudes externas. Pins/core/CLI/MCP/migraciones/frontend/host/Home contrastados con baseline externo.
+- [x] 3.2 Medir helper release en M1 Max/64 GiB con corpus/latencia/RSS y saturación; revisar árbol/licencias y registrar resultados/fallos y matriz de todos los escenarios, sin confundir heap con RSS. Verificar reproducibilidad de comandos. benchmark-final3.json: 77 casos admitidos + cuatro excesos, tres warmups/veinte muestras, p95 máximo 25,849 ms, RSS máximo 36.323.328 bytes; dos gates FTS intactos p95 121,38–146,34 ms. Clausura standalone 38 paquetes con licencia declarada, matriz 6/6 requisitos y 16/16 escenarios documentada; no cargo-audit ni garantía universal.
+- [x] 3.3 Revisar diff final y reconciliar guía/ADR/plan/config/estado con alcance real; validar OpenSpec estricto y sólo marcar tareas con evidencia. Trazabilidad: todos los requisitos. Revisión completa de código/protocolo/harness, seis requisitos/dieciséis escenarios y diseño; tres defectos de frontera reproducidos/corregidos con regresión fresca. closure-audit-presync.json: 316/326 archivos previos idénticos, diez cambios previstos, 107 pins final3 intactos y 276 enlaces relativos válidos. OpenSpec estricto 15/15 antes de sync; guía/ADR/plan/config distinguen lector de integración pendiente y Home nativo 9/17.
+
+## Workflow follow-up
+
+- Sincronizar únicamente este delta verificado, contrastar con main y archivar; Home sigue activo 9/17.
+- Continuar con un cambio separado de integración XLSX que diseñe migración/backup/recuperación antes de tocar persistencia; esta lista no da esa integración por realizada.

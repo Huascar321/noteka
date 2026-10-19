@@ -1,0 +1,11 @@
+[package]
+name = "noteka-pdf-protocol"
+version.workspace = true
+edition.workspace = true
+license = "MIT"
+
+[dependencies]
+serde.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

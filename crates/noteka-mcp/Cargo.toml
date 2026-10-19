@@ -1,0 +1,17 @@
+[package]
+name = "noteka-mcp"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+noteka-core = { path = "../noteka-core" }
+rmcp = { version = "=3.5.1", default-features = false, features = ["server", "transport-io"] }
+serde.workspace = true
+serde_json.workspace = true
+sha2 = "0.10"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "io-util", "io-std"] }
+tokio-util = { version = "0.7", features = ["codec", "rt"] }
+
+[dev-dependencies]
+tempfile.workspace = true
+tokio = { version = "1", features = ["test-util"] }

@@ -1,0 +1,13 @@
+[package]
+name = "noteka-pdfkit-runtime"
+version.workspace = true
+edition.workspace = true
+license = "MIT"
+publish = false
+
+[dependencies]
+noteka-pdfkit-protocol = { path = "../noteka-pdfkit-protocol" }
+serde_json.workspace = true
+tempfile.workspace = true
+sha2 = "0.10"
+libc = "0.2"

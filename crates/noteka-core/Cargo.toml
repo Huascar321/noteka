@@ -1,0 +1,27 @@
+[package]
+name = "noteka-core"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+noteka-ocr-protocol = { path = "../noteka-ocr-protocol" }
+noteka-pdf-protocol = { path = "../noteka-pdf-protocol" }
+noteka-xlsx-protocol = { path = "../noteka-xlsx-protocol" }
+serde.workspace = true
+serde_json.workspace = true
+schemars.workspace = true
+rusqlite.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+tempfile.workspace = true
+sha2 = "0.10"
+dirs = "6"
+iana-time-zone = "0.1"
+chrono-tz = "0.10"
+base64 = "0.22"
+libc = "0.2"
+
+# sha2 0.10 habilita su backend ARM con detección runtime sólo con `asm`.
+# El fallback portable y el algoritmo/formato SHA-256 no cambian.
+[target.'cfg(target_arch = "aarch64")'.dependencies]
+sha2 = { version = "0.10", features = ["asm"] }

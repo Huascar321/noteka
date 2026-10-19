@@ -1,0 +1,9 @@
+[package]
+name = "noteka-parser-runtime"
+version.workspace = true
+edition.workspace = true
+license = "MIT"
+publish = false
+
+[dependencies]
+libc = "0.2"

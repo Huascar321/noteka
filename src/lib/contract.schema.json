@@ -1,0 +1,6599 @@
+{
+  "$defs": {
+    "AddRelation": {
+      "additionalProperties": false,
+      "properties": {
+        "expected_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "kind": {
+          "$ref": "#/$defs/RelationKind"
+        },
+        "source_id": {
+          "type": "string"
+        },
+        "target_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "target_id",
+        "kind",
+        "expected_revision"
+      ],
+      "type": "object"
+    },
+    "Aggregate": {
+      "enum": [
+        "count",
+        "sum",
+        "avg",
+        "min",
+        "max"
+      ],
+      "type": "string"
+    },
+    "ApplyBatch": {
+      "additionalProperties": false,
+      "properties": {
+        "expected": {
+          "$ref": "#/$defs/BatchReceipt"
+        },
+        "plan": {
+          "$ref": "#/$defs/BatchPlan"
+        }
+      },
+      "required": [
+        "plan",
+        "expected"
+      ],
+      "type": "object"
+    },
+    "Attachment": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "mime": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "mime",
+        "bytes",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "AttachmentData": {
+      "properties": {
+        "attachment": {
+          "$ref": "#/$defs/Attachment"
+        },
+        "base64": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "attachment",
+        "base64"
+      ],
+      "type": "object"
+    },
+    "AttachmentIndexCoverage": {
+      "additionalProperties": false,
+      "properties": {
+        "fragments": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "index_validation": {
+          "$ref": "#/$defs/IndexValidation"
+        },
+        "indexed_generations": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "jobs_without_generation": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/IndexCoverageScope"
+        },
+        "source_validation": {
+          "$ref": "#/$defs/IndexSourceValidation"
+        },
+        "text_bytes": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "unindexed_supported_generations": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "unsupported_generations": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "scope",
+        "index_validation",
+        "source_validation",
+        "indexed_generations",
+        "unindexed_supported_generations",
+        "unsupported_generations",
+        "jobs_without_generation",
+        "fragments",
+        "text_bytes"
+      ],
+      "type": "object"
+    },
+    "AttachmentIndexEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "content_hash": {
+          "type": "string"
+        },
+        "fragment_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "indexed_at": {
+          "type": "string"
+        },
+        "result_from_previous_attempt": {
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/$defs/IndexedSource"
+        },
+        "text_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source",
+        "fragment_count",
+        "text_bytes",
+        "content_hash",
+        "indexed_at",
+        "result_from_previous_attempt"
+      ],
+      "type": "object"
+    },
+    "AttachmentIndexInput": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "get",
+              "type": "string"
+            },
+            "attachment_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "cursor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "extractor": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/IndexedExtractor"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "job_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "limit": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "put",
+              "type": "string"
+            },
+            "expected_generation_id": {
+              "type": "string"
+            },
+            "expected_revision": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "job_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "action",
+            "job_id",
+            "expected_generation_id",
+            "expected_revision"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "reset",
+              "type": "string"
+            },
+            "expected_revision": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "action",
+            "expected_revision"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "AttachmentIndexResult": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "get",
+              "type": "string"
+            },
+            "coverage": {
+              "$ref": "#/$defs/AttachmentIndexCoverage"
+            },
+            "items": {
+              "items": {
+                "$ref": "#/$defs/AttachmentIndexEntry"
+              },
+              "type": "array"
+            },
+            "next_cursor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "profile": {
+              "type": "string"
+            },
+            "revision": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "version": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "action",
+            "version",
+            "profile",
+            "revision",
+            "coverage",
+            "items"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "put",
+              "type": "string"
+            },
+            "changed": {
+              "type": "boolean"
+            },
+            "entry": {
+              "$ref": "#/$defs/AttachmentIndexEntry"
+            },
+            "revision": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "action",
+            "revision",
+            "entry",
+            "changed"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "reset",
+              "type": "string"
+            },
+            "removed_fragments": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "removed_generations": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "revision": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "action",
+            "revision",
+            "removed_generations",
+            "removed_fragments"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "AttachmentSearchHit": {
+      "additionalProperties": false,
+      "properties": {
+        "locator": {
+          "$ref": "#/$defs/AttachmentTextLocator"
+        },
+        "ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "result_from_previous_attempt": {
+          "type": "boolean"
+        },
+        "score": {
+          "format": "double",
+          "type": "number"
+        },
+        "source": {
+          "$ref": "#/$defs/IndexedSource"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "ordinal",
+        "text",
+        "locator",
+        "score",
+        "result_from_previous_attempt"
+      ],
+      "type": "object"
+    },
+    "AttachmentSearchInput": {
+      "additionalProperties": false,
+      "properties": {
+        "attachment_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "extractor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/IndexedExtractor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "job_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "query": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "type": "object"
+    },
+    "AttachmentSearchPage": {
+      "additionalProperties": false,
+      "properties": {
+        "coverage": {
+          "$ref": "#/$defs/AttachmentIndexCoverage"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/AttachmentSearchHit"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profile": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version",
+        "profile",
+        "revision",
+        "coverage",
+        "items"
+      ],
+      "type": "object"
+    },
+    "AttachmentTextLocator": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "bbox": {
+              "$ref": "#/$defs/OcrBoundingBox"
+            },
+            "confidence": {
+              "type": "string"
+            },
+            "coordinate_space": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "image_ocr_region_text",
+              "type": "string"
+            },
+            "projection": {
+              "$ref": "#/$defs/OcrTextProjection"
+            },
+            "region_bytes": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "region_ordinal": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "text_byte_end": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "text_byte_start": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "projection",
+            "region_ordinal",
+            "bbox",
+            "confidence",
+            "coordinate_space",
+            "region_bytes",
+            "text_byte_start",
+            "text_byte_end"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "byte_end": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "byte_start": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "kind": {
+              "const": "utf8_bytes",
+              "type": "string"
+            },
+            "line_end": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "line_start": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "byte_start",
+            "byte_end",
+            "line_start",
+            "line_end"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "pdf_page_text",
+              "type": "string"
+            },
+            "limitations": {
+              "items": {
+                "$ref": "#/$defs/PdfLimitation"
+              },
+              "type": "array"
+            },
+            "page_number": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "scope": {
+              "$ref": "#/$defs/PdfTextScope"
+            },
+            "text_byte_end": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "text_byte_start": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "page_number",
+            "text_byte_start",
+            "text_byte_end",
+            "scope",
+            "limitations"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "cell_ordinal": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "field": {
+              "$ref": "#/$defs/XlsxTextField"
+            },
+            "field_bytes": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "kind": {
+              "const": "xlsx_cell_text",
+              "type": "string"
+            },
+            "projection": {
+              "$ref": "#/$defs/XlsxTextProjection"
+            },
+            "reference": {
+              "type": "string"
+            },
+            "sheet_id": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "text_byte_end": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "text_byte_start": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "projection",
+            "cell_ordinal",
+            "sheet_id",
+            "reference",
+            "field",
+            "field_bytes",
+            "text_byte_start",
+            "text_byte_end"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "BackupInfo": {
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "schema_version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "sha256": {
+          "type": "string"
+        },
+        "workspace_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "workspace_id",
+        "schema_version",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "BackupInput": {
+      "additionalProperties": false,
+      "properties": {
+        "destination": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "destination"
+      ],
+      "type": "object"
+    },
+    "BatchApplied": {
+      "additionalProperties": false,
+      "properties": {
+        "applied": {
+          "type": "boolean"
+        },
+        "batch_id": {
+          "type": "string"
+        },
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/BatchCheckResult"
+          },
+          "type": "array"
+        },
+        "diff": {
+          "items": {
+            "$ref": "#/$defs/BatchDiff"
+          },
+          "type": "array"
+        },
+        "executed_at": {
+          "type": "string"
+        },
+        "history_summary": {
+          "items": {
+            "$ref": "#/$defs/HistorySummary"
+          },
+          "type": "array"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/BatchStepResult"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "applied",
+        "batch_id",
+        "executed_at",
+        "steps",
+        "checks",
+        "diff",
+        "history_summary"
+      ],
+      "type": "object"
+    },
+    "BatchCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "bindings": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Binding"
+          },
+          "type": "array"
+        },
+        "input": true,
+        "key": {
+          "type": "string"
+        },
+        "require_complete": {
+          "default": true,
+          "type": "boolean"
+        },
+        "require_no_calculation_errors": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "key",
+        "input"
+      ],
+      "type": "object"
+    },
+    "BatchCheckResult": {
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "$ref": "#/$defs/DatabasePage"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "data"
+      ],
+      "type": "object"
+    },
+    "BatchDiff": {
+      "additionalProperties": false,
+      "properties": {
+        "after": true,
+        "before": true,
+        "key": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "kind": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "key"
+      ],
+      "type": "object"
+    },
+    "BatchExport": {
+      "enum": [
+        "entity_id",
+        "entity_revision",
+        "collection_id",
+        "collection_revision",
+        "title_property_id",
+        "property_id",
+        "view_id",
+        "view_revision"
+      ],
+      "type": "string"
+    },
+    "BatchOperation": {
+      "enum": [
+        "entity.create",
+        "entity.update",
+        "collection.create",
+        "property.define",
+        "formula.set",
+        "record.create",
+        "record.attach",
+        "record.update",
+        "view.save"
+      ],
+      "type": "string"
+    },
+    "BatchPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "batch_id": {
+          "type": "string"
+        },
+        "checks": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/BatchCheck"
+          },
+          "type": "array"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/BatchStep"
+          },
+          "type": "array"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version",
+        "batch_id",
+        "steps"
+      ],
+      "type": "object"
+    },
+    "BatchPreview": {
+      "additionalProperties": false,
+      "properties": {
+        "applied": {
+          "type": "boolean"
+        },
+        "batch_id": {
+          "type": "string"
+        },
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/BatchCheckResult"
+          },
+          "type": "array"
+        },
+        "diff": {
+          "items": {
+            "$ref": "#/$defs/BatchDiff"
+          },
+          "type": "array"
+        },
+        "evaluated_at": {
+          "type": "string"
+        },
+        "history_summary": {
+          "items": {
+            "$ref": "#/$defs/HistorySummary"
+          },
+          "type": "array"
+        },
+        "receipt": {
+          "$ref": "#/$defs/BatchReceipt"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/BatchStepResult"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "applied",
+        "batch_id",
+        "receipt",
+        "evaluated_at",
+        "steps",
+        "checks",
+        "diff",
+        "history_summary"
+      ],
+      "type": "object"
+    },
+    "BatchReceipt": {
+      "additionalProperties": false,
+      "properties": {
+        "base_hash": {
+          "type": "string"
+        },
+        "effect_hash": {
+          "type": "string"
+        },
+        "path_hash": {
+          "type": "string"
+        },
+        "plan_hash": {
+          "type": "string"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "workspace_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "workspace_id",
+        "path_hash",
+        "plan_hash",
+        "base_hash",
+        "effect_hash"
+      ],
+      "type": "object"
+    },
+    "BatchStep": {
+      "additionalProperties": false,
+      "properties": {
+        "bindings": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Binding"
+          },
+          "type": "array"
+        },
+        "input": true,
+        "key": {
+          "type": "string"
+        },
+        "operation": {
+          "$ref": "#/$defs/BatchOperation"
+        }
+      },
+      "required": [
+        "key",
+        "operation",
+        "input"
+      ],
+      "type": "object"
+    },
+    "BatchStepResult": {
+      "additionalProperties": false,
+      "properties": {
+        "data": true,
+        "exports": {
+          "additionalProperties": false,
+          "properties": {
+            "collection_id": {
+              "$ref": "#/$defs/ExportValue"
+            },
+            "collection_revision": {
+              "$ref": "#/$defs/ExportValue"
+            },
+            "entity_id": {
+              "$ref": "#/$defs/ExportValue"
+            },
+            "entity_revision": {
+              "$ref": "#/$defs/ExportValue"
+            },
+            "property_id": {
+              "$ref": "#/$defs/ExportValue"
+            },
+            "title_property_id": {
+              "$ref": "#/$defs/ExportValue"
+            },
+            "view_id": {
+              "$ref": "#/$defs/ExportValue"
+            },
+            "view_revision": {
+              "$ref": "#/$defs/ExportValue"
+            }
+          },
+          "type": "object"
+        },
+        "key": {
+          "type": "string"
+        },
+        "operation": {
+          "$ref": "#/$defs/BatchOperation"
+        }
+      },
+      "required": [
+        "key",
+        "operation",
+        "data",
+        "exports"
+      ],
+      "type": "object"
+    },
+    "BinaryOp": {
+      "enum": [
+        "add",
+        "sub",
+        "mul",
+        "div",
+        "eq",
+        "lt",
+        "and",
+        "or"
+      ],
+      "type": "string"
+    },
+    "Binding": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/BindingKind"
+        },
+        "source": {
+          "$ref": "#/$defs/ExportSource"
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "target",
+        "source"
+      ],
+      "type": "object"
+    },
+    "BindingKind": {
+      "enum": [
+        "value",
+        "property_key"
+      ],
+      "type": "string"
+    },
+    "Block": {
+      "additionalProperties": false,
+      "properties": {
+        "attrs": true,
+        "children": {
+          "items": {
+            "$ref": "#/$defs/Block"
+          },
+          "type": "array"
+        },
+        "content": {
+          "items": {
+            "$ref": "#/$defs/Text"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/BlockKind"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "content"
+      ],
+      "type": "object"
+    },
+    "BlockKind": {
+      "enum": [
+        "paragraph",
+        "heading",
+        "bullet_list",
+        "ordered_list",
+        "list_item",
+        "task_list",
+        "task_item",
+        "blockquote",
+        "horizontal_rule",
+        "code_block",
+        "image",
+        "file",
+        "collection_view"
+      ],
+      "type": "string"
+    },
+    "CalculationError": {
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "type": "object"
+    },
+    "CalculationType": {
+      "additionalProperties": false,
+      "properties": {
+        "currency": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "$ref": "#/$defs/ScalarKind"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "type": "object"
+    },
+    "CalendarConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "month": {
+          "type": "string"
+        },
+        "property_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "property_id",
+        "month"
+      ],
+      "type": "object"
+    },
+    "Cell": {
+      "additionalProperties": false,
+      "properties": {
+        "cached": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CellValue"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "column": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "formula": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Formula"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reference": {
+          "type": "string"
+        },
+        "row": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "style": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "reference",
+        "row",
+        "column",
+        "style"
+      ],
+      "type": "object"
+    },
+    "CellValue": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "number",
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "text",
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "boolean",
+              "type": "string"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "error",
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "date_iso",
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "Change": {
+      "properties": {
+        "created_at": {
+          "type": "string"
+        },
+        "entity_id": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "new_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "operation": {
+          "type": "string"
+        },
+        "origin": {
+          "type": "string"
+        },
+        "previous_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "request_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "request_id",
+        "entity_id",
+        "operation",
+        "origin",
+        "previous_revision",
+        "new_revision",
+        "created_at"
+      ],
+      "type": "object"
+    },
+    "Classification": {
+      "enum": [
+        "area",
+        "resource",
+        "topic"
+      ],
+      "type": "string"
+    },
+    "Collection": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "CollectionBundle": {
+      "properties": {
+        "calculations": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Expression"
+          },
+          "type": "object"
+        },
+        "collection": {
+          "$ref": "#/$defs/Collection"
+        },
+        "properties": {
+          "items": {
+            "$ref": "#/$defs/Property"
+          },
+          "type": "array"
+        },
+        "views": {
+          "items": {
+            "$ref": "#/$defs/CollectionView"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "collection",
+        "properties",
+        "views",
+        "calculations"
+      ],
+      "type": "object"
+    },
+    "CollectionView": {
+      "additionalProperties": false,
+      "properties": {
+        "collection_id": {
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/$defs/ViewConfig"
+        },
+        "id": {
+          "type": "string"
+        },
+        "layout": {
+          "$ref": "#/$defs/ViewLayout"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "collection_id",
+        "revision",
+        "name",
+        "layout",
+        "config"
+      ],
+      "type": "object"
+    },
+    "ContextLink": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/RelationKind"
+        },
+        "target_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "target_id",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "CoreError": {
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/ErrorCode"
+        },
+        "details": true,
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "details"
+      ],
+      "type": "object"
+    },
+    "CreateCollection": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "CreateEntity": {
+      "additionalProperties": false,
+      "properties": {
+        "context": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContextLink"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "document": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Document"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "$ref": "#/$defs/EntityKind"
+        },
+        "payload": {
+          "default": null
+        },
+        "record": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RecordSeed"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "title"
+      ],
+      "type": "object"
+    },
+    "CreateRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "collection_id": {
+          "type": "string"
+        },
+        "document": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Document"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "values": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        }
+      },
+      "required": [
+        "collection_id",
+        "title"
+      ],
+      "type": "object"
+    },
+    "CreateWorkspace": {
+      "additionalProperties": false,
+      "properties": {
+        "timezone": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "DatabasePage": {
+      "properties": {
+        "config": {
+          "$ref": "#/$defs/ViewConfig"
+        },
+        "groups": {
+          "items": {
+            "$ref": "#/$defs/ViewGroup"
+          },
+          "type": "array"
+        },
+        "layout": {
+          "$ref": "#/$defs/ViewLayout"
+        },
+        "matching_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "properties": {
+          "items": {
+            "$ref": "#/$defs/Property"
+          },
+          "type": "array"
+        },
+        "records": {
+          "$ref": "#/$defs/Page"
+        }
+      },
+      "required": [
+        "properties",
+        "config",
+        "records",
+        "layout",
+        "matching_count",
+        "groups"
+      ],
+      "type": "object"
+    },
+    "DatabaseQuery": {
+      "additionalProperties": false,
+      "properties": {
+        "collection_id": {
+          "type": "string"
+        },
+        "config": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ViewConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "layout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ViewLayout"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limit": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "view_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "collection_id"
+      ],
+      "type": "object"
+    },
+    "DefineProperty": {
+      "additionalProperties": false,
+      "properties": {
+        "collection_id": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "spec": {
+          "$ref": "#/$defs/PropertySpec"
+        }
+      },
+      "required": [
+        "collection_id",
+        "expected_revision",
+        "spec"
+      ],
+      "type": "object"
+    },
+    "Document": {
+      "additionalProperties": false,
+      "properties": {
+        "blocks": {
+          "items": {
+            "$ref": "#/$defs/Block"
+          },
+          "type": "array"
+        },
+        "schema_version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "schema_version",
+        "blocks"
+      ],
+      "type": "object"
+    },
+    "Empty": {
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "EnqueueExtraction": {
+      "additionalProperties": false,
+      "properties": {
+        "attachment_id": {
+          "type": "string"
+        },
+        "config": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractionConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extractor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "attachment_id",
+        "extractor"
+      ],
+      "type": "object"
+    },
+    "EnqueuedExtraction": {
+      "properties": {
+        "deduplicated": {
+          "type": "boolean"
+        },
+        "job": {
+          "$ref": "#/$defs/ExtractionJob"
+        }
+      },
+      "required": [
+        "job",
+        "deduplicated"
+      ],
+      "type": "object"
+    },
+    "Entity": {
+      "properties": {
+        "archived_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "document": true,
+        "document_editable": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/EntityKind"
+        },
+        "payload": true,
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        },
+        "updated_at": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "title",
+        "revision",
+        "created_at",
+        "updated_at",
+        "payload",
+        "document_editable"
+      ],
+      "type": "object"
+    },
+    "EntityKind": {
+      "enum": [
+        "note",
+        "task",
+        "project",
+        "tag",
+        "person"
+      ],
+      "type": "string"
+    },
+    "EntityRef": {
+      "properties": {
+        "archived_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/EntityKind"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        },
+        "updated_at": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "title",
+        "revision",
+        "created_at",
+        "updated_at"
+      ],
+      "type": "object"
+    },
+    "ErrorCode": {
+      "enum": [
+        "validation_error",
+        "not_found",
+        "revision_conflict",
+        "workspace_busy",
+        "storage_error",
+        "unsupported_workspace_version",
+        "unsupported_document_format",
+        "unsupported_template_format",
+        "invalid_backup",
+        "destination_not_empty"
+      ],
+      "type": "string"
+    },
+    "ExportDocument": {
+      "additionalProperties": false,
+      "properties": {
+        "destination": {
+          "type": "string"
+        },
+        "format": {
+          "$ref": "#/$defs/ExportFormat"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "destination",
+        "format"
+      ],
+      "type": "object"
+    },
+    "ExportFormat": {
+      "enum": [
+        "json",
+        "markdown"
+      ],
+      "type": "string"
+    },
+    "ExportResult": {
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "path",
+        "warnings"
+      ],
+      "type": "object"
+    },
+    "ExportSource": {
+      "additionalProperties": false,
+      "properties": {
+        "export": {
+          "$ref": "#/$defs/BatchExport"
+        },
+        "step": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "step",
+        "export"
+      ],
+      "type": "object"
+    },
+    "ExportValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      ]
+    },
+    "Expression": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "number",
+              "type": "string"
+            },
+            "value": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "currency": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "op": {
+              "const": "decimal",
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "boolean",
+              "type": "string"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "op",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "text",
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "property",
+              "type": "string"
+            },
+            "property_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "property_id"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "left": {
+              "$ref": "#/$defs/Expression"
+            },
+            "op": {
+              "const": "binary",
+              "type": "string"
+            },
+            "operator": {
+              "$ref": "#/$defs/BinaryOp"
+            },
+            "right": {
+              "$ref": "#/$defs/Expression"
+            }
+          },
+          "required": [
+            "op",
+            "operator",
+            "left",
+            "right"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "not",
+              "type": "string"
+            },
+            "value": {
+              "$ref": "#/$defs/Expression"
+            }
+          },
+          "required": [
+            "op",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "condition": {
+              "$ref": "#/$defs/Expression"
+            },
+            "op": {
+              "const": "if",
+              "type": "string"
+            },
+            "otherwise": {
+              "$ref": "#/$defs/Expression"
+            },
+            "then": {
+              "$ref": "#/$defs/Expression"
+            }
+          },
+          "required": [
+            "op",
+            "condition",
+            "then",
+            "otherwise"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "aggregate": {
+              "$ref": "#/$defs/Aggregate"
+            },
+            "inverse": {
+              "default": false,
+              "type": "boolean"
+            },
+            "op": {
+              "const": "rollup",
+              "type": "string"
+            },
+            "property_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "relation_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "relation_id",
+            "aggregate"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "cost_id": {
+              "type": "string"
+            },
+            "op": {
+              "const": "allocate",
+              "type": "string"
+            },
+            "relation_id": {
+              "type": "string"
+            },
+            "scale": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "weight_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "relation_id",
+            "cost_id",
+            "weight_id",
+            "scale"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "ExtractionConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "chunk_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version",
+        "chunk_bytes"
+      ],
+      "type": "object"
+    },
+    "ExtractionControl": {
+      "properties": {
+        "paused": {
+          "type": "boolean"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "updated_at": {
+          "type": "string"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version",
+        "paused",
+        "revision",
+        "updated_at"
+      ],
+      "type": "object"
+    },
+    "ExtractionControlInput": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "get",
+              "type": "string"
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "set",
+              "type": "string"
+            },
+            "expected_revision": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "paused": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "action",
+            "paused",
+            "expected_revision"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "ExtractionFragment": {
+      "properties": {
+        "byte_end": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "byte_start": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "line_end": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "line_start": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ordinal",
+        "text",
+        "byte_start",
+        "byte_end",
+        "line_start",
+        "line_end"
+      ],
+      "type": "object"
+    },
+    "ExtractionGeneration": {
+      "properties": {
+        "attachment_id": {
+          "type": "string"
+        },
+        "attempt": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "config": true,
+        "config_hash": {
+          "type": "string"
+        },
+        "covered_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "extractor": {
+          "type": "string"
+        },
+        "extractor_version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "fragment_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "published_at": {
+          "type": "string"
+        },
+        "source_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "source_sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "attachment_id",
+        "source_sha256",
+        "extractor",
+        "extractor_version",
+        "config",
+        "config_hash",
+        "source_bytes",
+        "covered_bytes",
+        "fragment_count",
+        "complete",
+        "published_at",
+        "attempt"
+      ],
+      "type": "object"
+    },
+    "ExtractionJob": {
+      "properties": {
+        "attachment_id": {
+          "type": "string"
+        },
+        "attempts": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "config": {
+          "description": "Crudo: una configuración futura no se reserializa en persistencia al leer."
+        },
+        "config_hash": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CoreError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extractor": {
+          "type": "string"
+        },
+        "extractor_version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "finished_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "generation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractionGeneration"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "ownership_active": {
+          "type": "boolean"
+        },
+        "recoverable": {
+          "type": "boolean"
+        },
+        "result_from_previous_attempt": {
+          "type": "boolean"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "source_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "source_sha256": {
+          "type": "string"
+        },
+        "started_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/ExtractionState"
+        },
+        "supported": {
+          "type": "boolean"
+        },
+        "unsupported_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "updated_at": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "attachment_id",
+        "source_sha256",
+        "source_bytes",
+        "extractor",
+        "extractor_version",
+        "config",
+        "config_hash",
+        "supported",
+        "state",
+        "revision",
+        "attempts",
+        "created_at",
+        "updated_at",
+        "ownership_active",
+        "recoverable",
+        "result_from_previous_attempt"
+      ],
+      "type": "object"
+    },
+    "ExtractionOutcome": {
+      "enum": [
+        "idle",
+        "succeeded",
+        "interrupted"
+      ],
+      "type": "string"
+    },
+    "ExtractionRevision": {
+      "additionalProperties": false,
+      "properties": {
+        "expected_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "expected_revision"
+      ],
+      "type": "object"
+    },
+    "ExtractionRun": {
+      "properties": {
+        "incompatible_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "job": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractionJob"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outcome": {
+          "$ref": "#/$defs/ExtractionOutcome"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recovered_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "outcome",
+        "recovered_count",
+        "incompatible_count"
+      ],
+      "type": "object"
+    },
+    "ExtractionState": {
+      "enum": [
+        "queued",
+        "running",
+        "succeeded",
+        "failed",
+        "cancelled",
+        "stale"
+      ],
+      "type": "string"
+    },
+    "FilterExpression": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "filter": {
+              "$ref": "#/$defs/PropertyFilter"
+            },
+            "op": {
+              "const": "condition",
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "filter"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "children": {
+              "items": {
+                "$ref": "#/$defs/FilterExpression"
+              },
+              "type": "array"
+            },
+            "op": {
+              "const": "all",
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "children"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "children": {
+              "items": {
+                "$ref": "#/$defs/FilterExpression"
+              },
+              "type": "array"
+            },
+            "op": {
+              "const": "any",
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "children"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "child": {
+              "$ref": "#/$defs/FilterExpression"
+            },
+            "op": {
+              "const": "not",
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "child"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "FilterOp": {
+      "enum": [
+        "eq",
+        "ne",
+        "lt",
+        "le",
+        "gt",
+        "ge",
+        "contains",
+        "is_empty"
+      ],
+      "type": "string"
+    },
+    "Formula": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/FormulaKind"
+        },
+        "reference": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "shared_index": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "text"
+      ],
+      "type": "object"
+    },
+    "FormulaKind": {
+      "enum": [
+        "normal",
+        "shared",
+        "array"
+      ],
+      "type": "string"
+    },
+    "FormulaSet": {
+      "additionalProperties": false,
+      "properties": {
+        "collection_id": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "expression": {
+          "$ref": "#/$defs/Expression"
+        },
+        "name": {
+          "type": "string"
+        },
+        "property_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "collection_id",
+        "expected_revision",
+        "name",
+        "expression"
+      ],
+      "type": "object"
+    },
+    "FragmentPage": {
+      "properties": {
+        "covers_generation": {
+          "type": "boolean"
+        },
+        "generation": {
+          "$ref": "#/$defs/ExtractionGeneration"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ExtractionFragment"
+          },
+          "type": "array"
+        },
+        "job_id": {
+          "type": "string"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "result_from_previous_attempt": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "job_id",
+        "generation",
+        "result_from_previous_attempt",
+        "items",
+        "covers_generation"
+      ],
+      "type": "object"
+    },
+    "HistorySummary": {
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "type": "string"
+        },
+        "new_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "operation": {
+          "type": "string"
+        },
+        "previous_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "entity_id",
+        "operation",
+        "previous_revision",
+        "new_revision"
+      ],
+      "type": "object"
+    },
+    "HomeGroup": {
+      "properties": {
+        "classification": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Classification"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entity_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "key": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "project_archived": {
+          "type": "boolean"
+        },
+        "project_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "project_state": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProjectState"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "key",
+        "label",
+        "entity_ids",
+        "project_archived"
+      ],
+      "type": "object"
+    },
+    "HomeItem": {
+      "properties": {
+        "context": {
+          "items": {
+            "$ref": "#/$defs/EntityRef"
+          },
+          "type": "array"
+        },
+        "context_total": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "entity": {
+          "$ref": "#/$defs/EntityRef"
+        },
+        "metadata": {
+          "$ref": "#/$defs/HomeMetadata"
+        },
+        "summary": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HomeSummary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "entity",
+        "metadata",
+        "context",
+        "context_total"
+      ],
+      "type": "object"
+    },
+    "HomeMetadata": {
+      "properties": {
+        "classification": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "due_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "inbox": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "issues": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "planned_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "priority": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "state": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "updated_days_ago": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "issues"
+      ],
+      "type": "object"
+    },
+    "HomePage": {
+      "properties": {
+        "date": {
+          "type": "string"
+        },
+        "groups": {
+          "items": {
+            "$ref": "#/$defs/HomeGroup"
+          },
+          "type": "array"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/HomeItem"
+          },
+          "type": "array"
+        },
+        "matching_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "offset": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "unavailable_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "view": {
+          "$ref": "#/$defs/HomeView"
+        }
+      },
+      "required": [
+        "view",
+        "date",
+        "timezone",
+        "items",
+        "groups",
+        "matching_count",
+        "unavailable_count",
+        "offset"
+      ],
+      "type": "object"
+    },
+    "HomeQuery": {
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "view": {
+          "$ref": "#/$defs/HomeView"
+        }
+      },
+      "required": [
+        "view"
+      ],
+      "type": "object"
+    },
+    "HomeSummary": {
+      "oneOf": [
+        {
+          "properties": {
+            "available": {
+              "type": "boolean"
+            },
+            "done": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "project",
+              "type": "string"
+            },
+            "overdue": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "pending": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "progress_percent": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "total": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "available"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "available": {
+              "type": "boolean"
+            },
+            "kind": {
+              "const": "tag",
+              "type": "string"
+            },
+            "last_note": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/EntityRef"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "note_count": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "available"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "HomeView": {
+      "enum": [
+        "tasks_today",
+        "tasks_inbox",
+        "tasks_all",
+        "tasks_done",
+        "notes_all",
+        "notes_inbox",
+        "projects_active",
+        "projects_planned",
+        "projects_board",
+        "tags_recent",
+        "tags_alphabetical",
+        "tags_types",
+        "people_contacts",
+        "people_new",
+        "people_updated"
+      ],
+      "type": "string"
+    },
+    "IdInput": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "ImportAttachment": {
+      "additionalProperties": false,
+      "properties": {
+        "source_path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_path"
+      ],
+      "type": "object"
+    },
+    "IndexCoverageScope": {
+      "enum": [
+        "selected_generations"
+      ],
+      "type": "string"
+    },
+    "IndexSourceValidation": {
+      "enum": [
+        "not_checked",
+        "returned_candidates"
+      ],
+      "type": "string"
+    },
+    "IndexValidation": {
+      "enum": [
+        "canonical_text_and_postings"
+      ],
+      "type": "string"
+    },
+    "IndexedExtractor": {
+      "enum": [
+        "utf8_text",
+        "pdf_text",
+        "xlsx_cells",
+        "image_ocr"
+      ],
+      "type": "string"
+    },
+    "IndexedSource": {
+      "additionalProperties": false,
+      "properties": {
+        "attachment_id": {
+          "type": "string"
+        },
+        "config_hash": {
+          "type": "string"
+        },
+        "extractor": {
+          "type": "string"
+        },
+        "extractor_version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "generation_id": {
+          "type": "string"
+        },
+        "job_id": {
+          "type": "string"
+        },
+        "source_sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "job_id",
+        "attachment_id",
+        "generation_id",
+        "source_sha256",
+        "extractor",
+        "extractor_version",
+        "config_hash"
+      ],
+      "type": "object"
+    },
+    "InstantiateTemplate": {
+      "additionalProperties": false,
+      "properties": {
+        "expected_collection_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "expected_template_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "values": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "expected_template_revision",
+        "expected_collection_revision"
+      ],
+      "type": "object"
+    },
+    "InverseQuery": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "property_id": {
+          "type": "string"
+        },
+        "target_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "property_id",
+        "target_id"
+      ],
+      "type": "object"
+    },
+    "ListChanges": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "entity_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ListCollections": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ListEntities": {
+      "additionalProperties": false,
+      "properties": {
+        "archived": {
+          "default": false,
+          "type": "boolean"
+        },
+        "classification": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EntityKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limit": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "state": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ListExtraction": {
+      "additionalProperties": false,
+      "properties": {
+        "attachment_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "state": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractionState"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ListRelations": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "entity_id": {
+          "type": "string"
+        },
+        "limit": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "entity_id"
+      ],
+      "type": "object"
+    },
+    "ListTemplates": {
+      "additionalProperties": false,
+      "properties": {
+        "collection_id": {
+          "type": "string"
+        },
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "collection_id"
+      ],
+      "type": "object"
+    },
+    "Mark": {
+      "additionalProperties": false,
+      "properties": {
+        "href": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "$ref": "#/$defs/MarkKind"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "MarkKind": {
+      "enum": [
+        "bold",
+        "italic",
+        "strike",
+        "code",
+        "link"
+      ],
+      "type": "string"
+    },
+    "NoteFields": {
+      "additionalProperties": false,
+      "properties": {
+        "inbox": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "NumberStyle": {
+      "additionalProperties": false,
+      "properties": {
+        "format_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "num_fmt_id": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "num_fmt_id"
+      ],
+      "type": "object"
+    },
+    "OcrBoundingBox": {
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "type": "string"
+        },
+        "width": {
+          "type": "string"
+        },
+        "x": {
+          "type": "string"
+        },
+        "y": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "type": "object"
+    },
+    "OcrEngine": {
+      "additionalProperties": false,
+      "properties": {
+        "automatic_language_detection": {
+          "type": "boolean"
+        },
+        "language_correction": {
+          "type": "boolean"
+        },
+        "languages": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "os_build": {
+          "type": "string"
+        },
+        "os_version": {
+          "type": "string"
+        },
+        "recognition_level": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "revision",
+        "recognition_level",
+        "languages",
+        "language_correction",
+        "automatic_language_detection",
+        "os_version",
+        "os_build"
+      ],
+      "type": "object"
+    },
+    "OcrImage": {
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "$ref": "#/$defs/OcrImageFormat"
+        },
+        "height": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "orientation": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "oriented_height": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "oriented_width": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "width": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "format",
+        "width",
+        "height",
+        "orientation",
+        "oriented_width",
+        "oriented_height"
+      ],
+      "type": "object"
+    },
+    "OcrImageFormat": {
+      "enum": [
+        "png",
+        "jpeg"
+      ],
+      "type": "string"
+    },
+    "OcrManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "coordinate_space": {
+          "type": "string"
+        },
+        "engine": {
+          "$ref": "#/$defs/OcrEngine"
+        },
+        "image": {
+          "$ref": "#/$defs/OcrImage"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "region_count": {
+          "format": "uint32",
+          "maximum": 512,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "representation_bytes": {
+          "format": "uint32",
+          "maximum": 1048576,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "representation_sha256": {
+          "type": "string"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version",
+        "profile",
+        "representation_sha256",
+        "representation_bytes",
+        "image",
+        "engine",
+        "coordinate_space",
+        "limitations",
+        "region_count"
+      ],
+      "type": "object"
+    },
+    "OcrRegion": {
+      "additionalProperties": false,
+      "properties": {
+        "bbox": {
+          "$ref": "#/$defs/OcrBoundingBox"
+        },
+        "confidence": {
+          "type": "string"
+        },
+        "ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ordinal",
+        "text",
+        "confidence",
+        "bbox"
+      ],
+      "type": "object"
+    },
+    "OcrRegionPage": {
+      "additionalProperties": false,
+      "properties": {
+        "covers_generation": {
+          "type": "boolean"
+        },
+        "generation": {
+          "$ref": "#/$defs/ExtractionGeneration"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/OcrRegion"
+          },
+          "type": "array"
+        },
+        "job_id": {
+          "type": "string"
+        },
+        "manifest": {
+          "$ref": "#/$defs/OcrManifest"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "result_from_previous_attempt": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "job_id",
+        "generation",
+        "result_from_previous_attempt",
+        "manifest",
+        "items",
+        "covers_generation"
+      ],
+      "type": "object"
+    },
+    "OcrTextProjection": {
+      "enum": [
+        "ocr_region_text_v1"
+      ],
+      "type": "string"
+    },
+    "Operation": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/AttachmentIndexInput"
+            },
+            "operation": {
+              "const": "extraction.index",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/AttachmentSearchInput"
+            },
+            "operation": {
+              "const": "extraction.search",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/EnqueueExtraction"
+            },
+            "operation": {
+              "const": "extraction.enqueue",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/IdInput"
+            },
+            "operation": {
+              "const": "extraction.get",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ListExtraction"
+            },
+            "operation": {
+              "const": "extraction.list",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/RunExtraction"
+            },
+            "operation": {
+              "const": "extraction.run",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ExtractionRevision"
+            },
+            "operation": {
+              "const": "extraction.cancel",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ExtractionRevision"
+            },
+            "operation": {
+              "const": "extraction.retry",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ExtractionControlInput"
+            },
+            "operation": {
+              "const": "extraction.control",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ReadFragments"
+            },
+            "operation": {
+              "const": "extraction.fragments",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ReadPdfFragments"
+            },
+            "operation": {
+              "const": "extraction.pdf_fragments",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ReadXlsxCells"
+            },
+            "operation": {
+              "const": "extraction.xlsx_cells",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ReadOcrRegions"
+            },
+            "operation": {
+              "const": "extraction.ocr_regions",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/BatchPlan"
+            },
+            "operation": {
+              "const": "changes.preview",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ApplyBatch"
+            },
+            "operation": {
+              "const": "changes.apply",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/HomeQuery"
+            },
+            "operation": {
+              "const": "home.query",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/SaveTemplate"
+            },
+            "operation": {
+              "const": "template.save",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/IdInput"
+            },
+            "operation": {
+              "const": "template.get",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ListTemplates"
+            },
+            "operation": {
+              "const": "template.list",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/InstantiateTemplate"
+            },
+            "operation": {
+              "const": "template.instantiate",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/FormulaSet"
+            },
+            "operation": {
+              "const": "formula.set",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/CreateCollection"
+            },
+            "operation": {
+              "const": "collection.create",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/IdInput"
+            },
+            "operation": {
+              "const": "collection.get",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ListCollections"
+            },
+            "operation": {
+              "const": "collection.list",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/DefineProperty"
+            },
+            "operation": {
+              "const": "property.define",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/CreateRecord"
+            },
+            "operation": {
+              "const": "record.create",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/RecordInput"
+            },
+            "operation": {
+              "const": "record.get",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/UpdateRecord"
+            },
+            "operation": {
+              "const": "record.attach",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/UpdateRecord"
+            },
+            "operation": {
+              "const": "record.update",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/InverseQuery"
+            },
+            "operation": {
+              "const": "record.inverse",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/SaveView"
+            },
+            "operation": {
+              "const": "view.save",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/DatabaseQuery"
+            },
+            "operation": {
+              "const": "database.query",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/CreateWorkspace"
+            },
+            "operation": {
+              "const": "workspace.create",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/Empty"
+            },
+            "operation": {
+              "const": "workspace.open",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/BackupInput"
+            },
+            "operation": {
+              "const": "workspace.backup",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/RestoreInput"
+            },
+            "operation": {
+              "const": "workspace.restore",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/Empty"
+            },
+            "operation": {
+              "const": "operations.describe",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/CreateEntity"
+            },
+            "operation": {
+              "const": "entity.create",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/IdInput"
+            },
+            "operation": {
+              "const": "entity.get",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ListEntities"
+            },
+            "operation": {
+              "const": "entity.list",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/UpdateEntity"
+            },
+            "operation": {
+              "const": "entity.update",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/RevisionInput"
+            },
+            "operation": {
+              "const": "entity.archive",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/RevisionInput"
+            },
+            "operation": {
+              "const": "entity.restore",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/AddRelation"
+            },
+            "operation": {
+              "const": "relation.add",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/RemoveRelation"
+            },
+            "operation": {
+              "const": "relation.remove",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ListRelations"
+            },
+            "operation": {
+              "const": "relation.list",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ListChanges"
+            },
+            "operation": {
+              "const": "changes.list",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ImportAttachment"
+            },
+            "operation": {
+              "const": "attachment.import",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/IdInput"
+            },
+            "operation": {
+              "const": "attachment.read",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ExportDocument"
+            },
+            "operation": {
+              "const": "document.export",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/WorkflowQuery"
+            },
+            "operation": {
+              "const": "workflow.query",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/SearchQuery"
+            },
+            "operation": {
+              "const": "search.query",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/Empty"
+            },
+            "operation": {
+              "const": "search.rebuild",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "Page": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/RecordData"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "type": "object"
+    },
+    "Page2": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/Template"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "type": "object"
+    },
+    "Page3": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/Collection"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "type": "object"
+    },
+    "Page4": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/Entity"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "type": "object"
+    },
+    "Page5": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/Relation"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "type": "object"
+    },
+    "Page6": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/Change"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "type": "object"
+    },
+    "Page7": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ExtractionJob"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "type": "object"
+    },
+    "PdfFragment": {
+      "additionalProperties": false,
+      "properties": {
+        "locator": {
+          "$ref": "#/$defs/PdfTextLocator"
+        },
+        "ordinal": {
+          "format": "uint32",
+          "maximum": 511,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ordinal",
+        "text",
+        "locator"
+      ],
+      "type": "object"
+    },
+    "PdfFragmentPage": {
+      "additionalProperties": false,
+      "properties": {
+        "covers_generation": {
+          "type": "boolean"
+        },
+        "generation": {
+          "$ref": "#/$defs/ExtractionGeneration"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/PdfFragment"
+          },
+          "type": "array"
+        },
+        "job_id": {
+          "type": "string"
+        },
+        "manifest": {
+          "$ref": "#/$defs/PdfManifest"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "result_from_previous_attempt": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "job_id",
+        "generation",
+        "result_from_previous_attempt",
+        "manifest",
+        "items",
+        "covers_generation"
+      ],
+      "type": "object"
+    },
+    "PdfLimitation": {
+      "enum": [
+        "no_ocr",
+        "no_visual_order",
+        "no_geometry",
+        "no_structured_tables"
+      ],
+      "type": "string"
+    },
+    "PdfLocatorKind": {
+      "enum": [
+        "pdf_page_text"
+      ],
+      "type": "string"
+    },
+    "PdfManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "extracted_bytes": {
+          "format": "uint32",
+          "maximum": 1048576,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "limitations": {
+          "items": {
+            "$ref": "#/$defs/PdfLimitation"
+          },
+          "type": "array"
+        },
+        "page_count": {
+          "format": "uint32",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "pages": {
+          "items": {
+            "$ref": "#/$defs/PdfPageDescriptor"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "type": "array"
+        },
+        "parser_name": {
+          "type": "string"
+        },
+        "parser_version": {
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/$defs/PdfTextScope"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version",
+        "parser_name",
+        "parser_version",
+        "scope",
+        "limitations",
+        "page_count",
+        "extracted_bytes",
+        "pages"
+      ],
+      "type": "object"
+    },
+    "PdfPageDescriptor": {
+      "additionalProperties": false,
+      "properties": {
+        "fragment_count": {
+          "format": "uint32",
+          "maximum": 512,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "page_number": {
+          "format": "uint32",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "state": {
+          "$ref": "#/$defs/PdfPageState"
+        },
+        "text_bytes": {
+          "format": "uint32",
+          "maximum": 1048576,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "text_sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "page_number",
+        "state",
+        "text_bytes",
+        "text_sha256",
+        "fragment_count"
+      ],
+      "type": "object"
+    },
+    "PdfPageState": {
+      "enum": [
+        "text",
+        "no_text"
+      ],
+      "type": "string"
+    },
+    "PdfTextLocator": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/PdfLocatorKind"
+        },
+        "page_number": {
+          "format": "uint32",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "text_byte_end": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "text_byte_start": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "page_number",
+        "text_byte_start",
+        "text_byte_end"
+      ],
+      "type": "object"
+    },
+    "PdfTextScope": {
+      "enum": [
+        "page_text_objects"
+      ],
+      "type": "string"
+    },
+    "Priority": {
+      "enum": [
+        "low",
+        "normal",
+        "high"
+      ],
+      "type": "string"
+    },
+    "ProjectFields": {
+      "additionalProperties": false,
+      "properties": {
+        "end_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "purpose": {
+          "default": "",
+          "type": "string"
+        },
+        "start_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/ProjectState",
+          "default": "planned"
+        }
+      },
+      "type": "object"
+    },
+    "ProjectState": {
+      "enum": [
+        "planned",
+        "doing",
+        "done",
+        "ongoing",
+        "on_hold"
+      ],
+      "type": "string"
+    },
+    "Property": {
+      "additionalProperties": false,
+      "properties": {
+        "collection_id": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "spec": {
+          "$ref": "#/$defs/PropertySpec"
+        }
+      },
+      "required": [
+        "id",
+        "collection_id",
+        "spec"
+      ],
+      "type": "object"
+    },
+    "PropertyFilter": {
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/FilterOp"
+        },
+        "property_id": {
+          "type": "string"
+        },
+        "value": {
+          "default": null
+        }
+      },
+      "required": [
+        "property_id",
+        "op"
+      ],
+      "type": "object"
+    },
+    "PropertyKind": {
+      "enum": [
+        "formula",
+        "rollup",
+        "title",
+        "text",
+        "number",
+        "decimal",
+        "money",
+        "checkbox",
+        "date",
+        "date_range",
+        "select",
+        "multi_select",
+        "url",
+        "email",
+        "files",
+        "relation",
+        "created_at",
+        "updated_at"
+      ],
+      "type": "string"
+    },
+    "PropertySort": {
+      "additionalProperties": false,
+      "properties": {
+        "descending": {
+          "default": false,
+          "type": "boolean"
+        },
+        "property_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "property_id"
+      ],
+      "type": "object"
+    },
+    "PropertySpec": {
+      "additionalProperties": false,
+      "properties": {
+        "calculation_type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CalculationType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "currency": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "options": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "target_collection_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "$ref": "#/$defs/PropertyKind"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ReadFragments": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "limit": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "ReadOcrRegions": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "limit": {
+          "format": "uint32",
+          "maximum": 64,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "ReadPdfFragments": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "limit": {
+          "format": "uint32",
+          "maximum": 64,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "ReadXlsxCells": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "limit": {
+          "format": "uint32",
+          "maximum": 64,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "RecordData": {
+      "properties": {
+        "calculation_errors": {
+          "additionalProperties": {
+            "$ref": "#/$defs/CalculationError"
+          },
+          "type": "object"
+        },
+        "collection_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "entity": {
+          "$ref": "#/$defs/Entity"
+        },
+        "values": {
+          "additionalProperties": true,
+          "type": "object"
+        }
+      },
+      "required": [
+        "entity",
+        "values",
+        "collection_ids",
+        "calculation_errors"
+      ],
+      "type": "object"
+    },
+    "RecordInput": {
+      "additionalProperties": false,
+      "properties": {
+        "collection_id": {
+          "type": "string"
+        },
+        "entity_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "collection_id",
+        "entity_id"
+      ],
+      "type": "object"
+    },
+    "RecordSeed": {
+      "additionalProperties": false,
+      "properties": {
+        "collection_id": {
+          "type": "string"
+        },
+        "values": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        }
+      },
+      "required": [
+        "collection_id"
+      ],
+      "type": "object"
+    },
+    "Relation": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/RelationKind"
+        },
+        "source_id": {
+          "type": "string"
+        },
+        "target_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "source_id",
+        "target_id",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "RelationKind": {
+      "enum": [
+        "project",
+        "tag",
+        "person"
+      ],
+      "type": "string"
+    },
+    "RelationResult": {
+      "properties": {
+        "changed": {
+          "type": "boolean"
+        },
+        "entity": {
+          "$ref": "#/$defs/Entity"
+        },
+        "relation": {
+          "$ref": "#/$defs/Relation"
+        }
+      },
+      "required": [
+        "relation",
+        "entity",
+        "changed"
+      ],
+      "type": "object"
+    },
+    "RemoveRelation": {
+      "additionalProperties": false,
+      "properties": {
+        "expected_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "expected_revision"
+      ],
+      "type": "object"
+    },
+    "Request": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "$ref": "#/$defs/Operation"
+        },
+        "workspace": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "type": "object"
+    },
+    "Response": {
+      "properties": {
+        "api_version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "data": true,
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CoreError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "request_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "api_version",
+        "request_id",
+        "ok"
+      ],
+      "type": "object"
+    },
+    "RestoreInput": {
+      "additionalProperties": false,
+      "properties": {
+        "backup": {
+          "type": "string"
+        },
+        "destination": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "backup",
+        "destination"
+      ],
+      "type": "object"
+    },
+    "RevisionInput": {
+      "additionalProperties": false,
+      "properties": {
+        "expected_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "expected_revision"
+      ],
+      "type": "object"
+    },
+    "RunExtraction": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "SaveTemplate": {
+      "additionalProperties": false,
+      "properties": {
+        "collection_id": {
+          "type": "string"
+        },
+        "definition": {
+          "$ref": "#/$defs/TemplateDefinition"
+        },
+        "expected_collection_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "expected_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "collection_id",
+        "expected_collection_revision",
+        "name",
+        "definition"
+      ],
+      "type": "object"
+    },
+    "SaveView": {
+      "additionalProperties": false,
+      "properties": {
+        "collection_id": {
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/$defs/ViewConfig"
+        },
+        "expected_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "layout": {
+          "$ref": "#/$defs/ViewLayout"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "collection_id",
+        "name",
+        "layout",
+        "config"
+      ],
+      "type": "object"
+    },
+    "ScalarKind": {
+      "enum": [
+        "number",
+        "decimal",
+        "boolean",
+        "text"
+      ],
+      "type": "string"
+    },
+    "SearchHit": {
+      "properties": {
+        "block_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "entity_id": {
+          "type": "string"
+        },
+        "excerpt": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/EntityKind"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "score": {
+          "format": "double",
+          "type": "number"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "entity_id",
+        "title",
+        "kind",
+        "revision",
+        "excerpt",
+        "score"
+      ],
+      "type": "object"
+    },
+    "SearchIndexInfo": {
+      "properties": {
+        "chunks": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "entities": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "entities",
+        "chunks"
+      ],
+      "type": "object"
+    },
+    "SearchPage": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/SearchHit"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "type": "object"
+    },
+    "SearchQuery": {
+      "additionalProperties": false,
+      "properties": {
+        "archived": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EntityKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limit": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "query": {
+          "type": "string"
+        },
+        "related_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "type": "object"
+    },
+    "TagFields": {
+      "additionalProperties": false,
+      "properties": {
+        "classification": {
+          "$ref": "#/$defs/Classification"
+        }
+      },
+      "required": [
+        "classification"
+      ],
+      "type": "object"
+    },
+    "TaskFields": {
+      "additionalProperties": false,
+      "properties": {
+        "due_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "inbox": {
+          "default": true,
+          "type": "boolean"
+        },
+        "planned_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "priority": {
+          "$ref": "#/$defs/Priority",
+          "default": "normal"
+        },
+        "state": {
+          "$ref": "#/$defs/TaskState",
+          "default": "todo"
+        }
+      },
+      "type": "object"
+    },
+    "TaskState": {
+      "enum": [
+        "todo",
+        "done"
+      ],
+      "type": "string"
+    },
+    "Template": {
+      "properties": {
+        "collection_id": {
+          "type": "string"
+        },
+        "definition": true,
+        "editable": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "collection_id",
+        "name",
+        "revision",
+        "definition",
+        "editable"
+      ],
+      "type": "object"
+    },
+    "TemplateDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "document": {
+          "$ref": "#/$defs/Document"
+        },
+        "schema_version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        },
+        "values": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema_version",
+        "title",
+        "document"
+      ],
+      "type": "object"
+    },
+    "Text": {
+      "additionalProperties": false,
+      "properties": {
+        "marks": {
+          "items": {
+            "$ref": "#/$defs/Mark"
+          },
+          "type": "array"
+        },
+        "text": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/TextKind"
+        }
+      },
+      "required": [
+        "type",
+        "text"
+      ],
+      "type": "object"
+    },
+    "TextKind": {
+      "enum": [
+        "text",
+        "hard_break"
+      ],
+      "type": "string"
+    },
+    "UpdateEntity": {
+      "additionalProperties": false,
+      "properties": {
+        "document": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Document"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expected_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "payload": true,
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "expected_revision"
+      ],
+      "type": "object"
+    },
+    "UpdateRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "collection_id": {
+          "type": "string"
+        },
+        "entity_id": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "values": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        }
+      },
+      "required": [
+        "collection_id",
+        "entity_id",
+        "expected_revision"
+      ],
+      "type": "object"
+    },
+    "ViewConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "archived": {
+          "default": false,
+          "type": "boolean"
+        },
+        "calendar": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CalendarConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "columns": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "filter_tree": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FilterExpression"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "filters": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/PropertyFilter"
+          },
+          "type": "array"
+        },
+        "group_by": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sorts": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/PropertySort"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ViewGroup": {
+      "properties": {
+        "entity_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "key": true,
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "label",
+        "entity_ids"
+      ],
+      "type": "object"
+    },
+    "ViewLayout": {
+      "enum": [
+        "table",
+        "list",
+        "board",
+        "calendar",
+        "gallery"
+      ],
+      "type": "string"
+    },
+    "Visibility": {
+      "enum": [
+        "visible",
+        "hidden",
+        "very_hidden"
+      ],
+      "type": "string"
+    },
+    "WorkflowPage": {
+      "properties": {
+        "date": {
+          "type": "string"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/Entity"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "items",
+        "date"
+      ],
+      "type": "object"
+    },
+    "WorkflowQuery": {
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "related_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "view": {
+          "$ref": "#/$defs/WorkflowView"
+        }
+      },
+      "required": [
+        "view"
+      ],
+      "type": "object"
+    },
+    "WorkflowView": {
+      "enum": [
+        "inbox",
+        "my_day",
+        "pending",
+        "overdue",
+        "active_projects",
+        "context"
+      ],
+      "type": "string"
+    },
+    "WorkspaceInfo": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "schema_version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "timezone": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "path",
+        "schema_version",
+        "timezone"
+      ],
+      "type": "object"
+    },
+    "XlsxCellItem": {
+      "additionalProperties": false,
+      "properties": {
+        "cell": {
+          "$ref": "#/$defs/Cell"
+        },
+        "locator": {
+          "$ref": "#/$defs/XlsxCellLocator"
+        },
+        "ordinal": {
+          "format": "uint32",
+          "maximum": 9999,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ordinal",
+        "locator",
+        "cell"
+      ],
+      "type": "object"
+    },
+    "XlsxCellLocator": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/XlsxLocatorKind"
+        },
+        "reference": {
+          "type": "string"
+        },
+        "sheet_id": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "sheet_id",
+        "reference"
+      ],
+      "type": "object"
+    },
+    "XlsxCellPage": {
+      "additionalProperties": false,
+      "properties": {
+        "covers_generation": {
+          "type": "boolean"
+        },
+        "generation": {
+          "$ref": "#/$defs/ExtractionGeneration"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/XlsxCellItem"
+          },
+          "type": "array"
+        },
+        "job_id": {
+          "type": "string"
+        },
+        "manifest": {
+          "$ref": "#/$defs/XlsxManifest"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "result_from_previous_attempt": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "job_id",
+        "generation",
+        "result_from_previous_attempt",
+        "manifest",
+        "items",
+        "covers_generation"
+      ],
+      "type": "object"
+    },
+    "XlsxLocatorKind": {
+      "enum": [
+        "xlsx_cell"
+      ],
+      "type": "string"
+    },
+    "XlsxManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "cell_count": {
+          "format": "uint32",
+          "maximum": 10000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "date_1904": {
+          "type": "boolean"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "parser": {
+          "type": "string"
+        },
+        "representation_bytes": {
+          "format": "uint32",
+          "maximum": 1048576,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "representation_sha256": {
+          "type": "string"
+        },
+        "sheets": {
+          "items": {
+            "$ref": "#/$defs/XlsxSheetDescriptor"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "type": "array"
+        },
+        "styles": {
+          "items": {
+            "$ref": "#/$defs/NumberStyle"
+          },
+          "type": "array"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version",
+        "parser",
+        "representation_sha256",
+        "representation_bytes",
+        "date_1904",
+        "limitations",
+        "styles",
+        "sheets",
+        "cell_count"
+      ],
+      "type": "object"
+    },
+    "XlsxSheetDescriptor": {
+      "additionalProperties": false,
+      "properties": {
+        "cell_count": {
+          "format": "uint32",
+          "maximum": 10000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "declared_range": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "merges": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "observed_range": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "visibility": {
+          "$ref": "#/$defs/Visibility"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "visibility",
+        "merges",
+        "cell_count"
+      ],
+      "type": "object"
+    },
+    "XlsxTextField": {
+      "enum": [
+        "cached_text",
+        "cached_number",
+        "cached_boolean",
+        "cached_error",
+        "cached_date_iso",
+        "formula_text"
+      ],
+      "type": "string"
+    },
+    "XlsxTextProjection": {
+      "enum": [
+        "xlsx_cell_fields_v1"
+      ],
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "attachment": {
+      "$ref": "#/$defs/Attachment"
+    },
+    "attachment_data": {
+      "$ref": "#/$defs/AttachmentData"
+    },
+    "attachment_index": {
+      "$ref": "#/$defs/AttachmentIndexResult"
+    },
+    "attachment_search": {
+      "$ref": "#/$defs/AttachmentSearchPage"
+    },
+    "backup": {
+      "$ref": "#/$defs/BackupInfo"
+    },
+    "batch_applied": {
+      "$ref": "#/$defs/BatchApplied"
+    },
+    "batch_plan": {
+      "$ref": "#/$defs/BatchPlan"
+    },
+    "batch_preview": {
+      "$ref": "#/$defs/BatchPreview"
+    },
+    "changes": {
+      "$ref": "#/$defs/Page6"
+    },
+    "collection_bundle": {
+      "$ref": "#/$defs/CollectionBundle"
+    },
+    "collections": {
+      "$ref": "#/$defs/Page3"
+    },
+    "database": {
+      "$ref": "#/$defs/DatabasePage"
+    },
+    "enqueued_extraction": {
+      "$ref": "#/$defs/EnqueuedExtraction"
+    },
+    "entities": {
+      "$ref": "#/$defs/Page4"
+    },
+    "entity": {
+      "$ref": "#/$defs/Entity"
+    },
+    "export": {
+      "$ref": "#/$defs/ExportResult"
+    },
+    "extraction_control": {
+      "$ref": "#/$defs/ExtractionControl"
+    },
+    "extraction_fragments": {
+      "$ref": "#/$defs/FragmentPage"
+    },
+    "extraction_job": {
+      "$ref": "#/$defs/ExtractionJob"
+    },
+    "extraction_jobs": {
+      "$ref": "#/$defs/Page7"
+    },
+    "extraction_run": {
+      "$ref": "#/$defs/ExtractionRun"
+    },
+    "home": {
+      "$ref": "#/$defs/HomePage"
+    },
+    "note_fields": {
+      "$ref": "#/$defs/NoteFields"
+    },
+    "ocr_regions": {
+      "$ref": "#/$defs/OcrRegionPage"
+    },
+    "pdf_fragments": {
+      "$ref": "#/$defs/PdfFragmentPage"
+    },
+    "project_fields": {
+      "$ref": "#/$defs/ProjectFields"
+    },
+    "property": {
+      "$ref": "#/$defs/Property"
+    },
+    "read_ocr_regions": {
+      "$ref": "#/$defs/ReadOcrRegions"
+    },
+    "read_pdf_fragments": {
+      "$ref": "#/$defs/ReadPdfFragments"
+    },
+    "read_xlsx_cells": {
+      "$ref": "#/$defs/ReadXlsxCells"
+    },
+    "record": {
+      "$ref": "#/$defs/RecordData"
+    },
+    "records": {
+      "$ref": "#/$defs/Page"
+    },
+    "relation_result": {
+      "$ref": "#/$defs/RelationResult"
+    },
+    "relations": {
+      "$ref": "#/$defs/Page5"
+    },
+    "request": {
+      "$ref": "#/$defs/Request"
+    },
+    "response": {
+      "$ref": "#/$defs/Response"
+    },
+    "search": {
+      "$ref": "#/$defs/SearchPage"
+    },
+    "search_index": {
+      "$ref": "#/$defs/SearchIndexInfo"
+    },
+    "tag_fields": {
+      "$ref": "#/$defs/TagFields"
+    },
+    "task_fields": {
+      "$ref": "#/$defs/TaskFields"
+    },
+    "template": {
+      "$ref": "#/$defs/Template"
+    },
+    "templates": {
+      "$ref": "#/$defs/Page2"
+    },
+    "view": {
+      "$ref": "#/$defs/CollectionView"
+    },
+    "workflow": {
+      "$ref": "#/$defs/WorkflowPage"
+    },
+    "workspace": {
+      "$ref": "#/$defs/WorkspaceInfo"
+    },
+    "xlsx_cells": {
+      "$ref": "#/$defs/XlsxCellPage"
+    }
+  },
+  "required": [
+    "batch_plan",
+    "batch_preview",
+    "batch_applied",
+    "home",
+    "template",
+    "templates",
+    "collection_bundle",
+    "collections",
+    "property",
+    "record",
+    "records",
+    "view",
+    "database",
+    "search",
+    "search_index",
+    "note_fields",
+    "task_fields",
+    "project_fields",
+    "tag_fields",
+    "workflow",
+    "request",
+    "response",
+    "entity",
+    "workspace",
+    "relation_result",
+    "entities",
+    "relations",
+    "changes",
+    "backup",
+    "attachment",
+    "attachment_data",
+    "export",
+    "extraction_job",
+    "extraction_control",
+    "extraction_run",
+    "enqueued_extraction",
+    "read_xlsx_cells",
+    "xlsx_cells",
+    "read_ocr_regions",
+    "ocr_regions",
+    "extraction_jobs",
+    "extraction_fragments",
+    "pdf_fragments",
+    "read_pdf_fragments",
+    "attachment_index",
+    "attachment_search"
+  ],
+  "title": "Contract",
+  "type": "object"
+}

@@ -1,0 +1,21 @@
+[package]
+name = "noteka-desktop"
+version.workspace = true
+edition.workspace = true
+
+[features]
+native-smoke = ["dep:rusqlite"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[lib]
+name = "noteka_desktop"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[dependencies]
+noteka-core = { path = "../crates/noteka-core" }
+serde_json.workspace = true
+tauri = { version = "2", features = [] }
+rusqlite = { workspace = true, optional = true }
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }

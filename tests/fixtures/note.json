@@ -1,0 +1,11 @@
+{
+  "kind": "note",
+  "title": "Nota sintética",
+  "document": {
+    "schema_version": 1,
+    "blocks": [
+      { "id": "fixture-paragraph-1", "type": "paragraph", "content": [{ "type": "text", "text": "Contenido de prueba, sin datos personales." }] },
+      { "id": "fixture-paragraph-2", "type": "paragraph", "content": [{ "type": "text", "text": "Segundo párrafo." }] }
+    ]
+  }
+}

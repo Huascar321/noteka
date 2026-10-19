@@ -1,0 +1,17 @@
+[package]
+name = "noteka-cli"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "noteka"
+path = "src/main.rs"
+
+[dependencies]
+noteka-core = { path = "../noteka-core" }
+serde_json.workspace = true
+clap = { version = "4", features = ["derive"] }
+
+[dev-dependencies]
+tempfile.workspace = true
+rusqlite.workspace = true

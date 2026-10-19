@@ -1,0 +1,11 @@
+[package]
+name = "noteka-pdfkit-protocol"
+version.workspace = true
+edition.workspace = true
+license = "MIT"
+publish = false
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+schemars.workspace = true

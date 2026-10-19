@@ -1,0 +1,10 @@
+CREATE TABLE collections (id TEXT PRIMARY KEY,name TEXT NOT NULL,revision INTEGER NOT NULL CHECK(revision>=1));
+CREATE TABLE properties (id TEXT PRIMARY KEY,collection_id TEXT NOT NULL REFERENCES collections(id),name TEXT NOT NULL,spec TEXT NOT NULL CHECK(json_valid(spec)),UNIQUE(collection_id,name));
+CREATE INDEX properties_collection ON properties(collection_id,id);
+CREATE TABLE memberships (collection_id TEXT NOT NULL REFERENCES collections(id),entity_id TEXT NOT NULL REFERENCES entities(id),PRIMARY KEY(collection_id,entity_id));
+CREATE INDEX memberships_entity ON memberships(entity_id,collection_id);
+CREATE TABLE property_values (entity_id TEXT NOT NULL REFERENCES entities(id),property_id TEXT NOT NULL REFERENCES properties(id),json TEXT NOT NULL CHECK(json_valid(json)),PRIMARY KEY(entity_id,property_id));
+CREATE TABLE views (id TEXT PRIMARY KEY,collection_id TEXT NOT NULL REFERENCES collections(id),revision INTEGER NOT NULL CHECK(revision>=1),json TEXT NOT NULL CHECK(json_valid(json)));
+CREATE INDEX views_collection ON views(collection_id,id);
+UPDATE workspace_meta SET schema_version=4;
+PRAGMA user_version=4;
