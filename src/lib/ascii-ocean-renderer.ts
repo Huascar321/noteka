@@ -96,7 +96,7 @@ export class AsciiOceanRenderer {
   private order=[0,1,2,3];
   private width=0;private height=0;private dpr=1;private dark=true;private ink='';private seconds=0;
   constructor(private canvas:HTMLCanvasElement){this.ctx=context(canvas);}
-  resize(width:number,height:number,dpr:number,dark:boolean,ink:string){
+  resize(width:number,height:number,dpr:number,dark:boolean,ink:string,repaint=true){
     width=Math.max(0,width);height=Math.max(0,height);dpr=Math.min(2,Math.max(1,dpr));
     if(width===this.width&&height===this.height&&dpr===this.dpr&&dark===this.dark&&ink===this.ink&&this.atlas)return;
     const atlasChanged=!this.atlas||dpr!==this.dpr||dark!==this.dark||ink!==this.ink;
@@ -109,12 +109,12 @@ export class AsciiOceanRenderer {
     ctx.globalAlpha=dark?.02:.025;ctx.beginPath();for(let x=0;x<width;x+=60){ctx.moveTo(x+.5,0);ctx.lineTo(x+.5,height);}for(let y=0;y<height;y+=60){ctx.moveTo(0,y+.5);ctx.lineTo(width,y+.5);}ctx.stroke();
     // ResizeObserver runs before paint: restore the cleared bitmap in this turn,
     // using the last scene time rather than exposing a blank frame until RAF.
-    this.draw(this.seconds,0);
+    if(repaint)this.draw(this.seconds,0);
   }
-  draw(seconds:number,delta:number){
+  drawEnvironment(ctx:CanvasRenderingContext2D,seconds:number){
     this.seconds=seconds;
     if(!this.width||!this.height||!this.atlas)return;
-    const ctx=this.ctx,w=this.width,h=this.height,atlas=this.atlas;ctx.setTransform(this.dpr,0,0,this.dpr,0,0);ctx.clearRect(0,0,w,h);
+    const w=this.width,h=this.height,atlas=this.atlas;
     ctx.globalAlpha=1;ctx.drawImage(this.grid,0,0,w,h);
     for(let i=0;i<36;i++){
       const j=i*4,depth=this.particles[j+2],x=(this.particles[j]*w+seconds*(1.5+depth*3))%(w+24)-12;
@@ -129,9 +129,20 @@ export class AsciiOceanRenderer {
       const edge=Math.min(1,Math.max(0,Math.min(x,w-x)/40));
       atlas.draw(ctx,this.school[j+3]>.7?14:0,x,y,(.09+this.school[j+2]*.16)*edge);
     }
-    const poses=oceanPoses(w,h,seconds);
+    ctx.globalAlpha=1;
+  }
+  drawActor(ctx:CanvasRenderingContext2D,index:number,pose:SharkPose,delta:number){
+    const layer=this.layers[index];if(!layer||!this.atlas)return;
+    layer.draw(pose,delta,this.atlas);ctx.globalAlpha=pose.opacity;
+    ctx.drawImage(layer.canvas,pose.x-layer.width/2,pose.y-layer.height/2,layer.width,layer.height);ctx.globalAlpha=1;
+  }
+  draw(seconds:number,delta:number){
+    this.seconds=seconds;if(!this.width||!this.height||!this.atlas)return;
+    const ctx=this.ctx;ctx.setTransform(this.dpr,0,0,this.dpr,0,0);ctx.clearRect(0,0,this.width,this.height);
+    this.drawEnvironment(ctx,seconds);
+    const poses=oceanPoses(this.width,this.height,seconds);
     this.order.sort((a,b)=>(poses[b].depth??0)-(poses[a].depth??0));
-    for(const i of this.order){const pose=poses[i],layer=this.layers[i];layer.draw(pose,delta,atlas);ctx.globalAlpha=pose.opacity;ctx.drawImage(layer.canvas,pose.x-layer.width/2,pose.y-layer.height/2,layer.width,layer.height);}
+    for(const i of this.order)this.drawActor(ctx,i,poses[i],delta);
     ctx.globalAlpha=1;
   }
 }

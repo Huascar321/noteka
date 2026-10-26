@@ -4,6 +4,20 @@ Fecha de referencia: **11 de octubre de 2026**, zona `America/La_Paz`.
 
 Este documento está escrito para una persona o IA que no participó de las conversaciones originales. Contiene el objetivo del producto, las decisiones tomadas, una arquitectura propuesta, requisitos, fases y criterios para continuar. Los chats son antecedentes; no hacen falta para ejecutar el plan.
 
+**Experimento combinado al 26/10/2026:** el commit local `2d43a66` conserva todo
+el avance anterior y las tres escenas ASCII. `combine-ascii-ocean-life`, en
+`codex/combined-ascii-ocean`, reemplaza la alternancia por fauna simultánea con
+profundidad/escala/contraste por individuo: 11 animales, nueve en estrecho. Orden
+global entre especies, geometría/nado y reloj conservados. El lateral separa su
+scroll vertical del borde interior de resize y no tiene overflow horizontal,
+incluidos mínimos a320px. Build, 16 pruebas puras, 37 checks de App y 20 casos
+visuales aprobados; API original del océano comparada con12 bitmaps idénticos al
+checkpoint. Canvas p95 hasta2,9ms, sin acreditar120Hz físicos o nueva aceptación
+nativa. Sin cambios de dominio/datos; Meeting Notes sigue0/19. Deltas pendientes:
+sincronizar el cambio de variantes antes del combinado, que retira su regla de
+alternancia. [Guía](ascii-cover-scenes.md), [ADR0053](decisions/0053-shared-depth-ascii-composition.md)
+y [evidencia/límites](verification-mixed-ocean.md).
+
 **Paneles y portada al 26/10/2026:** `resize-workspace-panels` y
 `add-random-ascii-cover-scenes` implementados y verificados localmente. Menú y
 Side peek ajustables con mouse/teclado y memoria local, máximos 35%/65% de ventana.

@@ -65,12 +65,25 @@ export class AsciiCreaturesRenderer {
     if(!this.width||!this.height||!this.atlas)return;
     const field=this.fieldCtx;field.setTransform(1,0,0,1,0,0);field.clearRect(0,0,this.field.width,this.field.height);field.setTransform(2/CW,0,0,2/CH,0,0);
     if(this.kind==='koi')for(const pose of koiPoses(this.width,this.height,seconds,this.seed))this.koi(pose);else for(const pose of jellyPoses(this.width,this.height,seconds,this.seed))this.jelly(pose);
-    const pixels=field.getImageData(0,0,this.field.width,this.field.height).data,ctx=this.ctx;ctx.setTransform(this.dpr,0,0,this.dpr,0,0);ctx.clearRect(0,0,this.width,this.height);
-    for(let row=0;row<this.rows;row++)for(let col=0;col<this.cols;col++){
-      const offset=((row*2+1)*this.field.width+col*2+1)*4,alpha=pixels[offset+3]/255;if(alpha<.06)continue;
+    const ctx=this.ctx;ctx.setTransform(this.dpr,0,0,this.dpr,0,0);ctx.clearRect(0,0,this.width,this.height);
+    this.raster(ctx,0,0,this.cols,this.rows,1);
+  }
+  drawActor(ctx:CanvasRenderingContext2D,pose:KoiPose|JellyPose,opacity:number){
+    if(!this.width||!this.height||!this.atlas)return;
+    const field=this.fieldCtx;field.setTransform(1,0,0,1,0,0);field.clearRect(0,0,this.field.width,this.field.height);field.setTransform(2/CW,0,0,2/CH,0,0);
+    const radius='length' in pose?pose.length*.72:pose.radius*3;
+    if('length' in pose)this.koi(pose);else this.jelly(pose);
+    const left=Math.max(0,Math.floor((pose.x-radius)/CW)),top=Math.max(0,Math.floor((pose.y-radius)/CH));
+    const right=Math.min(this.cols,Math.ceil((pose.x+radius)/CW)),bottom=Math.min(this.rows,Math.ceil((pose.y+radius)/CH));
+    if(right>left&&bottom>top)this.raster(ctx,left,top,right,bottom,opacity);
+  }
+  private raster(ctx:CanvasRenderingContext2D,left:number,top:number,right:number,bottom:number,opacity:number){
+    const width=(right-left)*2,pixels=this.fieldCtx.getImageData(left*2,top*2,width,(bottom-top)*2).data;
+    for(let row=top;row<bottom;row++)for(let col=left;col<right;col++){
+      const offset=(((row-top)*2+1)*width+(col-left)*2+1)*4,alpha=pixels[offset+3]/255;if(alpha<.06)continue;
       const family=Math.max(0,Math.min(4,Math.round((pixels[offset]-20)/40))),level=Math.max(0,Math.min(10,Math.round(pixels[offset+1]/255*10)));
       const glyph=Math.min(GLYPHS.length-1,Math.floor(sceneNoise(this.seed,col+row*997)*5)+(this.kind==='jellyfish'?Math.round(level*.5):5));
-      this.atlas.draw(ctx,family,level,glyph,col*CW,row*CH,!this.dark&&this.kind==='jellyfish'?Math.min(1,alpha*1.45):alpha);
+      this.atlas!.draw(ctx,family,level,glyph,col*CW,row*CH,opacity*(!this.dark&&this.kind==='jellyfish'?Math.min(1,alpha*1.45):alpha));
     }ctx.globalAlpha=1;
   }
 }

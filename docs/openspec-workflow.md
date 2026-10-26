@@ -1,5 +1,15 @@
 # Cómo desarrollar Noteka con OpenSpec
 
+Seguimiento 26/10/2026: checkpoint local `2d43a66` preserva todo el avance y el
+ASCII alternado. `combine-ascii-ocean-life` implementado/verificado localmente en
+`codex/combined-ascii-ocean`: escena mixta con profundidad global por individuo y
+lateral sin overflow horizontal, con scroll vertical/resize operativos. Build,
+16 pruebas puras, 37 checks de App, 20 casos visuales y12 comparaciones pixel
+idénticas de la API original aprobaron. Sin aceptación nativa nueva. Deltas
+pendientes: aplicar primero `add-random-ascii-cover-scenes` y después el combinado,
+que retira la alternancia anterior. Meeting Notes0/19 intacto.
+[Guía](ascii-cover-scenes.md) y [evidencia](verification-mixed-ocean.md).
+
 Actualización 26/10/2026: `resize-workspace-panels` y
 `add-random-ascii-cover-scenes` implementados/verificados localmente; deltas
 pendientes de sincronización/archivo. Anchos con arrastre/teclado y memoria local,

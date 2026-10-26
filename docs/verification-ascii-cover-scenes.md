@@ -1,5 +1,10 @@
 # Verificación de las tres variantes ASCII
 
+Esta revisión documenta la versión de tres escenas preservada en `2d43a66`.
+El experimento posterior combina la fauna: ver
+[evidencia actual](verification-mixed-ocean.md). Los resultados siguientes son
+históricos y no se vuelven a contar como pruebas nuevas.
+
 Fecha: 26/10/2026. Cambio: `add-random-ascii-cover-scenes`. Implementado y
 verificado localmente; deltas pendientes de sincronización/archivo.
 

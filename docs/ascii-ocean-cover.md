@@ -1,10 +1,11 @@
 # Portada de océano ASCII
 
-Desde el seguimiento del 26/10/2026, esta composición es una de las tres variantes
-de la portada. Alterna con koi naranja/blanco y medusas cian/violeta, con inicio y
-orden aleatorios estables. Ver [escenas, ritmo y referencias](ascii-cover-scenes.md)
-y [verificación](verification-ascii-cover-scenes.md). La geometría y renderer de
-tiburones descritos abajo permanecen intactos.
+El experimento del 26/10/2026 combina este océano con koi naranja/blanco y medusas
+cian/violeta, ordenando individuos por profundidad compartida y variando escala y
+contraste. Sustituye las tres escenas alternadas, preservadas en `2d43a66`. Ver
+[composición y referencias](ascii-cover-scenes.md) y
+[verificación actual](verification-mixed-ocean.md). La geometría y nado de
+tiburones descritos abajo se conservan; su API original sigue disponible.
 
 Home conserva ASCII/Foto y su preferencia local anterior. La escena procedural
 combina dos tiburones, un pez de cuerpo compacto y otro alargado. Los tipos de

@@ -1,5 +1,10 @@
 # Proposal
 
+Seguimiento: este cambio documenta la versión preservada en `2d43a66`. El
+experimento posterior `combine-ascii-ocean-life` sustituye la alternancia; al
+sincronizar sus deltas, aplicar éste primero y después el combinado para no
+reintroducir la regla anterior.
+
 ## Why
 
 El usuario quiere conservar los tiburones e incorporar al azar los koi naranjas de Dao-Ho/portfolio y, después, las medusas ASCII del ZIP Kurage Dashboard aportado. La portada necesita tres variantes locales coherentes, sin cambiar el resto de Home.

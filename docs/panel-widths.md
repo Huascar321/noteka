@@ -6,6 +6,10 @@ respectivamente. El mínimo deseado es 180/280px y cede ante el máximo en venta
 estrechas. Las flechas mueven el borde 10px (Shift: 50px, Alt: 1px); Home/End
 usan mínimo/máximo. Escape durante el arrastre cancela el ajuste.
 
+El borde del menú queda dentro de su contorno y separado del cuerpo scrolleable:
+no aparece scrollbar horizontal, y el scroll vertical sigue permitiendo llegar
+a Settings en ventanas bajas. El borde permanece visible al desplazar el contenido.
+
 La preferencia global del dispositivo se guarda en `noteka.panel-widths.v1`
 como píxeles preferidos, al soltar el borde o confirmar un ajuste por teclado.
 Cerrar/reabrir o reiniciar recupera ese ancho, acotado al viewport actual.

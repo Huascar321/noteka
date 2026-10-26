@@ -357,11 +357,13 @@
   <div class="desktop-shell" class:sidebar-open={sidebarOpen} class:sidebar-collapsed={sidebarCollapsed}>
     {#if compactSidebar}<button class="sidebar-backdrop" class:visible={sidebarOpen} aria-label="Close sidebar" aria-hidden={!sidebarOpen} inert={!sidebarOpen} tabindex="-1" onclick={() => { sidebarOpen = false; }}></button>{/if}
     <aside class="desktop-sidebar" class:sidebar-narrow={sidebarWidth < 230} id="workspace-sidebar" aria-label="Workspace" aria-hidden={!sidebarVisible} inert={!sidebarVisible || activePeek?.presentation === 'center'}>
+      <div class="sidebar-scroll">
       <div class="workspace-brand"><span class="tiny-mark">n.</span><strong>Noteka</strong></div>
       <div class="sidebar-tools"><button use:sidebarIconMotion class="sidebar-search" aria-label="Search" title="Search (⌘/Ctrl K)" disabled={blocked || activeTab?.state.busy} onclick={() => openSearch('current')}><AppIcon name="search" size={15} /><span>Search</span><kbd>⌘ K</kbd></button><button use:sidebarIconMotion class="icon-button collections-shortcut" aria-label="Collections" title="Collections" disabled={blocked || activeTab?.state.busy} onclick={() => void navigate('collections')}><AppIcon name="collections" size={18} /></button></div>
       <p class="sidebar-caption">WORKSPACE</p>
       <nav aria-label="Sections">{#each PRIMARY_SECTIONS as section}<button use:sidebarIconMotion class:active={activeTab?.state.section === section.id} aria-current={activeTab?.state.section === section.id ? 'page' : undefined} title={section.label} disabled={blocked || activeTab?.state.busy} onclick={() => void navigate(section.id)}><span class="nav-icon" aria-hidden="true"><SectionIcon section={section.id} size={18} /></span><span class="sidebar-nav-label">{section.label}</span></button>{/each}</nav>
       <div class="sidebar-bottom"><button class="sidebar-settings" aria-haspopup="dialog" aria-controls={settingsOpen ? 'settings-dialog' : undefined} aria-expanded={settingsOpen} disabled={blocked} onclick={openSettings}><AppIcon name="settings" size={18} /><span>Settings</span></button></div>
+      </div>
       <PanelResizeHandle label="Resize sidebar" controls="workspace-sidebar" edge="right" width={sidebarWidth} min={sidebarLimits.min} max={sidebarLimits.max} disabled={!sidebarVisible || blocked || searchMode !== null || settingsOpen} onstart={() => beginResize('sidebar')} onresize={width => resizePanel('sidebar', width)} onend={endResize} />
     </aside>
     <section class="desktop-workspace" aria-label="Workspace content">

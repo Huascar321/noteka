@@ -986,7 +986,14 @@ svg[data-app-icon] { flex-shrink:0; vertical-align:middle; }
 .window-close:hover:not(:disabled) { background:#c42b1c; color:#fff; }
 .app-window { --panel-motion:260ms; }
 .app-window>.desktop-shell { --sidebar-motion:var(--panel-motion); grid-template-columns:var(--sidebar-width) minmax(0,1fr); transition:grid-template-columns var(--sidebar-motion) var(--ease-ui); }
-.app-window .desktop-sidebar { position:relative; width:var(--sidebar-width); max-width:35vw; transform:translateX(0); opacity:1; visibility:visible; transition:transform var(--sidebar-motion) var(--ease-ui), opacity var(--sidebar-motion) var(--ease-ui), visibility 0s; }
+.app-window .desktop-sidebar { position:relative; padding:0; width:var(--sidebar-width); max-width:35vw; overflow:hidden; transform:translateX(0); opacity:1; visibility:visible; transition:transform var(--sidebar-motion) var(--ease-ui), opacity var(--sidebar-motion) var(--ease-ui), visibility 0s; }
+.sidebar-scroll { flex:1; min-height:0; min-width:0; display:flex; flex-direction:column; padding:13px 10px 14px; overflow-x:hidden; overflow-y:auto; }
+.desktop-sidebar>.panel-resize-handle { right:0; }
+.desktop-sidebar .workspace-brand strong,.sidebar-settings>span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.desktop-sidebar .tiny-mark { flex-shrink:0; }
+.desktop-sidebar nav,.desktop-sidebar .sidebar-bottom { min-width:0; flex-shrink:0; }
+.desktop-sidebar .sidebar-bottom { grid-template-columns:minmax(0,1fr); }
+.desktop-sidebar .sidebar-settings { min-width:0; }
 .desktop-sidebar .sidebar-nav-label { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .desktop-sidebar .nav-icon { flex-shrink:0; }
 .sidebar-narrow .sidebar-search kbd { display:none; }

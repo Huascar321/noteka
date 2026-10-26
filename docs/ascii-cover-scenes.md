@@ -1,22 +1,37 @@
-# Variantes de la portada ASCII
+# Composición de la portada ASCII
 
-Home conserva Photo/ASCII. En ASCII, una semilla de sesión elige el inicio y el
-orden de **tiburones, koi naranjas/blancos y medusas cian/violeta**. Cada tramo
-dura 42 segundos de tiempo activo, con un fundido de 1,4s al final. Las tres
-variantes aparecen una vez por ciclo y no hay repetición consecutiva. No se
-sortean caracteres o escenas en cada frame y no se guarda una preferencia nueva.
+Home conserva Photo/ASCII. El experimento `combine-ascii-ocean-life` reúne
+**tiburones, koi naranjas/blancos y medusas cian/violeta** en una escena continua.
+Una semilla por instancia conserva fases y marcas; no se sortean caracteres por
+frame ni se añade una preferencia. Hay 11 animales en ancho amplio y nueve en
+estrecho, contando los peces compactos/alargados del océano original.
 
-El renderer original de tiburones conserva geometría, rutas, colores y nado.
+Cada individuo tiene profundidad propia, que controla tamaño, opacidad y orden de
+dibujo. Los lejanos quedan más pequeños y discretos; los cercanos, más definidos.
+Todas las familias se intercalan: ninguna especie es una capa siempre delante.
+Las rutas reparten centros por el ancho y altura, con cruces ocasionales. Los
+animales compartidos conservan su recorrido y profundidad al pasar el umbral de
+densidad estrecha.
+
+El renderer de tiburones conserva geometría, colores y nado; expone dibujo por
+individuo para la composición compartida y mantiene su API anterior.
 Los koi nuevos tienen morro redondeado, manchas fijadas al cuerpo, aletas claras,
 barbillas y cola en abanico. Las medusas muestran campanas pulsantes, cuatro
 lóbulos internos y tentáculos; ambas usan paletas adaptadas al tema y atlas de
 caracteres monospace del sistema.
 
-Las escenas comparten OceanClock: hasta 120 FPS sujetos al navegador/presupuesto,
+La composición usa OceanClock: hasta 120 FPS sujetos al navegador/presupuesto,
 tiempo activo y pausas por pestaña/portada/documento ocultos. Movimiento reducido
 deja una composición estática. Resize reconstruye las capas y repinta el tiempo
-actual antes de mostrar el siguiente frame; no expone un bitmap vacío ni cambia
-el orden de escenas. Photo conserva su recurso local y la preferencia existente.
+actual antes de mostrar el siguiente frame, sin exponer un bitmap vacío. Photo
+conserva su recurso local y la preferencia existente.
+
+El estado anterior de tres escenas alternadas cada 42s con fundido de 1,4s está
+preservado en el commit local `2d43a66`. La rama `codex/combined-ascii-ocean`
+contiene la prueba combinada; el historial permite recuperar la versión anterior
+sin modificar los datos del workspace. Ver
+[decisión](decisions/0053-shared-depth-ascii-composition.md) y
+[evidencia actual](verification-mixed-ocean.md).
 
 ## References and attribution
 
@@ -33,4 +48,4 @@ el orden de escenas. Photo conserva su recurso local y la preferencia existente.
   las referencias conservadas están en evidencia local ignorada por Git.
 
 No hay solicitudes de red durante el render ni acceso al workspace. Ver
-[evidencia y límites](verification-ascii-cover-scenes.md).
+[evidencia anterior de variantes](verification-ascii-cover-scenes.md).
