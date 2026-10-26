@@ -5,7 +5,7 @@ export class ReadQueue {
   private pending: Array<() => void> = [];
   private readonly capacity: number;
   constructor(capacity = 2) {
-    if (!Number.isInteger(capacity) || capacity < 1) throw new Error('Capacidad de lecturas inválida.');
+    if (!Number.isInteger(capacity) || capacity < 1) throw new Error("Invalid read capacity.");
     this.capacity = capacity;
   }
   private drain() { while (this.active < this.capacity && this.pending.length) this.pending.shift()!(); }
@@ -14,7 +14,7 @@ export class ReadQueue {
       let started = false;
       const abort = () => {
         if (!started) this.pending = this.pending.filter(start => start !== startJob);
-        reject(new DOMException('Lectura descartada', 'AbortError'));
+        reject(new DOMException("Read discarded", 'AbortError'));
       };
       const startJob = () => {
         if (signal.aborted) { abort(); return; }

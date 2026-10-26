@@ -327,9 +327,11 @@ fn view_filters_exact_decimal_order_pagination_and_schema_conflicts() {
 fn migration_backup_originals_and_future_schema_are_preserved() {
     let f = Fixture::new();
     let conn = f.db();
-    conn.execute_batch("DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;DROP TABLE extraction_xlsx_chunks;DROP TABLE extraction_xlsx_generations")
+    conn.execute_batch("DROP TABLE extraction_pdf_ocr_chunks;DROP TABLE extraction_pdf_ocr_generations;DROP TABLE extraction_pdfkit_chunks;DROP TABLE extraction_pdfkit_generations;DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;DROP TABLE extraction_xlsx_chunks;DROP TABLE extraction_xlsx_generations")
         .unwrap();
-    conn.execute_batch("DROP TABLE extraction_search_entries;DROP TABLE extraction_search_fts;DROP TABLE extraction_search_control;DROP TABLE extraction_pdf_fragments;DROP TABLE extraction_pdf_pages;DROP TABLE extraction_pdf_generations;DROP TABLE extraction_fragments;DROP TABLE extraction_runtime;DROP TABLE extraction_jobs;DROP TABLE extraction_generations;DROP TABLE extraction_control;DROP TABLE templates;DROP TABLE calculations;DROP TABLE views;DROP TABLE property_values;DROP TABLE memberships;DROP TABLE properties;DROP TABLE collections;UPDATE workspace_meta SET schema_version=3;PRAGMA user_version=3;").unwrap();
+    conn.execute_batch("DROP TABLE extraction_search_entries;DROP TABLE extraction_search_fts;DROP TABLE extraction_search_control;DROP TABLE extraction_pdf_fragments;DROP TABLE extraction_pdf_pages;DROP TABLE extraction_pdf_generations;DROP TABLE extraction_fragments;DROP TABLE extraction_runtime;DROP TABLE extraction_jobs;DROP TABLE extraction_generations;DROP TABLE extraction_control;DROP TABLE templates;DROP TABLE calculations;DROP TABLE views;DROP TABLE property_values;DROP TABLE memberships;DROP TABLE properties;DROP TABLE collections;DROP TABLE IF EXISTS semantic_chunks;DROP TABLE IF EXISTS semantic_control;DROP TABLE IF EXISTS semantic_generations;DROP TABLE IF EXISTS semantic_profiles;DROP TABLE IF EXISTS agent_runs;
+DROP TABLE IF EXISTS extraction_pdf_structures;
+UPDATE workspace_meta SET schema_version=3;PRAGMA user_version=3;").unwrap();
     drop(conn);
     assert_eq!(
         f.ok("workspace.open", json!({}))["schema_version"],

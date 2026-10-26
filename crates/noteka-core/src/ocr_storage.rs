@@ -82,6 +82,7 @@ fn corrupt() -> CoreError {
     store::storage("invalid_ocr_integrity")
 }
 pub(crate) fn load(c: &Connection, generation: &str, job: &str, count: u32) -> Result<Prepared> {
+    crate::pdf_ocr_storage::no_owner(c, generation)?;
     // No materializar texto antes de comprobar presupuestos y cruces de formato.
     let (chunks,bytes,oversized,literal,pdf,xlsx):(u32,u32,u32,u32,u32,u32)=c.query_row("SELECT (SELECT count(*) FROM extraction_ocr_chunks WHERE generation_id=?1),(SELECT coalesce(sum(length(CAST(text AS BLOB))),0) FROM extraction_ocr_chunks WHERE generation_id=?1),(SELECT count(*) FROM extraction_ocr_chunks WHERE generation_id=?1 AND length(CAST(text AS BLOB)) NOT BETWEEN 1 AND 4096),(SELECT count(*) FROM extraction_fragments WHERE generation_id=?1),(SELECT count(*) FROM extraction_pdf_generations WHERE generation_id=?1),(SELECT count(*) FROM extraction_xlsx_generations WHERE generation_id=?1)",[generation],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?,r.get(4)?,r.get(5)?)))?;
     if chunks != count

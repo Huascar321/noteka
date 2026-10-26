@@ -26,6 +26,426 @@
       ],
       "type": "object"
     },
+    "AgentAskInput": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_apply": {
+          "default": false,
+          "type": "boolean"
+        },
+        "limits": {
+          "$ref": "#/$defs/AgentLimits",
+          "default": {
+            "deadline_ms": 60000,
+            "max_context_bytes": 65536,
+            "max_steps": 6,
+            "max_tool_bytes": 65536
+          }
+        },
+        "provider": {
+          "$ref": "#/$defs/AgentProviderConfig"
+        },
+        "question": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "question",
+        "provider"
+      ],
+      "type": "object"
+    },
+    "AgentCancelInput": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "AgentCitation": {
+      "additionalProperties": false,
+      "properties": {
+        "attachment_id": {
+          "type": "string"
+        },
+        "extractor": {
+          "type": "string"
+        },
+        "generation_id": {
+          "type": "string"
+        },
+        "job_id": {
+          "type": "string"
+        },
+        "locator": {
+          "$ref": "#/$defs/AttachmentTextLocator"
+        },
+        "ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "quote": {
+          "type": "string"
+        },
+        "text_sha256": {
+          "type": "string"
+        },
+        "verified": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "job_id",
+        "attachment_id",
+        "generation_id",
+        "extractor",
+        "ordinal",
+        "quote",
+        "locator",
+        "text_sha256",
+        "verified"
+      ],
+      "type": "object"
+    },
+    "AgentLimits": {
+      "additionalProperties": false,
+      "properties": {
+        "deadline_ms": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "max_context_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "max_steps": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "max_tool_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "max_steps",
+        "max_context_bytes",
+        "max_tool_bytes",
+        "deadline_ms"
+      ],
+      "type": "object"
+    },
+    "AgentProviderConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "endpoint": {
+          "type": "string"
+        },
+        "max_tokens": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "model": {
+          "type": "string"
+        },
+        "runtime": {
+          "type": "string"
+        },
+        "temperature": {
+          "format": "double",
+          "type": "number"
+        },
+        "timeout_ms": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "runtime",
+        "endpoint",
+        "model",
+        "timeout_ms",
+        "max_tokens",
+        "temperature"
+      ],
+      "type": "object"
+    },
+    "AgentRunResult": {
+      "additionalProperties": false,
+      "properties": {
+        "citations": {
+          "items": {
+            "$ref": "#/$defs/AgentCitation"
+          },
+          "type": "array"
+        },
+        "run": {
+          "$ref": "#/$defs/AgentRunSummary"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/AgentStep"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "run",
+        "steps",
+        "citations"
+      ],
+      "type": "object"
+    },
+    "AgentRunState": {
+      "enum": [
+        "running",
+        "succeeded",
+        "failed",
+        "cancelled",
+        "limited"
+      ],
+      "type": "string"
+    },
+    "AgentRunSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "answer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cancel_requested": {
+          "type": "boolean"
+        },
+        "citations": {
+          "items": {
+            "$ref": "#/$defs/AgentCitation"
+          },
+          "type": "array"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "finished_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "lease_expired": {
+          "type": "boolean"
+        },
+        "model": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string"
+        },
+        "started_at": {
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/AgentRunState"
+        },
+        "step_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "state",
+        "provider",
+        "model",
+        "endpoint",
+        "question",
+        "started_at",
+        "lease_expired",
+        "cancel_requested",
+        "step_count",
+        "citations"
+      ],
+      "type": "object"
+    },
+    "AgentStep": {
+      "additionalProperties": false,
+      "properties": {
+        "duration_ms": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "index": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "input_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "kind": {
+          "$ref": "#/$defs/AgentStepKind"
+        },
+        "output_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "status": {
+          "type": "string"
+        },
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tool": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "index",
+        "kind",
+        "duration_ms",
+        "input_bytes",
+        "output_bytes",
+        "status"
+      ],
+      "type": "object"
+    },
+    "AgentStepKind": {
+      "enum": [
+        "model",
+        "tool"
+      ],
+      "type": "string"
+    },
+    "AgentTrace": {
+      "additionalProperties": false,
+      "properties": {
+        "run": {
+          "$ref": "#/$defs/AgentRunSummary"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/AgentStep"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "run",
+        "steps"
+      ],
+      "type": "object"
+    },
+    "AgentTraceInput": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "get",
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "action",
+            "id"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "list",
+              "type": "string"
+            },
+            "cursor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "limit": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "AgentTracePage": {
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/AgentRunSummary"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "type": "object"
+    },
     "Aggregate": {
       "enum": [
         "count",
@@ -522,6 +942,146 @@
     },
     "AttachmentTextLocator": {
       "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "bbox": {
+              "$ref": "#/$defs/OcrBoundingBox"
+            },
+            "confidence": {
+              "type": "string"
+            },
+            "coordinate_space": {
+              "type": "string"
+            },
+            "engine": {
+              "$ref": "#/$defs/OcrEngine"
+            },
+            "global_region_ordinal": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "kind": {
+              "const": "pdf_ocr_region_text",
+              "type": "string"
+            },
+            "limitations": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "page_number": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "profile": {
+              "type": "string"
+            },
+            "projection": {
+              "$ref": "#/$defs/PdfOcrTextProjection"
+            },
+            "raster": {
+              "$ref": "#/$defs/RasterIdentity"
+            },
+            "region_bytes": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "region_ordinal": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "text_byte_end": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "text_byte_start": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "projection",
+            "profile",
+            "page_number",
+            "region_ordinal",
+            "global_region_ordinal",
+            "raster",
+            "engine",
+            "bbox",
+            "confidence",
+            "coordinate_space",
+            "limitations",
+            "region_bytes",
+            "text_byte_start",
+            "text_byte_end"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "engine": {
+              "$ref": "#/$defs/Engine"
+            },
+            "kind": {
+              "const": "pdfkit_page_text",
+              "type": "string"
+            },
+            "limitations": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "page_bytes": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "page_number": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "profile": {
+              "type": "string"
+            },
+            "projection": {
+              "$ref": "#/$defs/PdfkitTextProjection"
+            },
+            "text_byte_end": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "text_byte_start": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "projection",
+            "profile",
+            "page_number",
+            "page_bytes",
+            "text_byte_start",
+            "text_byte_end",
+            "engine",
+            "limitations"
+          ],
+          "type": "object"
+        },
         {
           "additionalProperties": false,
           "properties": {
@@ -1404,6 +1964,7 @@
       "enum": [
         "area",
         "resource",
+        "entity",
         "topic"
       ],
       "type": "string"
@@ -1766,8 +2327,388 @@
       ],
       "type": "object"
     },
+    "EmbeddingChunking": {
+      "enum": [
+        "extraction_fragment_v1"
+      ],
+      "type": "string"
+    },
+    "EmbeddingIndexInput": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "status",
+              "type": "string"
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "build",
+              "type": "string"
+            },
+            "attachment_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "endpoint": {
+              "type": "string"
+            },
+            "extractor": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/IndexedExtractor"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "job_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "profile": {
+              "$ref": "#/$defs/EmbeddingProfile"
+            }
+          },
+          "required": [
+            "action",
+            "profile",
+            "endpoint"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "reset",
+              "type": "string"
+            },
+            "expected_revision": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "action",
+            "expected_revision"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "EmbeddingIndexResult": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "status",
+              "type": "string"
+            },
+            "active": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SemanticGenerationInfo"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "building": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SemanticGenerationInfo"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "coverage": {
+              "$ref": "#/$defs/SemanticCoverage"
+            },
+            "retired": {
+              "items": {
+                "$ref": "#/$defs/SemanticGenerationInfo"
+              },
+              "type": "array"
+            },
+            "revision": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "version": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "action",
+            "version",
+            "revision",
+            "retired",
+            "coverage"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "built",
+              "type": "string"
+            },
+            "duration_ms": {
+              "format": "uint64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "embedded_chunks": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "generation": {
+              "$ref": "#/$defs/SemanticGenerationInfo"
+            },
+            "previous_generation_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "reused": {
+              "type": "boolean"
+            },
+            "revision": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "version": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "action",
+            "version",
+            "revision",
+            "generation",
+            "reused",
+            "embedded_chunks",
+            "duration_ms"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "reset",
+              "type": "string"
+            },
+            "removed_chunks": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "removed_generations": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "revision": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "action",
+            "revision",
+            "removed_generations",
+            "removed_chunks"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "EmbeddingNormalization": {
+      "enum": [
+        "l2"
+      ],
+      "type": "string"
+    },
+    "EmbeddingProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "chunking": {
+          "$ref": "#/$defs/EmbeddingChunking"
+        },
+        "dimension": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "document_prefix": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "normalization": {
+          "$ref": "#/$defs/EmbeddingNormalization"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "quantization": {
+          "$ref": "#/$defs/EmbeddingQuantization"
+        },
+        "query_prefix": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "runtime": {
+          "type": "string"
+        },
+        "task": {
+          "$ref": "#/$defs/EmbeddingTask"
+        },
+        "tokenizer": {
+          "type": "string"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version",
+        "provider",
+        "runtime",
+        "model",
+        "revision",
+        "dimension",
+        "normalization",
+        "task",
+        "query_prefix",
+        "document_prefix",
+        "tokenizer",
+        "chunking",
+        "quantization"
+      ],
+      "type": "object"
+    },
+    "EmbeddingQuantization": {
+      "enum": [
+        "f32"
+      ],
+      "type": "string"
+    },
+    "EmbeddingStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "active": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SemanticGenerationInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "building": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SemanticGenerationInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "coverage": {
+          "$ref": "#/$defs/SemanticCoverage"
+        },
+        "retired": {
+          "items": {
+            "$ref": "#/$defs/SemanticGenerationInfo"
+          },
+          "type": "array"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version",
+        "revision",
+        "retired",
+        "coverage"
+      ],
+      "type": "object"
+    },
+    "EmbeddingTask": {
+      "enum": [
+        "retrieval"
+      ],
+      "type": "string"
+    },
     "Empty": {
       "additionalProperties": false,
+      "type": "object"
+    },
+    "Engine": {
+      "additionalProperties": false,
+      "properties": {
+        "api": {
+          "type": "string"
+        },
+        "os_build": {
+          "type": "string"
+        },
+        "os_version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "api",
+        "os_version",
+        "os_build"
+      ],
       "type": "object"
     },
     "EnqueueExtraction": {
@@ -1877,6 +2818,18 @@
         },
         "created_at": {
           "type": "string"
+        },
+        "icon": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "icon_color": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "id": {
           "type": "string"
@@ -2218,6 +3171,62 @@
           "type": "object"
         }
       ]
+    },
+    "ExternalResource": {
+      "properties": {
+        "account_id": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "metadata": true,
+        "provider": {
+          "type": "string"
+        },
+        "resource_id": {
+          "type": "string"
+        },
+        "resource_type": {
+          "type": "string"
+        },
+        "updated_at": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "provider",
+        "account_id",
+        "resource_type",
+        "resource_id",
+        "metadata",
+        "created_at",
+        "updated_at"
+      ],
+      "type": "object"
+    },
+    "ExternalResourceResult": {
+      "properties": {
+        "changed": {
+          "type": "boolean"
+        },
+        "entity": {
+          "$ref": "#/$defs/Entity"
+        },
+        "resource": {
+          "$ref": "#/$defs/ExternalResource"
+        }
+      },
+      "required": [
+        "resource",
+        "entity",
+        "changed"
+      ],
+      "type": "object"
     },
     "ExtractionConfig": {
       "additionalProperties": false,
@@ -2808,6 +3817,73 @@
       ],
       "type": "object"
     },
+    "GoalActivitySnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "at": {
+          "type": "string"
+        },
+        "revisions": {
+          "additionalProperties": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "at",
+        "revisions"
+      ],
+      "type": "object"
+    },
+    "GoalFields": {
+      "additionalProperties": false,
+      "properties": {
+        "achieved_on": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "activity_snapshot": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GoalActivitySnapshot"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "goal_set": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/GoalState",
+          "default": "dream"
+        },
+        "target_deadline": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "GoalState": {
+      "enum": [
+        "active",
+        "dream",
+        "achieved"
+      ],
+      "type": "string"
+    },
     "HistorySummary": {
       "additionalProperties": false,
       "properties": {
@@ -2878,6 +3954,16 @@
               "type": "null"
             }
           ]
+        },
+        "related_entity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EntityRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -2928,6 +4014,12 @@
     },
     "HomeMetadata": {
       "properties": {
+        "birthday_occurrence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "classification": {
           "type": [
             "string",
@@ -2935,6 +4027,28 @@
           ]
         },
         "due_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "favorite": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "goal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GoalFields"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "goal_activity_at": {
           "type": [
             "string",
             "null"
@@ -2952,6 +4066,38 @@
           },
           "type": "array"
         },
+        "milestone": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MilestoneFields"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "note_library": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "note_type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "person": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PersonFields"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "planned_date": {
           "type": [
             "string",
@@ -2961,6 +4107,25 @@
         "priority": {
           "type": [
             "string",
+            "null"
+          ]
+        },
+        "project_end_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_updated_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_updated_days_ago": {
+          "format": "int64",
+          "type": [
+            "integer",
             "null"
           ]
         },
@@ -3055,6 +4220,12 @@
             "null"
           ]
         },
+        "goal_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "limit": {
           "format": "uint32",
           "minimum": 0,
@@ -3074,6 +4245,46 @@
     },
     "HomeSummary": {
       "oneOf": [
+        {
+          "properties": {
+            "available": {
+              "type": "boolean"
+            },
+            "done": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "goal",
+              "type": "string"
+            },
+            "progress_tenths": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "total": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "available"
+          ],
+          "type": "object"
+        },
         {
           "properties": {
             "available": {
@@ -3108,6 +4319,14 @@
               ]
             },
             "progress_percent": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "progress_tenths": {
               "format": "uint32",
               "minimum": 0,
               "type": [
@@ -3172,17 +4391,45 @@
         "tasks_inbox",
         "tasks_all",
         "tasks_done",
+        "tasks_week",
+        "tasks_month",
+        "tasks_scheduled",
+        "tasks_no_due",
+        "tasks_active_projects",
+        "tasks_projects_in_progress",
         "notes_all",
         "notes_inbox",
+        "notes_library",
+        "notes_favorites",
+        "notes_clips",
+        "notes_voice",
+        "notes_journal",
+        "notes_meetings",
         "projects_active",
         "projects_planned",
         "projects_board",
+        "projects_deadlines",
+        "projects_completed",
+        "projects_on_hold",
+        "projects_by_tag",
+        "projects_by_people",
         "tags_recent",
+        "tags_favorites",
         "tags_alphabetical",
         "tags_types",
+        "goals_activity",
+        "goals_deadline",
+        "goals_by_tag",
+        "goals_achieved",
+        "milestones_completed",
+        "milestones_all",
         "people_contacts",
         "people_new",
-        "people_updated"
+        "people_updated",
+        "people_check_ins",
+        "people_birthdays",
+        "people_pipeline",
+        "people_active_projects"
       ],
       "type": "string"
     },
@@ -3233,8 +4480,12 @@
       "enum": [
         "utf8_text",
         "pdf_text",
+        "pdfium_text",
+        "paddle_ocr",
         "xlsx_cells",
-        "image_ocr"
+        "image_ocr",
+        "pdfkit_text",
+        "pdf_ocr"
       ],
       "type": "string"
     },
@@ -3338,6 +4589,43 @@
       ],
       "type": "object"
     },
+    "LinkExternalResource": {
+      "additionalProperties": false,
+      "properties": {
+        "account_id": {
+          "type": "string"
+        },
+        "entity_id": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "metadata": {
+          "default": null
+        },
+        "provider": {
+          "type": "string"
+        },
+        "resource_id": {
+          "type": "string"
+        },
+        "resource_type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "entity_id",
+        "expected_revision",
+        "provider",
+        "account_id",
+        "resource_type",
+        "resource_id"
+      ],
+      "type": "object"
+    },
     "ListChanges": {
       "additionalProperties": false,
       "properties": {
@@ -3428,6 +4716,32 @@
           ]
         }
       },
+      "type": "object"
+    },
+    "ListExternalResources": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "entity_id": {
+          "type": "string"
+        },
+        "limit": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "entity_id"
+      ],
       "type": "object"
     },
     "ListExtraction": {
@@ -3546,15 +4860,149 @@
       ],
       "type": "string"
     },
-    "NoteFields": {
+    "MilestoneFields": {
       "additionalProperties": false,
       "properties": {
-        "inbox": {
-          "default": true,
-          "type": "boolean"
+        "completed_on": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "goal_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "target_deadline": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "type": "object"
+    },
+    "NoteFields": {
+      "additionalProperties": false,
+      "properties": {
+        "favorite": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "goal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GoalFields"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "icon": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "icon_color": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "inbox": {
+          "default": true,
+          "type": "boolean"
+        },
+        "milestone": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MilestoneFields"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "note_type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NoteType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NoteSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "NoteSource": {
+      "additionalProperties": false,
+      "properties": {
+        "archived": {
+          "default": false,
+          "type": "boolean"
+        },
+        "collection": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "provider": {
+          "type": "string"
+        },
+        "record_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "updated_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "provider",
+        "collection"
+      ],
+      "type": "object"
+    },
+    "NoteType": {
+      "enum": [
+        "reference",
+        "plan",
+        "web_clip",
+        "voice",
+        "journal",
+        "meeting",
+        "topic_research",
+        "idea",
+        "lecture"
+      ],
+      "type": "string"
     },
     "NumberStyle": {
       "additionalProperties": false,
@@ -3825,6 +5273,91 @@
           "additionalProperties": false,
           "properties": {
             "input": {
+              "$ref": "#/$defs/AgentAskInput"
+            },
+            "operation": {
+              "const": "agent.ask",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/AgentCancelInput"
+            },
+            "operation": {
+              "const": "agent.cancel",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/AgentTraceInput"
+            },
+            "operation": {
+              "const": "agent.trace",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/EmbeddingIndexInput"
+            },
+            "operation": {
+              "const": "embedding.index",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/RetrievalInput"
+            },
+            "operation": {
+              "const": "retrieval.search",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
               "$ref": "#/$defs/AttachmentIndexInput"
             },
             "operation": {
@@ -4033,6 +5566,91 @@
             },
             "operation": {
               "const": "extraction.ocr_regions",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ReadPdfOcrRegions"
+            },
+            "operation": {
+              "const": "extraction.pdf_ocr_regions",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ReadPdfOcrTable"
+            },
+            "operation": {
+              "const": "extraction.pdf_ocr_table",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ReadXlsxRange"
+            },
+            "operation": {
+              "const": "extraction.xlsx_range",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ReadPdfStructure"
+            },
+            "operation": {
+              "const": "extraction.pdf_structure",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ReadPdfkitPages"
+            },
+            "operation": {
+              "const": "extraction.pdfkit_pages",
               "type": "string"
             }
           },
@@ -4607,6 +6225,57 @@
           "additionalProperties": false,
           "properties": {
             "input": {
+              "$ref": "#/$defs/LinkExternalResource"
+            },
+            "operation": {
+              "const": "external.link",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/UnlinkExternalResource"
+            },
+            "operation": {
+              "const": "external.unlink",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/ListExternalResources"
+            },
+            "operation": {
+              "const": "external.list",
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "input"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
               "$ref": "#/$defs/ListChanges"
             },
             "operation": {
@@ -4864,6 +6533,55 @@
       ],
       "type": "object"
     },
+    "Page8": {
+      "additionalProperties": false,
+      "properties": {
+        "number": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "status": {
+          "$ref": "#/$defs/PageStatus"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "number",
+        "status",
+        "text"
+      ],
+      "type": "object"
+    },
+    "Page9": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ExternalResource"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "type": "object"
+    },
+    "PageStatus": {
+      "enum": [
+        "text",
+        "no_text"
+      ],
+      "type": "string"
+    },
     "PdfFragment": {
       "additionalProperties": false,
       "properties": {
@@ -4999,6 +6717,359 @@
       ],
       "type": "object"
     },
+    "PdfOcrManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "page_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "pages": {
+          "items": {
+            "$ref": "#/$defs/PdfOcrPageDescriptor"
+          },
+          "type": "array"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "raster_profile": {
+          "type": "string"
+        },
+        "region_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "representation_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "representation_sha256": {
+          "type": "string"
+        },
+        "source_sha256": {
+          "type": "string"
+        },
+        "text_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "version": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version",
+        "profile",
+        "raster_profile",
+        "source_sha256",
+        "representation_sha256",
+        "representation_bytes",
+        "page_count",
+        "region_count",
+        "text_bytes",
+        "pages"
+      ],
+      "type": "object"
+    },
+    "PdfOcrPageDescriptor": {
+      "additionalProperties": false,
+      "properties": {
+        "coordinate_space": {
+          "type": "string"
+        },
+        "engine": {
+          "$ref": "#/$defs/OcrEngine"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "raster": {
+          "$ref": "#/$defs/RasterIdentity"
+        },
+        "region_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "text_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "raster",
+        "engine",
+        "coordinate_space",
+        "limitations",
+        "region_count",
+        "text_bytes"
+      ],
+      "type": "object"
+    },
+    "PdfOcrRegion": {
+      "additionalProperties": false,
+      "properties": {
+        "bbox": {
+          "$ref": "#/$defs/OcrBoundingBox"
+        },
+        "confidence": {
+          "type": "string"
+        },
+        "ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "page_number": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "region_ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ordinal",
+        "page_number",
+        "region_ordinal",
+        "text",
+        "confidence",
+        "bbox"
+      ],
+      "type": "object"
+    },
+    "PdfOcrRegionPage": {
+      "additionalProperties": false,
+      "properties": {
+        "covers_generation": {
+          "type": "boolean"
+        },
+        "generation": {
+          "$ref": "#/$defs/ExtractionGeneration"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/PdfOcrRegion"
+          },
+          "type": "array"
+        },
+        "job_id": {
+          "type": "string"
+        },
+        "manifest": {
+          "$ref": "#/$defs/PdfOcrManifest"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "result_from_previous_attempt": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "job_id",
+        "generation",
+        "result_from_previous_attempt",
+        "manifest",
+        "items",
+        "covers_generation"
+      ],
+      "type": "object"
+    },
+    "PdfOcrTableCell": {
+      "additionalProperties": false,
+      "properties": {
+        "column": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "regions": {
+          "items": {
+            "$ref": "#/$defs/PdfOcrRegion"
+          },
+          "type": "array"
+        },
+        "row": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ordinal",
+        "row",
+        "column",
+        "regions"
+      ],
+      "type": "object"
+    },
+    "PdfOcrTableOutside": {
+      "additionalProperties": false,
+      "properties": {
+        "ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "page_number": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "region_ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ordinal",
+        "page_number",
+        "region_ordinal"
+      ],
+      "type": "object"
+    },
+    "PdfOcrTablePage": {
+      "additionalProperties": false,
+      "properties": {
+        "cell_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "column_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "covers_generation": {
+          "type": "boolean"
+        },
+        "covers_table": {
+          "type": "boolean"
+        },
+        "generation": {
+          "$ref": "#/$defs/ExtractionGeneration"
+        },
+        "header_row": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/PdfOcrTableCell"
+          },
+          "type": "array"
+        },
+        "job_id": {
+          "type": "string"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "manifest": {
+          "$ref": "#/$defs/PdfOcrManifest"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "outside": {
+          "items": {
+            "$ref": "#/$defs/PdfOcrTableOutside"
+          },
+          "type": "array"
+        },
+        "page": {
+          "$ref": "#/$defs/PdfOcrPageDescriptor"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "result_from_previous_attempt": {
+          "type": "boolean"
+        },
+        "row_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "x_edges": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "y_max": {
+          "type": "string"
+        },
+        "y_min": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "job_id",
+        "generation",
+        "result_from_previous_attempt",
+        "manifest",
+        "page",
+        "profile",
+        "x_edges",
+        "y_min",
+        "y_max",
+        "row_count",
+        "column_count",
+        "cell_count",
+        "outside",
+        "limitations",
+        "items",
+        "covers_table",
+        "covers_generation"
+      ],
+      "type": "object"
+    },
+    "PdfOcrTextProjection": {
+      "enum": [
+        "pdf_ocr_region_text_v1"
+      ],
+      "type": "string"
+    },
     "PdfPageDescriptor": {
       "additionalProperties": false,
       "properties": {
@@ -5043,6 +7114,183 @@
       ],
       "type": "string"
     },
+    "PdfStructure": {
+      "additionalProperties": false,
+      "properties": {
+        "pages": {
+          "items": {
+            "$ref": "#/$defs/PdfStructurePage"
+          },
+          "type": "array"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version",
+        "pages"
+      ],
+      "type": "object"
+    },
+    "PdfStructureManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "type": "string"
+        },
+        "page_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "source_sha256": {
+          "type": "string"
+        },
+        "structure_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "structure_sha256": {
+          "type": "string"
+        },
+        "table_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version",
+        "format",
+        "source_sha256",
+        "structure_sha256",
+        "structure_bytes",
+        "page_count",
+        "table_count"
+      ],
+      "type": "object"
+    },
+    "PdfStructurePage": {
+      "additionalProperties": false,
+      "properties": {
+        "page_number": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "tables": {
+          "items": {
+            "$ref": "#/$defs/PdfTable"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "page_number",
+        "tables"
+      ],
+      "type": "object"
+    },
+    "PdfStructureResult": {
+      "additionalProperties": false,
+      "properties": {
+        "generation": {
+          "$ref": "#/$defs/ExtractionGeneration"
+        },
+        "job_id": {
+          "type": "string"
+        },
+        "manifest": {
+          "$ref": "#/$defs/PdfStructureManifest"
+        },
+        "result_from_previous_attempt": {
+          "type": "boolean"
+        },
+        "structure": {
+          "$ref": "#/$defs/PdfStructure"
+        }
+      },
+      "required": [
+        "job_id",
+        "generation",
+        "result_from_previous_attempt",
+        "manifest",
+        "structure"
+      ],
+      "type": "object"
+    },
+    "PdfTable": {
+      "additionalProperties": false,
+      "properties": {
+        "cells": {
+          "items": {
+            "$ref": "#/$defs/PdfTableCell"
+          },
+          "type": "array"
+        },
+        "columns": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "rows": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "rows",
+        "columns",
+        "cells"
+      ],
+      "type": "object"
+    },
+    "PdfTableCell": {
+      "additionalProperties": false,
+      "properties": {
+        "col_span": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "column": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "row": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "row_span": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "row",
+        "column",
+        "row_span",
+        "col_span",
+        "text"
+      ],
+      "type": "object"
+    },
     "PdfTextLocator": {
       "additionalProperties": false,
       "properties": {
@@ -5080,6 +7328,209 @@
       ],
       "type": "string"
     },
+    "PdfkitManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "engine": {
+          "$ref": "#/$defs/Engine"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "page_count": {
+          "format": "uint32",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "representation_bytes": {
+          "format": "uint32",
+          "maximum": 1048576,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "representation_sha256": {
+          "type": "string"
+        },
+        "text_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version",
+        "profile",
+        "representation_sha256",
+        "representation_bytes",
+        "engine",
+        "limitations",
+        "page_count",
+        "text_bytes"
+      ],
+      "type": "object"
+    },
+    "PdfkitPagePage": {
+      "additionalProperties": false,
+      "properties": {
+        "covers_generation": {
+          "type": "boolean"
+        },
+        "generation": {
+          "$ref": "#/$defs/ExtractionGeneration"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/Page8"
+          },
+          "type": "array"
+        },
+        "job_id": {
+          "type": "string"
+        },
+        "manifest": {
+          "$ref": "#/$defs/PdfkitManifest"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "result_from_previous_attempt": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "job_id",
+        "generation",
+        "result_from_previous_attempt",
+        "manifest",
+        "items",
+        "covers_generation"
+      ],
+      "type": "object"
+    },
+    "PdfkitTextProjection": {
+      "enum": [
+        "pdfkit_page_text_v1"
+      ],
+      "type": "string"
+    },
+    "PersonFields": {
+      "additionalProperties": false,
+      "properties": {
+        "birthday": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "check_in": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "company": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "gallery_order": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "icon": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "icon_color": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "last_check_in": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "photo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "photo_position": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "pipeline_status": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PersonPipelineStatus"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "relationships": {
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NoteSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "PersonPipelineStatus": {
+      "enum": [
+        "prospect",
+        "contacted",
+        "negotiating",
+        "rejected",
+        "closed"
+      ],
+      "type": "string"
+    },
     "Priority": {
       "enum": [
         "low",
@@ -5091,7 +7542,27 @@
     "ProjectFields": {
       "additionalProperties": false,
       "properties": {
+        "board_order": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "end_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "icon": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "icon_color": {
           "type": [
             "string",
             "null"
@@ -5100,6 +7571,16 @@
         "purpose": {
           "default": "",
           "type": "string"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NoteSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "start_date": {
           "type": [
@@ -5247,6 +7728,78 @@
       ],
       "type": "object"
     },
+    "RasterIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "box_rect": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": "array"
+        },
+        "height": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "os_build": {
+          "type": "string"
+        },
+        "os_version": {
+          "type": "string"
+        },
+        "page_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "page_number": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "png_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "png_sha256": {
+          "type": "string"
+        },
+        "rotation": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "total_pixels": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "width": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "page_count",
+        "page_number",
+        "total_pixels",
+        "box_rect",
+        "rotation",
+        "width",
+        "height",
+        "png_sha256",
+        "png_bytes",
+        "os_version",
+        "os_build"
+      ],
+      "type": "object"
+    },
     "ReadFragments": {
       "additionalProperties": false,
       "properties": {
@@ -5327,6 +7880,131 @@
       ],
       "type": "object"
     },
+    "ReadPdfOcrRegions": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "limit": {
+          "format": "uint32",
+          "maximum": 64,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "ReadPdfOcrTable": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "header_row": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "limit": {
+          "format": "uint32",
+          "maximum": 64,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "page_number": {
+          "format": "uint32",
+          "maximum": 20,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "x_edges": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 33,
+          "minItems": 2,
+          "type": "array"
+        },
+        "y_max": {
+          "type": "string"
+        },
+        "y_min": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "page_number",
+        "x_edges",
+        "y_min",
+        "y_max"
+      ],
+      "type": "object"
+    },
+    "ReadPdfStructure": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "ReadPdfkitPages": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "limit": {
+          "format": "uint32",
+          "maximum": 64,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
     "ReadXlsxCells": {
       "additionalProperties": false,
       "properties": {
@@ -5351,6 +8029,54 @@
       },
       "required": [
         "id"
+      ],
+      "type": "object"
+    },
+    "ReadXlsxRange": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "header_row": {
+          "format": "uint32",
+          "maximum": 1048576,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "limit": {
+          "format": "uint32",
+          "maximum": 64,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "range": {
+          "maxLength": 21,
+          "minLength": 2,
+          "type": "string"
+        },
+        "sheet_id": {
+          "format": "uint32",
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "sheet_id",
+        "range"
       ],
       "type": "object"
     },
@@ -5550,6 +8276,283 @@
         "destination"
       ],
       "type": "object"
+    },
+    "RetrievalCoverage": {
+      "additionalProperties": false,
+      "properties": {
+        "deduplicated": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "lexical_indexed_generations": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "semantic_chunks": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "semantic_generation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "semantic_stale_chunks": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "stale_excluded": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "semantic_chunks",
+        "semantic_stale_chunks",
+        "lexical_indexed_generations",
+        "stale_excluded",
+        "deduplicated"
+      ],
+      "type": "object"
+    },
+    "RetrievalHit": {
+      "additionalProperties": false,
+      "properties": {
+        "attachment_id": {
+          "type": "string"
+        },
+        "extractor": {
+          "type": "string"
+        },
+        "extractor_version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "fragment_ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "fused_score": {
+          "format": "double",
+          "type": "number"
+        },
+        "generation_id": {
+          "type": "string"
+        },
+        "job_id": {
+          "type": "string"
+        },
+        "lexical_rank": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "lexical_score": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "locator": {
+          "$ref": "#/$defs/AttachmentTextLocator"
+        },
+        "semantic_rank": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "semantic_score": {
+          "format": "float",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "source_state": {
+          "$ref": "#/$defs/RetrievalSourceState"
+        },
+        "text": {
+          "type": "string"
+        },
+        "text_sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "job_id",
+        "attachment_id",
+        "generation_id",
+        "extractor",
+        "extractor_version",
+        "fragment_ordinal",
+        "text",
+        "text_sha256",
+        "locator",
+        "source_state",
+        "fused_score"
+      ],
+      "type": "object"
+    },
+    "RetrievalInput": {
+      "additionalProperties": false,
+      "properties": {
+        "attachment_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "budget_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "extractor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/IndexedExtractor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "include_stale": {
+          "default": false,
+          "type": "boolean"
+        },
+        "job_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RetrievalMode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "query": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "type": "object"
+    },
+    "RetrievalMode": {
+      "enum": [
+        "hybrid",
+        "semantic",
+        "lexical"
+      ],
+      "type": "string"
+    },
+    "RetrievalPage": {
+      "additionalProperties": false,
+      "properties": {
+        "budget_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "budget_exhausted": {
+          "type": "boolean"
+        },
+        "coverage": {
+          "$ref": "#/$defs/RetrievalCoverage"
+        },
+        "degraded": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/RetrievalHit"
+          },
+          "type": "array"
+        },
+        "mode_requested": {
+          "$ref": "#/$defs/RetrievalMode"
+        },
+        "mode_used": {
+          "$ref": "#/$defs/RetrievalMode"
+        },
+        "profile_fingerprint": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "query": {
+          "type": "string"
+        },
+        "used_bytes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version",
+        "query",
+        "mode_requested",
+        "mode_used",
+        "degraded",
+        "coverage",
+        "items",
+        "budget_bytes",
+        "used_bytes",
+        "budget_exhausted"
+      ],
+      "type": "object"
+    },
+    "RetrievalSourceState": {
+      "enum": [
+        "current",
+        "stale",
+        "unknown"
+      ],
+      "type": "string"
     },
     "RevisionInput": {
       "additionalProperties": false,
@@ -5793,11 +8796,180 @@
       ],
       "type": "object"
     },
+    "SemanticCoverage": {
+      "additionalProperties": false,
+      "properties": {
+        "active_chunks": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "active_sources": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "active_text_bytes": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "stale_chunks": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "stale_sources": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "unindexed_supported_generations": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "active_sources",
+        "active_chunks",
+        "active_text_bytes",
+        "stale_sources",
+        "stale_chunks",
+        "unindexed_supported_generations"
+      ],
+      "type": "object"
+    },
+    "SemanticGenerationInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "activated_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "chunk_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "dimension": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fingerprint": {
+          "type": "string"
+        },
+        "generation_id": {
+          "type": "string"
+        },
+        "profile": {
+          "$ref": "#/$defs/EmbeddingProfile"
+        },
+        "retired_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "source_digest": {
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/SemanticGenerationState"
+        },
+        "text_bytes": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "updated_at": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "generation_id",
+        "fingerprint",
+        "profile",
+        "state",
+        "dimension",
+        "endpoint",
+        "source_digest",
+        "source_count",
+        "chunk_count",
+        "text_bytes",
+        "created_at",
+        "updated_at"
+      ],
+      "type": "object"
+    },
+    "SemanticGenerationState": {
+      "enum": [
+        "building",
+        "active",
+        "retired",
+        "failed"
+      ],
+      "type": "string"
+    },
     "TagFields": {
       "additionalProperties": false,
       "properties": {
         "classification": {
           "$ref": "#/$defs/Classification"
+        },
+        "favorite": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "icon": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "icon_color": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NoteSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_activity_at": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -5809,6 +8981,18 @@
       "additionalProperties": false,
       "properties": {
         "due_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "icon": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "icon_color": {
           "type": [
             "string",
             "null"
@@ -5928,6 +9112,28 @@
         "hard_break"
       ],
       "type": "string"
+    },
+    "UnlinkExternalResource": {
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "entity_id",
+        "expected_revision",
+        "id"
+      ],
+      "type": "object"
     },
     "UpdateEntity": {
       "additionalProperties": false,
@@ -6339,6 +9545,108 @@
       ],
       "type": "object"
     },
+    "XlsxRangeHeader": {
+      "additionalProperties": false,
+      "properties": {
+        "column": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "item": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/XlsxCellItem"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reference": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "column",
+        "reference"
+      ],
+      "type": "object"
+    },
+    "XlsxRangePage": {
+      "additionalProperties": false,
+      "properties": {
+        "covers_generation": {
+          "type": "boolean"
+        },
+        "covers_range": {
+          "type": "boolean"
+        },
+        "generation": {
+          "$ref": "#/$defs/ExtractionGeneration"
+        },
+        "header_row": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "headers": {
+          "items": {
+            "$ref": "#/$defs/XlsxRangeHeader"
+          },
+          "type": "array"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/XlsxCellItem"
+          },
+          "type": "array"
+        },
+        "job_id": {
+          "type": "string"
+        },
+        "manifest": {
+          "$ref": "#/$defs/XlsxManifest"
+        },
+        "matching_cell_count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "range": {
+          "type": "string"
+        },
+        "result_from_previous_attempt": {
+          "type": "boolean"
+        },
+        "sheet": {
+          "$ref": "#/$defs/XlsxSheetDescriptor"
+        }
+      },
+      "required": [
+        "job_id",
+        "generation",
+        "result_from_previous_attempt",
+        "manifest",
+        "sheet",
+        "range",
+        "headers",
+        "matching_cell_count",
+        "items",
+        "covers_range",
+        "covers_generation"
+      ],
+      "type": "object"
+    },
     "XlsxSheetDescriptor": {
       "additionalProperties": false,
       "properties": {
@@ -6407,6 +9715,15 @@
   },
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "properties": {
+    "agent_run": {
+      "$ref": "#/$defs/AgentRunResult"
+    },
+    "agent_trace": {
+      "$ref": "#/$defs/AgentTrace"
+    },
+    "agent_traces": {
+      "$ref": "#/$defs/AgentTracePage"
+    },
     "attachment": {
       "$ref": "#/$defs/Attachment"
     },
@@ -6443,6 +9760,12 @@
     "database": {
       "$ref": "#/$defs/DatabasePage"
     },
+    "embedding_index": {
+      "$ref": "#/$defs/EmbeddingIndexResult"
+    },
+    "embedding_status": {
+      "$ref": "#/$defs/EmbeddingStatus"
+    },
     "enqueued_extraction": {
       "$ref": "#/$defs/EnqueuedExtraction"
     },
@@ -6454,6 +9777,15 @@
     },
     "export": {
       "$ref": "#/$defs/ExportResult"
+    },
+    "external_resource": {
+      "$ref": "#/$defs/ExternalResource"
+    },
+    "external_resource_result": {
+      "$ref": "#/$defs/ExternalResourceResult"
+    },
+    "external_resources": {
+      "$ref": "#/$defs/Page9"
     },
     "extraction_control": {
       "$ref": "#/$defs/ExtractionControl"
@@ -6482,6 +9814,18 @@
     "pdf_fragments": {
       "$ref": "#/$defs/PdfFragmentPage"
     },
+    "pdf_ocr_regions": {
+      "$ref": "#/$defs/PdfOcrRegionPage"
+    },
+    "pdf_ocr_table": {
+      "$ref": "#/$defs/PdfOcrTablePage"
+    },
+    "pdf_structure": {
+      "$ref": "#/$defs/PdfStructureResult"
+    },
+    "pdfkit_pages": {
+      "$ref": "#/$defs/PdfkitPagePage"
+    },
     "project_fields": {
       "$ref": "#/$defs/ProjectFields"
     },
@@ -6494,8 +9838,20 @@
     "read_pdf_fragments": {
       "$ref": "#/$defs/ReadPdfFragments"
     },
+    "read_pdf_ocr_regions": {
+      "$ref": "#/$defs/ReadPdfOcrRegions"
+    },
+    "read_pdf_ocr_table": {
+      "$ref": "#/$defs/ReadPdfOcrTable"
+    },
+    "read_pdfkit_pages": {
+      "$ref": "#/$defs/ReadPdfkitPages"
+    },
     "read_xlsx_cells": {
       "$ref": "#/$defs/ReadXlsxCells"
+    },
+    "read_xlsx_range": {
+      "$ref": "#/$defs/ReadXlsxRange"
     },
     "record": {
       "$ref": "#/$defs/RecordData"
@@ -6514,6 +9870,9 @@
     },
     "response": {
       "$ref": "#/$defs/Response"
+    },
+    "retrieval": {
+      "$ref": "#/$defs/RetrievalPage"
     },
     "search": {
       "$ref": "#/$defs/SearchPage"
@@ -6544,6 +9903,9 @@
     },
     "xlsx_cells": {
       "$ref": "#/$defs/XlsxCellPage"
+    },
+    "xlsx_range": {
+      "$ref": "#/$defs/XlsxRangePage"
     }
   },
   "required": [
@@ -6592,7 +9954,25 @@
     "pdf_fragments",
     "read_pdf_fragments",
     "attachment_index",
-    "attachment_search"
+    "attachment_search",
+    "read_pdfkit_pages",
+    "pdfkit_pages",
+    "read_pdf_ocr_regions",
+    "pdf_ocr_regions",
+    "read_xlsx_range",
+    "xlsx_range",
+    "read_pdf_ocr_table",
+    "pdf_ocr_table",
+    "pdf_structure",
+    "embedding_index",
+    "embedding_status",
+    "retrieval",
+    "agent_run",
+    "agent_trace",
+    "agent_traces",
+    "external_resource",
+    "external_resources",
+    "external_resource_result"
   ],
   "title": "Contract",
   "type": "object"

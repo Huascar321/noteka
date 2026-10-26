@@ -30,15 +30,15 @@ La ruta canónica, identidad y política se fijan al iniciar. No son DTOs ni se 
 
 | Modo | Herramientas | Acciones |
 | --- | --- | --- |
-| Predeterminado | 24 | Lectura, preview, control/index sólo get |
-| allow-write | 44 | Añade 20 herramientas de mutación y control set/index put/reset |
-| allow-write + allow-run | 45 | Añade únicamente extraction.run |
+| Predeterminado | 34 | Lectura, preview, control/index sólo get |
+| allow-write | 57 | Añade 23 herramientas de mutación y control set/index put/reset |
+| allow-write + allow-run | 59 | Añade únicamente agent.ask y extraction.run |
 
-Lectura: `changes.list/preview`, `collection.get/list`, `database.query`, `entity.get/list`, `extraction.control/fragments/get/index/list/pdf_fragments/search/xlsx_cells`, `home.query`, `operations.describe`, `record.get/inverse`, `relation.list`, `search.query`, `template.get/list`, `workflow.query`. Celdas XLSX completas, números léxicos, fórmulas/cachés sin recálculo y metadatos; index/search trabajan sobre campos persistidos seleccionados, no offsets del ZIP. Put/reset requieren allow-write pero no allow-run; extraer sí necesita ambos permisos.
+Lectura: `changes.list/preview`, `collection.get/list`, `database.query`, `entity.get/list`, `external.list`, `extraction.control/fragments/get/index/list/pdf_fragments/search/xlsx_cells`, `home.query`, `operations.describe`, `record.get/inverse`, `relation.list`, `search.query`, `template.get/list`, `workflow.query`. Celdas XLSX completas, números léxicos, fórmulas/cachés sin recálculo y metadatos; index/search trabajan sobre campos persistidos seleccionados, no offsets del ZIP. Put/reset requieren allow-write pero no allow-run; extraer sí necesita ambos permisos.
 
-Escritura añadida: `changes.apply`, `collection.create`, `entity.archive/create/restore/update`, `extraction.cancel/enqueue/retry`, `formula.set`, `property.define`, `record.attach/create/update`, `relation.add/remove`, `search.rebuild`, `template.instantiate/save`, `view.save`. `changes.preview` no concede apply ni amplía las nueve mutaciones y database.query de la whitelist de lotes.
+Escritura añadida: `changes.apply`, `collection.create`, `entity.archive/create/restore/update`, `external.link/unlink`, `extraction.cancel/enqueue/retry`, `formula.set`, `property.define`, `record.attach/create/update`, `relation.add/remove`, `search.rebuild`, `template.instantiate/save`, `view.save`. `changes.preview` no concede apply ni amplía las nueve mutaciones y database.query de la whitelist de lotes.
 
-Siempre excluidas: `workspace.create/open/backup/restore`, `attachment.import/read`, `document.export`. Hay **52 operaciones del CLI/core**, con los 51 contratos previos conservados. Adjuntos sintéticos se preparan/importan por CLI; MCP no ofrece rutas arbitrarias, binarios base64 ni exportación. Denegación conocida: envelope v1 `validation_error`, `details.reason=permission_denied`. Nombre desconocido: error MCP. Annotations son hints, no permisos.
+Siempre excluidas: `workspace.create/open/backup/restore`, `attachment.import/read`, `document.export`. Hay **66 operaciones del CLI/core**, con los contratos previos conservados y las asociaciones externas añadidas en SQLite20. Adjuntos sintéticos se preparan/importan por CLI; MCP no ofrece rutas arbitrarias, binarios base64 ni exportación. Denegación conocida: envelope v1 `validation_error`, `details.reason=permission_denied`. Nombre desconocido: error MCP. Annotations son hints, no permisos.
 
 ## Discovery y contratos
 

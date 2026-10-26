@@ -95,7 +95,7 @@ def main():
             before_query = call(old, ws, 'extraction', 'search', dict(query='original'))
             before = snapshot(ws)
             originals = files(ws / 'attachments')
-            assert call(new, ws, 'workspace', 'open', {})['schema_version'] == 13
+            assert call(new, ws, 'workspace', 'open', {})['schema_version'] == 15
             after = snapshot(ws)
             for name, rows in before.items():
                 if name != 'workspace_meta':

@@ -51,7 +51,7 @@ La interfaz SHALL buscar notas/entidades y adjuntos en ámbitos explícitos sepa
 
 ### Requirement: Selección explícita de generaciones extraídas
 
-El sistema SHALL indexar mediante `extraction.index put` una generación confirmada UTF-8, PDF o XLSX compatible por llamada, con trabajo y generación esperada. MUST verificar fuente, configuración y fragmentos/proyección antes de publicarla. Importar, extraer, abrir, migrar y buscar no seleccionan generaciones automáticamente; el índice empieza vacío.
+El sistema SHALL indexar mediante `extraction.index put` una generación confirmada UTF-8, PDF, XLSX, OCR o PDFKit compatible por llamada, con trabajo y generación esperada. MUST verificar fuente, configuración y fragmentos/proyección antes de publicarla. Importar, extraer, abrir, migrar y buscar no seleccionan generaciones automáticamente; el índice empieza vacío.
 
 #### Scenario: Extracción no implica indexación
 - **WHEN** se importa un adjunto y se confirma su extracción sin llamar a index put
@@ -103,7 +103,7 @@ El sistema SHALL buscar términos literales en fragmentos indexados, con filtros
 
 ### Requirement: Hits con fragmento canónico y localizador tipado
 
-Cada hit SHALL devolver trabajo, adjunto, generación, hash fuente, extractor/versión, hash de configuración, ordinal, texto canónico y localizador tipado. MUST verificar la fuente de los hits y distinguir bytes/líneas UTF-8, página/rango del texto PDF derivado y hoja/A1/celda/campo/rango del texto XLSX proyectado. Un resultado de un intento anterior se identifica; no se inventa una entidad propietaria, coordenada visual o cita OCR. La caché XLSX no se presenta como cálculo actualizado.
+Cada hit SHALL devolver trabajo, adjunto, generación, hash fuente, extractor/versión, hash de configuración, ordinal, texto canónico y localizador tipado. MUST validar la fuente y distinguir rangos/procedencia UTF-8, PDF/PDFKit, XLSX y OCR; identificar intentos previos sin inventar dueño, geometría o certeza OCR. PDFKit conserva perfil/motor/limitaciones; cachés XLSX no implican recálculo.
 
 #### Scenario: Evidencia literal
 - **WHEN** un hit corresponde a un fragmento UTF-8 con caracteres multibyte y saltos de línea
@@ -285,6 +285,10 @@ La interfaz SHALL distinguir bytes/líneas UTF-8, página y bytes del texto PDF 
 - **WHEN** se muestra un hit image_ocr_region_text, incluido un campo dividido o un resultado de intento previo
 - **THEN** texto, fuente, proyección, región, bbox/confianza decimales, marco orientado y rango derivado permanecen completos; se identifica inferencia falible y no se inventan bytes originales, nombre/propiedad de nota, certeza o cobertura universal
 
+#### Scenario: Página PDFKit con perfil real
+- **WHEN** se muestra un hit pdfkit_page_text de una página textual dividida
+- **THEN** muestra perfil/proyección, página, bytes totales/rango UTF-8 y motor/OS/build/limitaciones reales, sin tratarlo como PDF estricto, OCR, geometría o una tabla
+
 ### Requirement: Cobertura de adjuntos visible en escritorio
 
 Cada página SHALL mostrar la cobertura filtrada de generaciones seleccionadas, compatibles sin indexar, incompatibles y trabajos sin generación, con fragmentos/bytes, perfil/revisión y alcance de verificación. MUST declarar que cero hits no prueba ausencia en toda la base ni verificación de todos los originales.
@@ -376,3 +380,83 @@ Search individual y agrupada SHALL presentar OCR sólo de generaciones seleccion
 #### Scenario: Fuente sin seleccionar y error
 - **WHEN** existe OCR extraído sin put o cambia índice/fuente durante búsqueda/paginación
 - **THEN** la generación no seleccionada no produce hits y el error sigue las reglas del ámbito/grupo afectado, sin indexación, reparación o retry automáticos
+
+### Requirement: Evidencia PDFKit seleccionada en búsqueda individual y agrupada
+
+Search SHALL incluir páginas PDFKit sólo tras selección explícita, con texto/procedencia/localizador íntegros, filtro de extractor y grupos/cursores/cobertura existentes. MUST conservar contenido escapado, errores/lifetimes y buffers; consultar o inspeccionar no ejecuta extracción, lectura adicional, indexación o reparación.
+
+#### Scenario: Consulta mixta y páginas canónicas
+- **WHEN** coinciden notas y generaciones seleccionadas de los cinco formatos con texto Unicode o contenido activo
+- **THEN** Search mantiene motores/grupos separados y los hits PDFKit coinciden byte a byte con el rango del lector; sólo se muestra texto como datos, con límites del perfil y sin inferir dueño o scores conjuntos
+
+#### Scenario: Vacío sin selección y error parcial
+- **WHEN** hay PDFKit extraído sin seleccionar o falla/vencen sus criterios entre páginas
+- **THEN** el primero no aporta hits y la cobertura lo distingue; el error retira sólo la página/grupo afectado sin autoindexar, reintentar, mostrar evidencia vieja o convertirlo en ausencia universal
+
+### Requirement: Selección PDF OCR y localizadores inferidos
+
+El índice SHALL admitir pdf_ocr sólo mediante put con generación/revisión esperadas y proyectar texto de regiones en fragmentos<=4096 bytes UTF-8 sin cruzarlas. MUST conservar página, ordinal local/global, perfil/motor, raster/hash/dimensiones/rotación, bbox/confianza y rango derivado; no indexar JSON/metadatos ni cambiar hashes de los cinco formatos anteriores.
+
+#### Scenario: Vacío Unicode y selección sin helper
+- **WHEN** se selecciona un PDF OCR íntegro con regiones vacías o largas/Unicode y no hay helpers
+- **THEN** sólo texto reconocido no vacío aporta fragmentos, cuyos rangos reconstruyen las regiones; conserva páginas sin regiones en manifiesto y permite selección vacía sin afirmar ausencia visual
+
+#### Scenario: Integridad CAS y presupuestos
+- **WHEN** hay corrupción fuera de filtro/página, fuente de candidato alterada, CAS obsoleto, reemplazo o exceso512 fragmentos/1MiB por selección,8MiB global o2MiB por página
+- **THEN** falla completa o invalida selección/cursor conforme al núcleo; no omite validaciones ni purga/trunca fuentes, y mantiene query p95<=300ms/lock p95<=150ms
+
+### Requirement: Evidencia PDF OCR en búsqueda de escritorio
+
+Search individual/agrupada SHALL ofrecer pdf_ocr y presentar página/región/raster, texto/procedencia/localizador completos e inferencia falible, sin tratar bbox como offsets originales o confianza como certeza. MUST conservar filtros/grupos/cobertura/cursores/errores y contenido escapado, sin ejecutar extracción/indexación/lectura adicional ni modificar Home/buffers.
+
+#### Scenario: Lectura contrastable y páginas independientes
+- **WHEN** se buscan regiones seleccionadas y entidades, con paginación y contenido hostil
+- **THEN** los hits coinciden con rangos del lector real, los grupos conservan identidad/cobertura y texto se presenta como datos sin mezclar scores o cursores
+
+#### Scenario: Sin selección o error de un grupo
+- **WHEN** existe extracción sin put o falla/vencen criterios de adjuntos durante paginación
+- **THEN** la primera no aporta hits; el error retira sólo la evidencia afectada sin convertirlo en ausencia universal ni borrar el otro snapshot
+
+### Requirement: Índice de adjuntos para PDFium
+
+El índice derivado SHALL aceptar generaciones `pdfium_text` y validar su canónico con las mismas reglas de páginas/fragmentos que `pdf_text`. MUST conservar la procedencia `pdfium_text` y no mezclar sus postings con generaciones de otro extractor.
+
+#### Scenario: Indexar y buscar PDFium
+- **WHEN** se indexa una generación `pdfium_text` y se busca por un término de página
+- **THEN** el hit conserva extractor `pdfium_text`, página y rangos de bytes; los filtros y la verificación de fuente siguen funcionando
+
+#### Scenario: Generación alterada
+- **WHEN** cambia el original o el canónico PDFium
+- **THEN** la búsqueda falla de forma recuperable o marca la fuente obsoleta, sin devolver postings de otra generación
+
+### Requirement: Índice de adjuntos PaddleOCR
+
+El índice SHALL aceptar generaciones `paddle_ocr` y validar sus páginas/fragmentos con las mismas reglas PDF. MUST conservar el extractor y no mezclar postings con otras generaciones.
+
+#### Scenario: Indexar y buscar PaddleOCR
+- **WHEN** se indexa una generación `paddle_ocr` y se busca un término
+- **THEN** el hit conserva extractor `paddle_ocr`, página y rangos; los filtros y la verificación de fuente funcionan
+
+#### Scenario: Fuente alterada
+- **WHEN** cambia el original o el canónico
+- **THEN** la búsqueda falla de forma recuperable o marca obsoleto sin devolver otra generación
+
+### Requirement: Buscador contextual compartido del escritorio
+
+La barra de búsqueda y el botón de nueva pestaña SHALL abrir el mismo diálogo contextual con foco inicial, consulta local de notas/entidades, filtros compatibles, resultados navegables y vista previa de sólo lectura. MUST conservar la búsqueda avanzada de adjuntos y grupos mediante un acceso real, sin presentar búsqueda semántica o respuestas de IA que no se ejecutan.
+
+#### Scenario: Barra y nueva pestaña
+- **WHEN** se abre el buscador desde la barra o `+` y se elige una sección o entidad
+- **THEN** ambos usan el mismo diálogo y datos; desde la barra se abre en la pestaña actual con su guardia de edición, mientras desde `+` se abre en una pestaña nueva sin modificar la anterior
+
+#### Scenario: Consulta y vista previa vigentes
+- **WHEN** cambian consulta, filtros, resultado seleccionado o workspace antes de recibir una respuesta
+- **THEN** sólo se publican resultados y vista previa de la identidad vigente; el texto se muestra escapado, el fallo es explícito y ninguna lectura modifica datos ni índices
+
+#### Scenario: Teclado y recuperación de foco
+- **WHEN** se usa el atajo de búsqueda, flechas, Enter, modificador de nueva pestaña y Escape
+- **THEN** se puede seleccionar/abrir el resultado y cerrar el diálogo, el foco vuelve al control de origen y los buffers de las páginas permanecen intactos
+
+#### Scenario: Buscar en adjuntos y vistas secundarias
+- **WHEN** se solicita búsqueda avanzada o se localiza Archive, Inbox, My Day, Pending, Overdue, Active Projects, Areas, Resources o Collections
+- **THEN** se accede a la pantalla existente con sus operaciones, filtros y guardias, sin crear copias ni cambiar la semántica de fechas o estados

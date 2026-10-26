@@ -4,11 +4,375 @@ Fecha de referencia: **11 de octubre de 2026**, zona `America/La_Paz`.
 
 Este documento está escrito para una persona o IA que no participó de las conversaciones originales. Contiene el objetivo del producto, las decisiones tomadas, una arquitectura propuesta, requisitos, fases y criterios para continuar. Los chats son antecedentes; no hacen falta para ejecutar el plan.
 
-**Estado real al 17 de octubre:** fases 0–4, búsqueda textual, cola/UTF-8, [PDF textual acotado](verification-pdf-extraction.md), [búsqueda de adjuntos](attachment-search.md), MCP local, [extracción XLSX acotada](xlsx-extraction.md) y [búsqueda XLSX](xlsx-search.md) verificados y archivados. SQLite v13/API v1/53 tras la integración OCR de imágenes verificada; nueve mutaciones batchables y documentos v1/v2/v3 conservados, sin modelos ni proveedores. Comparación histórica exacta v11 no repetible tras perder el baseline, según [criterio alternativo autorizado](xlsx-search-evidence-recovery.md). **Home activo 9/17, sin archivar**; [verificación](verification-home.md): los 606 checks headless no acreditan aceptación nativa. [P95 búsqueda de notas histórica](search.md) 22,92 ms/10.000 notas. PDF amplio, OCR de PDF, ampliaciones Excel, embeddings/IA y resto de 5a pendientes. Desarrollo local autónomo autorizado; [revisiones](review-queue.md). UI headless: no pantalla sin autorización específica.
+**Paneles y portada al 26/10/2026:** `resize-workspace-panels` y
+`add-random-ascii-cover-scenes` implementados y verificados localmente. Menú y
+Side peek ajustables con mouse/teclado y memoria local, máximos 35%/65% de ventana.
+Side mayor a 35% excluye al menú; alternar los oculta conservando editor e
+historial. Movimiento reversible de 260ms y reducido inmediato. Indicador ahora
+de 24px con paso de 14px y marcas de 2px. ASCII alterna tiburones, koi
+naranja/blanco y medusas cian/violeta: inicio/orden aleatorios estables, 42s
+activos por escena y fundido de 1,4s. Render local propio, referencias atribuidas,
+pausas y repintado inmediato conservados. Build y 16 pruebas puras aprobados;
+71 checks de App, 12 combinaciones visuales y nueve muestras de fundido headless.
+Sin cambios de Rust/contratos/dependencias/datos ni aceptación nativa nueva.
+Deltas pendientes de sync/archivo; Meeting Notes sigue 0/19.
+[Paneles](panel-widths.md), [escenas](ascii-cover-scenes.md),
+[evidencia de paneles](verification-panel-widths.md) y
+[evidencia ASCII](verification-ascii-cover-scenes.md).
+
+**Orientación y peeks al 26/10/2026:** `add-persistent-scroll-outline` y
+`add-detail-peek-modes` implementados y verificados localmente. Home conserva seis
+marcas persistentes; Note, título y H1/H2/H3. Los detalles abren inicialmente en
+Side peek derecho, con Center peek, Full page y New tab en Switch peek mode y
+default global local validado. Editor/historial/buffers permanecen entre modos;
+guardias agregadas incluyen peeks inactivos y orígenes cubiertos. Compilación y
+127 comprobaciones headless aprobadas (27 outline + 100 integración de peeks),
+ambos temas/420px. Sin Rust, migración, datos personales ni nueva aceptación
+nativa. Deltas pendientes de sincronización/archivo; Meeting Notes sigue 0/19.
+[Guías](detail-peek.md), [outline](scroll-outline.md), [ADR0050](decisions/0050-session-detail-peeks.md)
+y [evidencia/límites](verification-detail-peek.md).
+Primer seguimiento visual: marcas de 2px, paso de 16px y sin brillo; reemplazado
+por el ajuste de 24px/paso de 14px documentado arriba.
+
+**Editor de Notes al 26/10/2026:** `refine-notion-note-editor` implementado y
+verificado localmente: página de escritura, barra sobre selección, slash filtrable
+y controles laterales para insertar, transformar y reordenar bloques. Por pedido
+posterior, Export/External resources/Attachments pasan a la cabecera de Note.
+Build y 59 comprobaciones headless con SQLite sintético aprobados; sin cambios de
+formato, contratos o migraciones. Task/Goal/Milestone conservan su presentación;
+Meeting Notes sigue propuesto 0/19. Deltas pendientes de sincronización/archivo.
+[Guía](note-editor.md) y [evidencia/límites](verification-note-editor.md).
+Seguimientos del mismo día: ayudas inferiores redundantes retiradas de Note;
+diálogo de salida Cancel/Discard/Save and continue con iconos y separación.
+Catálogo local 79 SVG, build y 29 comprobaciones focalizadas aprobados.
+Otro seguimiento limita los controles laterales al hover del bloque, conservando
+teclado explícito y arrastre; build y 25 comprobaciones headless aprobados.
+
+**Corrección ASCII al 25/10/2026:** `fix-ascii-resize-flicker`, archivado **2/2**,
+corrige el bitmap
+vacío entre resize y RAF durante la transición del lateral; repintado inmediato
+y reloj continuo, sin modificar trayectorias o duración del menú. Compilación,
+siete pruebas existentes y doce comprobaciones headless aprobadas; reproducción
+32/33 bitmaps vacíos antes y cero después. Sin cambios de specs/datos ni nueva
+aceptación nativa. [Evidencia](verification-ascii-resize-flicker.md).
+
+**Alineación y transición del lateral al 25/10/2026:**
+`align-titlebar-and-animate-sidebar` implementado, verificado, sincronizado y
+archivado **3/3**: controles de barra
+centrados, posición Mac ajustada y transición reversible de 260 ms en ambos
+sentidos, con movimiento reducido inmediato. Compilación y 56 comprobaciones
+headless aprobadas; posición nativa aplicada al próximo inicio y aceptación del
+host pendiente. Sin datos/contratos modificados. [Guía](window-titlebar.md) y
+[evidencia](verification-titlebar-alignment.md).
+
+**Consistencia y preferencias al 25/10/2026:**
+[`unify-navigation-appearance`](../openspec/changes/archive/2026-10-25-unify-navigation-appearance/proposal.md)
+implementado, verificado, sincronizado y archivado **4/4**. Home, Tasks, Notes, Projects, Tags, Goals y
+People comparten las formas del breadcrumb, sin rellenos ni flechas superpuestas,
+con el mismo acento. Settings → Preferences permite Blue inicial, cinco colores
+adicionales y Custom con rueda/controles precisos; preferencia local validada,
+contraste por tema y fallos recuperables. Textos propios de la interfaz en inglés,
+con originales y marcadores importados conservados. Compilación, 56 comprobaciones
+headless actuales y 18 paletas aprobadas; sin suites históricas, datos personales,
+proveedores ni aceptación nativa nueva. [Guía](settings.md),
+[iconos](icons.md) y [revisión](verification-appearance.md).
+
+**Settings al 25/10/2026:** [`add-sidebar-settings-popup`](../openspec/changes/archive/2026-10-25-add-sidebar-settings-popup/proposal.md)
+implementado, verificado, sincronizado y archivado **3/3**. El lateral queda con Settings/engranaje, sin punto azul ni
+«En tu equipo». Popup inspirado en la referencia: navegación por secciones,
+búsqueda y panel adaptable. Preferencias contiene Tema; Workspace/General,
+ruta y cambio protegido. Conserva tema, buffers y guardias de todas las pestañas.
+Compilación y 33 comprobaciones headless aprobadas en ambos temas/420 px; sin
+datos personales ni aceptación nativa nueva. [Guía](settings.md) y
+[evidencia](verification-settings.md).
+
+**Dispersión ASCII al 25/10/2026:** [`spread-ascii-ocean-paths`](../openspec/changes/archive/2026-10-25-spread-ascii-ocean-paths/proposal.md)
+implementado, verificado, sincronizado y archivado **3/3**. Centros/radios/fases reparten tiburones y peces
+pequeños por distintas zonas y alturas, conservando estilo y nado. Catorce
+checks, compilación y revisión headless en ambos temas/420 px aprobados;
+muestreo de treinta minutos confirma menos agrupaciones de centros, sin prometer
+cero cruces. [Revisión](verification-ocean-spread.md).
+
+**Nado ASCII de día/noche, 24–25/10/2026:** `refine-shark-swimming-reference`
+está implementado, verificado, sincronizado y archivado **4/4** como
+[`2026-10-25-refine-shark-swimming-reference`](../openspec/changes/archive/2026-10-25-refine-shark-swimming-reference/proposal.md). Cuerpo/cola se
+articulan sin alargar segmentos; aletas/normales acompañan la curva, recorridos
+suavizan extremos y la profundidad ordena solapamientos. Celdas de 6×8 px, tonos
+gris azulados/oliva/dorados por tema y bancos de puntos siguen ambos videos.
+Catorce checks existentes, compilación y revisión headless en ambos temas/420 px
+aprobados; ≈60 FPS observados, p95 Canvas aislado hasta 2,1 ms. Cadencia/pausas,
+Home, preferencias, datos y dependencias conservados. [Guía](ascii-ocean-cover.md)
+y [evidencia](verification-shark-swimming.md); no acredita pantalla física de 120 Hz.
+
+**Referencia previa de peces ASCII al 24/10/2026:** el video aportado por el usuario guía
+una vista más cenital, celdas rellenas y glifos de contraste con acentos discretos.
+Dos tiburones, un pez compacto y otro alargado tienen mallas/cadencias propias;
+fondo de grilla fina y trazos lejanos. Se conserva el reloj de hasta 120 FPS,
+pausas y estabilidad. Catorce checks, compilación y revisión del componente
+compilado aprobados en ambos temas/420 px, con p95 Canvas aislado hasta 1,6 ms.
+Sin cambios de Home, controles, datos o dependencias. [Guía](ascii-ocean-cover.md)
+y [revisión](verification-shark-day-reference.md).
+
+**Base de océano ASCII al 24/10/2026:** silueta/nado afinados, caracteres con grilla local,
+atlas y buffers reutilizados, más partículas, peces y luz tenue. Cadencia hasta
+120 FPS con tiempo activo y pausas anteriores conservadas; no implica aceptación
+de una pantalla de 120 Hz. Doce checks, compilación y revisión del componente
+compilado con Playwright aprobados, incluidos temas, 420 px y mediciones Canvas.
+Sin cambios de Home/datos/preferencias/dependencias. [Guía](ascii-ocean-cover.md)
+y [revisión](verification-ascii-ocean-cover.md).
+
+**Detalles Goal/Person al 24/10/2026:** referencias reales de Notion acreditadas
+y capturadas con Playwright. Goal usa Status/Tag/Progress canónico y tabla de
+hitos, conservando exactamente editor/documento y acciones actuales. Person usa
+foto local como portada, campos editables en View details y contexto operativo
+Notes/Projects/Tasks, con captura y relaciones existentes; no recibe cuerpo libre.
+Compilación y revisión UI de borrador en copia, con simulaciones acotadas; sin
+modificar datos ni ampliar modelos. [Guía](goal-person-detail.md) y
+[revisión](verification-goal-person-detail.md).
+
+**Detalle de Tags al 24/10/2026:** referencia real de Notion identificada y
+capturada con Playwright. Portada decorativa, Type/Favorite, contador Rust y
+Notes/Clips con contexto/cursor; Tasks y demás relaciones conservadas. No se
+inventan jerarquía ni vínculos de la fuente. Compilación y revisión UI de borrador
+en copia, con simulaciones de error/paginación; sin datos modificados,
+proveedores o aceptación nativa. [Guía](tag-detail.md) y
+[revisión](verification-tag-detail.md).
+
+**Herramientas y detalle Project al 24/10/2026:** el único Más opciones
+compartido se reemplaza por grupos de iconos con paneles, tooltip y teclado.
+Notes usa Exportar/Recursos externos/Adjuntos; otros contextos sólo grupos
+aplicables, conservando condiciones y estado al cerrar. Project toma su jerarquía
+de una captura real de Notion, con portada decorativa local, propiedades/resumen
+Rust, relaciones y Tasks/Notes del contexto canónico, cursor y guardias existentes.
+Sin cambios Rust/contratos/SQLite/dependencias ni datos. Compilación y revisión UI
+en copia, con fallos/DTOs simulados, sin proveedores ni persistencia/IPC nativo.
+[Herramientas](page-tools.md), [Project](project-detail.md),
+[ADR0049](decisions/0049-page-tool-groups-and-project-detail.md) y
+[revisión](verification-project-detail-tools.md).
+
+**Detalle de Notes al 24/10/2026:** composición con icono/título,
+Tag/URL/Favorite/Type, relaciones reales y cuerpo visible. Tipo/favorito son
+locales y editables; URL y propiedades del export son lectura en View details.
+El párrafo repetido del export Notes sólo se proyecta con fuente, marcador,
+anclas exactas y nombres admitidos; se recompone íntegro al editar. Entrada con
+Enter, `/` y estructuras de Note vacía; Task/Goal/Milestone conservan sus flujos.
+Sin cambios Rust/contratos/SQLite ni nuevas dependencias. [Guía](note-detail.md)
+y [revisión acotada](verification-note-detail.md).
+
+**Contenido Task al 24/10/2026:** documento enriquecido opcional en la misma Task,
+con CRUD/CAS compartido, sin migración ni nuevas operaciones. Detalle con
+Status/Project/Due, campos secundarios en View details y cuerpo visible con `/`,
+Enter desde título y estructuras Página vacía/Lista de pasos/Notas de tarea.
+Las Tasks sin cuerpo no se rellenan al abrir; Notes mantiene sus defaults.
+Compilación CLI/host/UI e inspección del borrador en copia; sin suites ni prueba
+de persistencia/IPC nativos. [Guía](task-page-content.md),
+[ADR0048](decisions/0048-task-owned-documents.md) y
+[revisión](verification-task-page-content.md).
+
+**Barra superior al 24/10/2026:** una fila de 44 px integra control lateral,
+pestañas y nueva pestaña. Mac conserva sus controles mediante overlay; Windows
+incorpora controles propios y web los omite. El lateral se pliega también en
+escritorio sin recrear paneles. Compilación frontend/host Mac e inspección sobre
+copia local; aceptación nativa Mac/Windows pendiente, Windows diferida por el
+usuario. Sin cambios de contratos/datos. [Guía](window-titlebar.md),
+[ADR0047](decisions/0047-integrated-window-titlebar.md) y
+[revisión](verification-window-titlebar.md).
+
+**Meeting Notes al 24/10/2026 — propuesto:** el usuario eligió primero diseño y
+modelos. `add-local-meeting-notes` define `/meet`, sugerencia de inicio por
+detección local, audio/ASR, actores editables, conclusiones y biblioteca integrada
+People/Notes. El candidato es Nemotron 3.5 ASR + Nemotron 3 Diarization mediante
+NeMo-Speech.cpp, con LLM separado. **0/19 tareas implementadas**, sin captura,
+descarga de modelos ni migración nueva. No es capacidad vigente ni habilita
+otras fases por inferencia. [Diseño](meeting-notes-design.md),
+[modelos](meeting-notes-models.md) y [ADR0046 propuesto](decisions/0046-local-meeting-notes-runtime.md).
+
+**People lateral al 24/10/2026:** página con icono sobre título, Nav, New Person
+y siete vistas reales compartidas con Home; Contacts inicial, fotos originales,
+calendario de cumpleaños y paginación acumulativa. Sin cambios Rust/contratos,
+migración ni datos personales. Compilación e inspección manual sobre copia,
+ambos temas y 420 px; sin suites ni aceptación nativa nueva.
+[Guía](people-page.md) y [revisión](verification-people-page.md).
+
+**Goals al 24/10/2026:** séptima entrada entre Tags y People, página con cuatro
+vistas y Goals real en Home. Goal/Milestone son subtipos Rust de páginas note,
+conservando IDs/documentos y CRUD/CAS; progreso por hitos, actividad acreditada,
+fechas y relaciones. Recuperados tres Goals, dieciséis Milestones, ocho vínculos
+de hitos y tres tags; cinco vínculos a proyectos conservados. Los 1.802 IDs y
+documentos coinciden antes/después. SQLite 20, sin migración ni nueva operación.
+Compilación e inspección manual sobre copia, sin suites ni aceptación nativa nueva.
+[Guía](goals.md), [ADR0045](decisions/0045-goals-as-typed-pages.md) y
+[revisión](verification-goals.md). Esta entrega reemplaza las menciones históricas
+de Goals pendiente; clima/funciones auxiliares conservan su alcance anterior.
+
+**Página Tags al 24/10/2026:** entrada lateral con icono sobre título, Nav a
+Tasks/Notes/Projects, New Tag y cinco vistas con Recent inicial. Table presenta
+Tag/Last Note/Type mediante la consulta A-Z existente; filas, captura protegida,
+breadcrumb y actualización reutilizados. Sin cambios Rust, contratos, migración
+ni datos. Compilación e inspección manual headless en copia local; sin suites ni
+aceptación nativa nueva. [Guía](tags-page.md) y [revisión](verification-tags-page.md).
+
+**Página Projects al 24/10/2026:** entrada lateral con icono sobre título, Nav,
+New Project y seis vistas, Active inicial con Doing/Ongoing. On Hold y agrupaciones
+By Tag/By People se calculan en Rust con relaciones e identidades locales; filas,
+tablero, progreso, breadcrumb y captura reutilizados. Deadlines conserva la lista
+por fecha existente. Sin migración ni cambios de datos; compilación e inspección
+manual headless, sin suites ni aceptación nativa nueva. [Guía](projects-page.md),
+[ADR0044](decisions/0044-projects-page-and-relation-projections.md) y
+[revisión](verification-projects-page.md).
+
+**Página Notes al 24/10/2026:** Notes lateral usa composición propia con icono
+sobre título, Nav, New Note y ocho vistas compartidas con Home. Tags aparece
+debajo en Recent con cuatro vistas, última nota y clasificación locales.
+Breadcrumb, captura protegida, filas textuales de ancho completo y actualización
+con ⌘R/Ctrl+R/F5 reutilizan componentes existentes. Sin migración ni modificaciones
+de datos; compilación e inspección manual headless, sin suites ni aceptación nativa
+nueva. [Guía](notes-page.md) y [revisión](verification-notes-page.md).
+
+**Tasks y navegación al 24/10/2026:** página Tasks propia con Today inicial,
+filas y Projects integrado; Deadlines/Completed calculados en Rust desde datos
+locales. Breadcrumb compartido Home → sección → registro, con iconos propios y
+antecesores protegidos. Pies sin contadores ni aviso técnico; Load more/New page
+textuales ocupan toda su fila y acumulan páginas. Botones con borde conservados.
+Sin migración ni cambios de entidades/documentos. Compilación e inspección manual
+headless, sin suites ni aceptación nativa nueva. [Guía](tasks-page.md),
+[ADR0043](decisions/0043-tasks-page-and-contextual-breadcrumb.md) y
+[revisión](verification-tasks-page.md).
+
+**Encabezado Home al 24/10/2026:** Navegación y Actualizar Home retirados.
+Actualización con ⌘R/Ctrl+R o F5 sólo en Home activo, con bloqueo ante diálogos,
+sin recarga del WebView ni cambios de datos. Compilación y revisión de código;
+sin suites ni aceptación nativa nueva. [Revisión](verification-home-refresh.md).
+
+**Fidelidad de People al 24/10/2026:** Contacts inicial con galería compacta,
+nueve fotos originales locales, relaciones y empresa; siete vistas reales,
+calendario mensual y proyectos activos por persona. Campos opcionales validados en
+Rust y procedencia que separa once contactos de seis miembros del workspace.
+Recuperados 38 vínculos Project→Person con backup, CAS e informe privado;
+1.802 IDs/documentos intactos. Compilación e inspección headless en ambos temas
+y 420 px; sin suites ni nueva aceptación nativa. [Guía](people-reference.md),
+[ADR0042](decisions/0042-person-metadata-and-local-gallery.md) y
+[revisión](verification-people-reference.md).
+
+**Corrección de animación lateral al 23/10/2026:** el Vite abierto devolvía
+504 por una dependencia optimizada obsoleta. AnimateIcons ESM se sirve fuera del
+prebundler en dev; se conserva carga diferida en producción. Movimiento geométrico
+real y reposo acreditados en Chromium/WebKit para los ocho iconos, sin tocar datos.
+[Revisión](verification-icon-motion-dev-fix.md).
+
+**Iconos al 23/10/2026:** AnimateIcons 0.1.0, 69 SVG locales seleccionados y
+estáticos. Únicamente clic lateral reproduce un ciclo de 800 ms, con reproductor
+diferido, cancelación y movimiento reducido. Logos/documentos intactos, sin nueva
+API ni migración. Compilación e inspección visual aprobadas. [Guía](icons.md),
+[ADR0041](decisions/0041-static-svg-and-explicit-icon-motion.md) y
+[revisión](verification-static-animateicons.md).
+
+**Movimiento de Projects al 23/10/2026:** arrastre dentro/entre columnas y
+alternativa de teclado, orden persistente mediante lote atómico con CAS/receipt.
+Board completo hasta cien proyectos; sin migración ni nueva API. Revisión manual
+sobre copia aislada y compilación aprobadas, sin suites ni nueva aceptación nativa.
+[Guía](project-board-movement.md), [ADR0040](decisions/0040-atomic-project-board-movement.md)
+y [revisión](verification-project-board-movement.md).
+
+**Fidelidad de Tags al 23/10/2026:** Types inicial, cuatro vistas y grupos
+Area/Resource/Entity, conservando Topic. Última nota y contadores desde relaciones
+locales, con archivo de origen. Recuperados 181 vínculos Note→Tag y diez iconos;
+backup y 1.802 IDs/documentos intactos. Dos procedencias de notas largas
+corregidas con otro backup: Clips 52, Notes 132. [Guía](tags-reference.md),
+[ADR0039](decisions/0039-tag-types-and-source-activity.md) y
+[revisión](verification-tags-reference.md). Compilación e inspección visual;
+Recent mantiene un alcance documentado, sin fórmula universal ni nueva aceptación nativa.
+
+**Fidelidad de Projects al 23/10/2026:** Board inicial, cinco columnas compactas,
+Active/Planned/Board, iconos originales, avance calculado con precisión de décimas
+y referencias a tags/páginas Goals. Procedencia/orden opcionales validados en Rust,
+sin migración. Recuperados 500 vínculos Task→Project, 17 Project→Tag, cinco
+GoalNote→Project y 12 iconos; backup y 1.802 IDs/documentos intactos. Siete
+referencias sin tarea exportada se omitieron con informe. [Guía](projects-reference.md),
+[ADR0038](decisions/0038-project-board-and-source-relations.md) y
+[revisión](verification-projects-reference.md). Compilación e inspección visual;
+no se ejecutan suites ni una nueva aceptación nativa.
+
+**Fidelidad de Notes al 23/10/2026:** encabezado, New Note, ocho vistas,
+filas compactas, iconos originales, relaciones, tipo y antigüedad de fuente.
+Clasificación/favoritos/procedencia opcionales validados en Rust, sin migración.
+Se recuperaron las 195 filas Notes y se separaron de las otras páginas importadas;
+All conserva las 1.172 notas activas. 16 vínculos explícitos y nueve asignaciones de
+imagen recuperados con backups; 1.802 IDs y digest documental intactos. Diez
+metadatos actuales de Notion contrastados sin cuerpos; dos fechas del export
+estaban desactualizadas. [Guía](notes-reference.md), [ADR0037](decisions/0037-note-library-and-source-metadata.md)
+y [revisión](verification-notes-reference.md). Compilación e inspección visual;
+no se ejecutan suites ni una nueva aceptación nativa.
+
+**Fidelidad de Tasks al23/10/2026:** ajuste de encabezado/filas/grupos,
+iconos originales de proyecto como adjuntos locales y seis vistas adicionales
+calculadas en Rust. Vista inicial agrupada por proyectos Doing/Ongoing.
+Recuperados14 vínculos explícitos omitidos por el export y arte para cinco
+proyectos, con backups; el duplicado se resolvió con evidencia de la fuente. Sin migración, estados
+ni fechas inventados. [Guía](tasks-reference.md),
+[ADR0036](decisions/0036-local-image-icons-and-task-projections.md) y
+[revisión acotada](verification-task-reference.md). Compilación e inspección
+visual realizadas; suites y aceptación nativa no repetidas en esta corrección.
+
+**Ajuste de escritorio verificado y archivado al 23 de octubre:**
+[`refine-desktop-navigation-and-tabs`](../openspec/changes/archive/2026-10-23-refine-desktop-navigation-and-tabs/proposal.md),
+**8/8 tareas**, reúne menú de seis entradas, Search contextual,
+Collections como botón de icono y pestañas de sesión con buffers independientes.
+Los listados sólo se muestran al navegar a una sección; el detalle ocupa el área
+principal. Las páginas usan icono sobre título, propiedades/relaciones compactas
+y herramientas desplegables; propiedades importadas y tablas Markdown se presentan
+sin convertir su formato persistido. Portada ASCII desde arriba con movimiento
+procedural, foto local alternativa y transiciones con movimiento reducido.
+Sin migración SQLite ni cambios de API/MCP o reglas Rust. [Guía](desktop-navigation.md),
+[ADR0035](decisions/0035-session-tabs-and-context-search.md) y
+[evidencia](verification-desktop-navigation.md).
+96 tests puros, 102 checks de navegación, 1.248 de búsqueda y 592 compartidos
+más 14 de teclado aprobados con CLI/SQLite sintéticos y navegador headless;
+no acredita transporte ni cierre de ventana Tauri. Dos deltas sincronizados.
+
+**Estado vigente al 22 de octubre:** fases0–6 completas en su alcance acotado y Home archivado; 7/8 son investigación/futuro.
+SQLite20/API66/MCP34/57/59/batch9. `add-semantic-retrieval`23/23 y
+`add-agent-harness`20/20 están implementados, verificados, sincronizados y
+archivados como2026-10-22; ver [5b](verification-semantic-retrieval.md),
+[5c](verification-agent-harness.md), [ADR0029](decisions/0029-semantic-retrieval.md)
+y [ADR0030](decisions/0030-agent-harness.md). 433 Rust/16 ignoradas y28 SDK por
+perfil,94 frontend y5.120 checks headless; gates originales máximos query
+189,807ms/lock22,925ms. La calidad real de Jina y de un modelo de chat NO se
+midió; se probaron ChatGPT y un 4B local en smoke, sin benchmark de calidad. El
+OCR Paddle local se ejecuta sólo en extracción explícita. Home archivado 17/17. 6a y
+6b están archivados: ChatGPT, Google Drive, Picker, asociaciones externas en
+SQLite20, UI básica y preview read-only Docs/Sheets. La prueba de API
+keys/cuotas reales de 6a queda diferida por decisión del usuario. El smoke de
+Qwen3.5-4B + LoRA quedó ejecutado localmente; no acredita calidad ni tool-calling.
+La fase 6 cierra en su alcance acotado; 6c mantiene paridad futura. Los estados
+siguientes son históricos y no sustituyen éste.
+
+**Recorte universal PDF (22/10/2026):** `pdfium_text` (PDFium 0.9.4/7881) y
+`paddle_ocr` (PaddleOCR 3.7.0/PaddlePaddle 3.3.1/pypdfium2 5.14.0) están
+implementados y verificados localmente como opciones prioritarias universales
+frente a PDFKit/Vision. PDFium extrae texto; Paddle extrae texto OCR por página.
+Migración019; SQLite19/API63. Paddle persiste texto y estructura de tablas
+(filas/columnas/celdas); no bbox/confianza ni orden visual. [Guía](universal-pdf.md), [ADR0031](decisions/0031-universal-pdf-backend.md)
+y [verificación](verification-universal-pdf.md). 414 Rust/16 ignoradas por perfil;
+Windows/Linux no ejecutados.
+
+**Proveedores cloud (22/10/2026, en curso):** `noteka-providers`/`noteka-auth`
+implementa Sign in with ChatGPT (OIDC+PKCE, callback loopback, Keychain), API
+keys OpenAI/Gemini, proxy chat-completions y OAuth Google Drive con listado
+acotado. [Guía](provider-auth.md). ChatGPT está autenticado y probado con
+`gpt-6.1-sol` por CLI/proxy/harness; Google Drive quedó conectado en el proyecto
+`noteka-drive` con scope `drive.file`; Google Picker API permite seleccionar
+archivos existentes y `google selected` devuelve metadatos sin scopes
+restringidos. `external.link|unlink|list` persisten asociaciones genéricas en
+SQLite20 con revisión y auditoría. 6b está archivado y 6a también quedó archivado con la prueba de API keys reales
+diferida por decisión del usuario. La fase 6 cierra en su alcance acotado; 6c
+mantiene su paridad futura.
+
+**Estado histórico al 17 de octubre:** fases 0–4, búsqueda textual, cola/UTF-8, [PDF textual acotado](verification-pdf-extraction.md), [búsqueda de adjuntos](attachment-search.md), MCP local, [extracción XLSX acotada](xlsx-extraction.md) y [búsqueda XLSX](xlsx-search.md) verificados y archivados. SQLite v13/API v1/53 tras la integración OCR de imágenes verificada; nueve mutaciones batchables y documentos v1/v2/v3 conservados, sin modelos ni proveedores. Comparación histórica exacta v11 no repetible tras perder el baseline, según [criterio alternativo autorizado](xlsx-search-evidence-recovery.md). **Home activo 9/17, sin archivar**; [verificación](verification-home.md): los 606 checks headless no acreditan aceptación nativa. [P95 búsqueda de notas histórica](search.md) 22,92 ms/10.000 notas. PDF amplio, OCR de PDF, ampliaciones Excel, embeddings/IA y resto de 5a pendientes. Desarrollo local autónomo autorizado; [revisiones](review-queue.md). UI headless: no pantalla sin autorización específica.
 
 **Cierre previo MCP:** [`add-local-mcp`](../openspec/changes/archive/2026-10-15-add-local-mcp/proposal.md): **22/22 tareas verificadas**, quince requisitos/45 escenarios (cinco heredados); dos deltas sincronizados y cambio archivado. SQLite v10/API v1/51 y [evidencia](verification-mcp.md): **235 tests Rust por perfil**, 17 SDK por perfil, tres rondas raw por perfil, corpus de 235 casos parser/CLI PDF por perfil y 606 checks headless. Los cierres previos de adjuntos v10/51 y PDF v9/49 conservan su evidencia independiente.
 
-**Home activo:** [`add-local-home-dashboard`](../openspec/changes/add-local-home-dashboard/proposal.md), código implementado y **9/17 tareas completamente verificadas**; [revisión final cerrada](review-home.md), ocho tareas con aceptación nativa pendientes, no ausencia de código. [Home](home.md) tiene quince vistas de datos originales, referencias/resúmenes, Today por due_date <= día civil y temas claro/oscuro, sin alterar workflows previos ni migrar. Goals/clima/fotos/auxiliares siguen pendientes; [matriz](../openspec/changes/add-local-home-dashboard/design.md). Recorrido headless aprobado: **592 checks compartidos + 14 de teclado/intercalados**, sin ocupar pantalla. No se reemplaza evidencia Tauri por evidencia del puente CLI; falta aceptación nativa, sin archivo prematuro.
+**Home archivado:** [`add-local-home-dashboard`](../openspec/changes/archive/2026-10-22-add-local-home-dashboard/proposal.md), **17/17 tareas**. [Home](home.md) tiene quince vistas de datos originales, referencias/resúmenes, Today por due_date <= día civil y temas claro/oscuro, sin alterar workflows previos ni migrar. Goals/clima/fotos/auxiliares siguen pendientes; [matriz](../openspec/changes/archive/2026-10-22-add-local-home-dashboard/design.md). Recorrido headless **592 checks compartidos + 14 de teclado** y aceptación nativa **592 checks** en seis sesiones Tauri. [Verificación](verification-home.md) y [revisión](review-home.md).
 
 **Lector independiente cerrado:** [`add-bounded-xlsx-reader`](../openspec/changes/archive/2026-10-15-add-bounded-xlsx-reader/proposal.md), **8/8 tareas**, seis requisitos/dieciséis escenarios sincronizados y contrastados con main, archivado. [Lector aislado](xlsx-reader.md), entregado sin activar cola/SQLite/API/MCP/FTS/UI en su baseline histórico v10/51. Números léxicos y fórmulas/caches separados, ZIP/XML cerrado y contención compartida con PDF; [ADR 0016](decisions/0016-bounded-xlsx-reader.md). [Aceptación final3 histórica](verification-xlsx-reader.md): 216 casos por parser/helper y 245 tests Rust por perfil, regresión PDF/MCP y 606 checks headless. Query p95 121,38–146,34 ms en dos gates intactos. La integración siguiente se verificó separadamente; no modifica Home ni satisface toda 5a/5b.
 
@@ -63,14 +427,23 @@ PNG/JPEG mediante Vision local r3/fast, sin instalaciones, con protocolo Rust y
 FTS/UI: ésa sigue como próximo recorte de 5a. Lector cerrado 6/6, delta sincronizado/contrastado y archivado el 17/10.
 Home permanece activo 9/17; no se instalan pesos ni se activan proveedores remotos.
 
-**Punto de parada vigente, ampliado el 17/10:** continuar por las dependencias de
-5a → 5b → 5c hasta la **fase 6 inclusive** (6a proveedores, 6b Drive/Docs/Sheets y
-6c MCP según alcance documentado), con informe acumulado al cerrar o identificar
-una intervención imprescindible. No iniciar fases 7/8. La ampliación no autoriza
-instalar pesos/modelos, activar proveedores/pagos, OAuth, reutilizar sesiones
-internas, publicar ni usar pantalla. Se implementa y verifica lo independiente;
-acceso/inferencia/OAuth reales requieren la intervención explícita correspondiente,
-sin presentar mocks como aceptación real. Home conserva su brecha nativa.
+**Punto de parada vigente, 20/10/2026:** completar únicamente fase 5 por sus
+dependencias: 5a, luego 5b y 5c, y detenerse con informe. La autorización actual
+reemplaza la ampliación anterior hasta fase 6 y revoca la detención histórica del
+18/10. Instrucción posterior del20/10: trabajar como máximo una hora desde
+15:43:39UTC; detenerse antes de16:43:39UTC (12:43:39America/La_Paz), aunque no
+se complete fase5, con checkpoint, informe y prompt de continuación Markdown.
+No iniciar fase 6 ni posteriores. No instalar
+pesos/modelos, activar proveedores/pagos/OAuth, publicar ni usar pantalla. Los
+adaptadores se implementan y prueban con contratos locales; no se atribuye
+inferencia real a fixtures. Home permanece activo 9/17 e independiente.
+
+**Continuación autorizada21/10/2026:** la nueva instrucción explícita revoca la
+detención del20/10. Se conserva el límite de una hora: inicio19:11:26UTC,
+corte máximo20:11:26UTC (16:11:26America/La_Paz), con checkpoint/informe/prompt
+si queda trabajo. Sólo fase5 por dependencias5a→5b→5c; Home9/17 independiente.
+Los recortes XLSX y proyector PDF independiente cerraron6/6 cada uno. El cambio
+activo add-local-pdf-table-reader está sólo planificado0/8; no existe API57.
 
 **Fase 4 cerrada:** [`extend-agent-operations`](../openspec/changes/archive/2026-10-13-extend-agent-operations/proposal.md), 22/22: preview aislado/nueve mutaciones/apply atómico y suscripción CLI. Su evidencia histórica usa 40 operaciones/v7 sin migración; [contrato actual](batches.md), [ADR 0010](decisions/0010-atomic-local-change-plans.md) y [evidencia](verification-phase-4.md). Extracción evoluciona schema/huella sin ampliar whitelist. Independiente de Home; no habilita modelos/MCP/remotos.
 
@@ -110,7 +483,7 @@ El núcleo funcionará sin Internet ni un servidor externo. Los modelos locales 
 | Tema | Decisión adoptada | Consecuencia |
 | --- | --- | --- |
 | Nombre | Noteka | Usar este identificador en producto y documentación. |
-| Uso | Personal, inicialmente en macOS | No comenzar con SaaS, cuentas multiusuario o colaboración. |
+| Uso | Personal, con macOS y Windows como plataformas objetivo (aclaración21/10) | No comenzar con SaaS, cuentas multiusuario o colaboración. La aceptación existente sigue siendo macOS; Windows requiere su propia verificación. |
 | Stack | Tauri 2, Svelte 5, TypeScript, Rust y SQLite | Mantener la lógica de dominio en Rust. |
 | Editor | Bloques enriquecidos, Tiptap + ProseMirror | El modelo persistente debe sobrevivir al editor. |
 | Referencia funcional | Capacidades esenciales de Ultimate Brain | Priorizar notas, tareas, proyectos, PARA, personas, relaciones y vistas útiles. |
@@ -134,7 +507,7 @@ No se promete compatibilidad total con la sintaxis o importación de Notion, ni 
 
 Las decisiones de la sección 2 forman el alcance adoptado. La estructura de tablas, nombres de operaciones, políticas de concurrencia y orden fino de implementación de este documento son **propuestas técnicas iniciales**, elegidas para hacer el trabajo ejecutable. Pueden evolucionar con un cambio documentado que preserve los requisitos.
 
-No existe todavía un compromiso adoptado con una extensión vectorial, un runtime LLM ni un framework de agentes específico. El perfil local OCR Vision r3/fast/es-ES/en-US está adoptado de forma acotada para imágenes en ADRs 0019/0020; no implica OCR genérico o de PDF. El primer subconjunto PDF usa lopdf =0.45.0 MIT dentro de un helper sin features default: [compilación/árbol/licencias/contención y métricas locales](verification-pdf-extraction.md), no publicidad. Ampliaciones se resuelven en cambios acotados con pruebas de compatibilidad, rendimiento y licencias.
+No existe un compromiso con una extensión vectorial (sqlite-vec/HNSW), un runtime LLM ni un framework de agentes externo. El recorte PDF universal adoptó PDFium/PaddleOCR como prioridad, con PDFKit/Vision como alternativas macOS. 5b adoptó escaneo exacto acotado y 5c un bucle propio con protocolo JSON; ver ADR0029/0030. El perfil local OCR Vision r3/fast/es-ES/en-US está adoptado de forma acotada para imágenes en ADRs 0019/0020; no implica OCR genérico o de PDF. El primer subconjunto PDF usa lopdf =0.45.0 MIT dentro de un helper sin features default: [compilación/árbol/licencias/contención y métricas locales](verification-pdf-extraction.md), no publicidad. Ampliaciones se resuelven en cambios acotados con pruebas de compatibilidad, rendimiento y licencias.
 
 El hardware local se verificó en esta preparación mediante `sysctl`: **Apple M1 Max y 68.719.476.736 bytes de RAM, equivalentes a 64 GiB**. Esto identifica el equipo de referencia; no prueba que cualquier modelo o LoRA funcione con una latencia determinada.
 
@@ -147,7 +520,7 @@ Las capturas originales del sistema de Spotify no estaban disponibles como píxe
 PARA organiza por propósito: proyectos con resultado, áreas de responsabilidad sostenida, recursos de interés y archivo de elementos inactivos. No se implementará simplemente como cuatro carpetas sin relaciones.
 
 - **Notes:** páginas con título, bloques, propiedades, etiquetas, relaciones, adjuntos y referencias externas.
-- **Tasks:** título, estado, prioridad, fecha de vencimiento, fecha planificada opcional, proyecto y notas relacionadas. Subtareas y recurrencias se incorporan después del CRUD básico.
+- **Tasks:** título, cuerpo enriquecido opcional propio, estado, prioridad, fecha de vencimiento, fecha planificada opcional, proyecto y notas relacionadas. Subtareas y recurrencias se incorporan después del CRUD básico.
 - **Projects:** resultado o propósito, estado, fechas opcionales y vistas de tareas y notas relacionadas. Estados iniciales propuestos: `planned`, `doing`, `done`, `ongoing`, `on_hold`.
 - **Tags:** clasificación `area`, `resource` o `topic`; pueden relacionar notas, proyectos, personas y otras entidades. Área y recurso no necesitan identidades duplicadas en tablas independientes.
 - **People:** personas relacionadas con notas, proyectos y registros; datos adicionales serán propiedades del sistema.
@@ -208,7 +581,7 @@ tabla resume el alcance completo previsto, no todas las capacidades actuales:
 
 La extracción determinista se prioriza antes de usar un LLM. Leer fórmulas de un Excel no implica ejecutar macros ni reconstruir todo Excel. La extracción de texto y la descripción visual son capacidades distintas; si falta una, el sistema debe informar la limitación.
 
-Cada trabajo registra revisión/hash, extractor/version/configuración, estado, intentos y error. Estados implementados `queued/running/succeeded/failed/cancelled/stale`; sin perfil de modelo en estos extractores deterministas. Pausa/cancel/retry/regeneración no modifican originales, publicación cercada contra versiones/ownership viejos. Encolar no ejecuta y run procesa como máximo un adjunto, sin scheduler residente. PDF textual acotado tiene lector por página, XLSX Transitional lector tipado hoja/A1 sin recalcular ni inferir encabezados. La indexación es explícita para UTF-8/PDF y campos persistidos XLSX, con caché/fórmula separados y hojas ocultas incluidas. PDF amplio, OCR de PDF y ampliaciones Excel son entregas posteriores; OCR de imágenes se verificó por separado. Un perfil de modelo sólo se agregará cuando haya uso evaluable autorizado.
+Cada trabajo registra revisión/hash, extractor/version/configuración, estado, intentos y error. Estados implementados `queued/running/succeeded/failed/cancelled/stale`; sin perfil de modelo en estos extractores deterministas. Pausa/cancel/retry/regeneración no modifican originales, publicación cercada contra versiones/ownership viejos. Encolar no ejecuta y run procesa como máximo un adjunto, sin scheduler residente. PDF textual acotado tiene lector por página, XLSX Transitional lector tipado hoja/A1 sin recalcular ni inferir encabezados. La indexación es explícita para UTF-8/PDF y campos persistidos XLSX, con caché/fórmula separados y hojas ocultas incluidas. PDFKit, OCR de PDF y lectura XLSX por rango/encabezado explícito ya están verificados por separado; tablas PDF siguen pendientes. Un perfil de modelo sólo se agregará cuando haya uso evaluable autorizado.
 
 Las sugerencias de relaciones se guardan como derivadas hasta que el usuario o una operación autorizada las aplique. Un resumen generado no reemplaza la nota. Los modelos no deben mantenerse cargados constantemente si no hay trabajo.
 
@@ -350,7 +723,7 @@ El perfil registra proveedor, modelo, revisión, dimensión, normalización, tar
 
 Cambiar cualquiera de esos factores crea una nueva generación de índice. No comparar vectores de espacios incompatibles aunque tengan igual dimensión. La reconstrucción se realiza aparte; su activación debe ser atómica tras verificar cobertura y consistencia. Mientras tanto se puede mantener la generación anterior con su perfil de consulta correspondiente, o degradar a SQL + FTS5. Nunca borrar originales para reconstruir embeddings.
 
-Se evaluará una implementación local compatible con Apple Silicon: persistencia, filtros, cancelación, empaquetado Tauri, costo de memoria y métricas de recuperación. La elección del backend vectorial queda para esa fase, con un ADR y benchmark específico; no se da por adoptado uno ahora.
+La evaluación de 5b está cerrada: se adoptó escaneo exacto en Rust por ser local, determinista, cancelable y sin extensión nativa; sqlite-vec/HNSW quedan no adoptados sin verificación local. [ADR0029](decisions/0029-semantic-retrieval.md) y [benchmark](verification-semantic-retrieval.md).
 
 ### 6.3 OpenAI, ChatGPT y Gemini
 
@@ -459,15 +832,16 @@ Los nombres futuros son orientativos. No crear todos los cambios ni specs defini
 | 3a | `add-database-engine` — implementado y archivado | Colecciones, propiedades tipadas, registros/relaciones/vistas tabla/lista; [IDs compartidos verificados](verification-phase-3a.md). |
 | 3b | `add-formulas-and-rollups` — implementado y archivado | [AST, tipos, dinero, dependencias y errores verificados](verification-phase-3b.md); fixture de suscripción exacta sin IA. |
 | 3c | Dividida: `add-advanced-collection-views` y `add-collection-templates-and-embeds`, ambos archivados — 3a/3b cumplidas | [Primer tramo](verification-phase-3c-views.md): tablero/calendario/galería y filtros complejos. [Segundo tramo](verification-phase-3c-templates.md): templates de páginas con defaults estáticos y referencias de bases incrustadas sin duplicación; 17/17 tareas, documento v3/SQLite v7. Separar evolución de consultas/vistas de evolución de bloques persistentes. |
-| Home | `add-local-home-dashboard` implementado, 9/17 tareas verificadas; revisión final cerrada, sin archivar | Composición y quince vistas sobre originales, temas y resúmenes; [606 checks headless y brecha nativa](verification-home.md). UI headless por defecto, pantalla sólo con consentimiento específico. Goals/clima/fotos/auxiliares pendientes, sin paridad total. |
+| Home | [`add-local-home-dashboard`](../openspec/changes/archive/2026-10-22-add-local-home-dashboard/proposal.md) — **archivado 22/10/2026; 17/17 tareas** | Composición y quince vistas sobre originales, temas y resúmenes; 592 checks headless y **592 checks nativos** en seis sesiones Tauri. Goals/clima/fotos/auxiliares siguen explícitos como pendientes. [Verificación](verification-home.md). |
 | 4 | [`extend-agent-operations`](../openspec/changes/archive/2026-10-13-extend-agent-operations/proposal.md) implementado, verificado, sincronizado y archivado; 22/22 tareas | Catálogo/CLI de 40 operaciones, preview sin mutaciones de dominio y apply atómico con recibo/huellas; nueve mutaciones y checks database.query. Suscripción/página construidas por lote de 16 pasos y comprobadas offline. Sin migración, LLM ni bloqueo por Home nativo. |
-| 5a | Dividida: FTS, cola/UTF-8, PDF **21/21**, índice UTF-8/PDF **19/19**, lector XLSX **8/8**, [extracción XLSX](xlsx-extraction.md) **11/11**, [búsqueda XLSX](xlsx-search.md) **19/19** y [UI de evidencia](evidence-search-ui.md) **17/17**, verificados, sincronizados y archivados | Baseline vigente v13/API v1/53, regresión y dos pares de gates frescos aprobados con evidencia durable; comparación histórica v11 no repetible según autorización. [Evidencia UI](verification-evidence-search-ui.md). Preparación UI 9/9, lector completo por páginas 6/6 y consulta agrupada 6/6 implementados/verificados; [aceptación conjunta](verification-local-preparation-closure.md). Los tres cambios están sincronizados/contrastados y archivados. Lector OCR independiente verificado ([guía](ocr-reader.md)) e [integración de imágenes OCR](verification-image-ocr.md) cerrada12/12, sincronizada y archivada; PDF amplio/OCR de PDF/Excel genérico y resto pendientes; 5a no completa ni dependencia 5b plenamente satisfecha. |
-| 5b | `add-semantic-retrieval` — 5a | Adaptador de embeddings, perfil Jina, backend vectorial evaluado, reindexación e híbrida con fuentes. |
-| 5c | `add-agent-harness` — fases 4/5b | Proveedor local configurable, QA con evidencia y tool loop acotado; cambio de modelo sin tocar el dominio. |
-| 6a | `add-cloud-model-providers` — 5c | Gemini key, OpenAI key y ChatGPT oficial según acceso; capacidades, cuotas, selección de envío y errores probados. |
-| 6b | `add-google-drive-references` — fases 1/5a | OAuth, asociaciones universales, previews Docs/Sheets y apertura externa; permisos y estado offline probados. |
+| 5a | Completa: extracción local PDF/Excel/OCR, preparación/lectura y búsqueda conjunta, más tablas PDF y rangos XLSX | SQLite16/API57/MCP29/49/50/batch9. Todos los recortes verificados/sincronizados cuando corresponden y archivados; [auditoría de cierre](verification-phase5a.md). Regresión384 Rust y28 SDK por perfil,101 frontend,5146 headless; gates query máximo182,232ms/lock18,445ms. Home9/17 sigue independiente; aceptación macOS y perfiles acotados, sin inferencia/modelos ni Windows productivo. |
+| 5b | [`add-semantic-retrieval`](../openspec/changes/archive/2026-10-22-add-semantic-retrieval/proposal.md) implementado, verificado, sincronizado y archivado; 23/23 tareas | Perfil/huella, adaptador loopback, migración17, escaneo exacto, generaciones con activación atómica e híbrida con filtros/fuentes/presupuesto/fallback. [Evidencia](verification-semantic-retrieval.md) y [ADR0029](decisions/0029-semantic-retrieval.md). |
+| 5c | [`add-agent-harness`](../openspec/changes/archive/2026-10-22-add-agent-harness/proposal.md) implementado, verificado, sincronizado y archivado; 20/20 tareas | Proveedor local, QA con citas verificables, herramientas públicas, preview/apply, límites, cancelación y trazas; migración18. [Evidencia](verification-agent-harness.md) y [ADR0030](decisions/0030-agent-harness.md). |
+| 5d | [`adopt-universal-pdf-text`](../openspec/changes/archive/2026-10-22-adopt-universal-pdf-text/proposal.md), [`adopt-universal-pdf-ocr`](../openspec/changes/archive/2026-10-22-adopt-universal-pdf-ocr/proposal.md) y [`add-universal-pdf-table-structure`](../openspec/changes/archive/2026-10-22-add-universal-pdf-table-structure/proposal.md) — 5a | PDFium universal para texto y PaddleOCR universal para OCR texto/tablas; prioridad sobre Mac-only. [Guía](universal-pdf.md). |
+| 6a | [`add-cloud-model-providers`](../openspec/changes/archive/2026-10-22-add-cloud-model-providers/proposal.md) — **archivado 22/10/2026; 9/10 tareas, 2.3 diferida** | ChatGPT, API keys OpenAI/Gemini y proxy implementados; login real, `gpt-6.1-sol`, selección explícita, timeout y tokens no expuestos verificados. La prueba con keys/cuotas reales queda diferida por decisión del usuario y no bloquea el archivo. [Guía](provider-auth.md) y [verificación](verification-provider-auth.md). |
+| 6b | [`add-google-drive-references`](../openspec/changes/archive/2026-10-22-add-google-drive-references/proposal.md) — fases 1/5a, **archivado 22/10/2026; 10/10 tareas** | OAuth Google, `drive.file`, Keychain, Picker, asociaciones genéricas en SQLite20, UI básica y preview read-only Docs/Sheets; cuenta real y errores 403/404/red verificados. [Guía](provider-auth.md), [ADR0032](decisions/0032-google-picker-drive-file.md), [ADR0033](decisions/0033-external-resource-associations.md), [recursos externos](external-resources.md), [verificación Drive](verification-google-drive.md) y [verificación externa](verification-external-resources.md). |
 | 6c | [`add-local-mcp`](../openspec/changes/archive/2026-10-15-add-local-mcp/proposal.md) verificado 22/22, sincronizado y archivado; dependencia fase 4 cumplida | Recorte inicial stdio: operaciones compartidas habilitadas por política, 23/43/44 herramientas y siete exclusiones explícitas de administración/archivos; catálogo core 51 intacto. SDK real modern/legacy, regresión/revisión y dos gates de consulta/lock aprobados, sin LLM ni pantalla. Puede adelantarse a 5c; no completa toda la paridad futura de 6c. |
-| 7 | `evaluate-qwen4b-lora` — fases 4/5c/6c estables | Baseline, dataset y comparación controlada; reporte de aciertos, errores, latencia y memoria. No bloquea uso normal. |
+| 7 | `evaluate-qwen4b-lora` — fases 4/5c/6c estables | Smoke local completado: MLX carga Qwen3.5-4B, entrena LoRA y el harness habla con `mlx_lm.server`; el 4B todavía no usa `retrieval.search` de forma fiable. Falta baseline comparable, dataset real, 9B y tool-calling. [Evidencia](verification-qwen35-lora.md). No bloquea uso normal. |
 | 8 | Cambios separados futuros | Sincronización entre Macs y versión web, después de uso local estable; diseño de conflictos/autenticación propio. |
 
 **Primera entrega utilizable:** completar fases 0–2 permite notas y productividad local. **Entrega que cumple la visión principal:** fases 3–6 permiten sistemas genéricos y agentes intercambiables con evidencia. LoRA es una investigación adicional. No se fija una fecha ficticia ni se promete que todo sea un MVP pequeño.
@@ -494,6 +868,15 @@ Métricas: éxito de tarea completa, argumentos válidos, consistencia final, c�
 El dataset LoRA usará ejemplos sintéticos o contenido autorizado, herramientas versionadas, casos de error y corrección. Separar train/validation/test por familias de tareas y estructuras, evitando que variantes de un mismo sistema contaminen el test. Conservar semillas, templates, revisiones y condiciones de ejecución.
 
 La viabilidad de entrenar Qwen3.5-4B en el M1 Max depende del soporte real del runtime para su arquitectura, del tamaño de contexto y de los parámetros del ajuste. Medir un experimento pequeño antes de estimar entrenamiento completo. Si requiere otro equipo, sigue siendo una investigación opcional.
+
+**Smoke local (22/10/2026):** `mlx-lm` 0.32.2 con `Qwen3.5-4B-4bit` entrenó
+LoRA rank 8 (150 iteraciones, secuencia 512, grad checkpoint) en 192 s con pico
+de 5,56 GB; el adaptador pesa 31 MB. En un fixture sintético de 120/30/30 la
+coincidencia exacta pasó de 0/30 a 1/30: el adaptador se carga y cambia el
+formato, pero no aprendió la regla arbitraria de color/prioridad. En el harness
+el transporte funciona; el 4B no llamó a `retrieval.search` y respondió
+`insufficient_evidence` ante una nota local. No es una evaluación de calidad.
+[Evidencia](verification-qwen35-lora.md).
 
 El ajuste no incorpora secretos ni conocimiento personal como sustituto de retrieval. Se versiona adapter y dataset autorizado, se evalúa después de cambios en herramientas y se compara contra el baseline sin alterar condiciones. Si no mejora o perjudica el respeto de límites, se conserva el modelo base.
 
@@ -524,11 +907,13 @@ Antes de cada fase, revisar documentación oficial vigente. No recalcular todo e
 6. Verificar y archivar solo cuando el comportamiento del cambio esté implementado y validado; sincronizar entonces los deltas a specs principales. No archivar esta propuesta porque sus documentos existan.
 7. `add-local-pdf-text-extraction` está archivado 21/21; leer su verificación antes de ampliar parser/cola/lector. `add-local-attachment-search` está archivado como `2026-10-14-add-local-attachment-search`, **19/19 tareas verificadas** y sus tres deltas sincronizados/contrastados: dos benchmarks de query p95 214,20–231,07 ms sobre el corpus fijado (<300 ms), lock aprobado y scratch físico medido, además de regresión/revisión. No recrearlo ni volver a sincronizarlo. Leer sus artefactos archivados, guía/ADR 0013 y evidencia externa, incluidos fallos previos, reconciliación de migración y límites por corpus/caché. No se cambió objetivo/caps ni se retiró validación; no garantiza 300 ms universal. No sincronizar/archivar Home ni declarar 5a/5b completas. Actualizar este plan y ADRs ante decisiones duraderas.
 
-La fase 4 está implementada, verificada, sincronizada y archivada en `2026-10-13-extend-agent-operations`, con 22/22 tareas y matriz de diez requisitos/29 escenarios. Las specs principales ya incluyen preview/apply. No recrear el cambio ni confundir artefactos completos con tareas verificadas. Los recibos implementados son comparación de estado, no permisos/firmas ni idempotencia persistente; preview usa copia de evaluación, apply nunca reemplaza la base original por ella. Extracción, harness/MCP y modelos siguen siendo cambios posteriores, no scope encubierto de fase 4.
+La fase 4 está implementada, verificada, sincronizada y archivada en `2026-10-13-extend-agent-operations`, con 22/22 tareas y matriz de diez requisitos/29 escenarios. Las specs principales ya incluyen preview/apply. No recrear el cambio ni confundir artefactos completos con tareas verificadas. Los recibos implementados son comparación de estado, no permisos/firmas ni idempotencia persistente; preview usa copia de evaluación, apply nunca reemplaza la base original por ella.
+
+**Fase 5 cerrada (22/10/2026):** `add-semantic-retrieval` y `add-agent-harness` están implementados, verificados, sincronizados y archivados. Leer [5b](verification-semantic-retrieval.md), [5c](verification-agent-harness.md), ADR0029/0030 y los deltas archivados antes de continuar. SQLite19/API63/MCP33/54/56/batch9; 15 capabilities/237 requisitos. No se instalaron pesos de Jina ni se activó un modelo/proveedor. Home sigue9/17; fase6 se inició después con 6a/6b. No recrear estos cambios ni confundir fixtures con calidad real.
 
 Propuesta de instrucción de arranque para otro agente:
 
-> Leé AGENTS.md, el plan y las verificaciones. Fases 0–4 y FTS archivados; Home implementado, cambio activo sin cerrar. Elegí el siguiente cambio por dependencias de la hoja de ruta y mantené pruebas UI headless, sin usar la pantalla del usuario ni afirmar cobertura del host nativo con el puente CLI. Documentá lo que requiere intervención, no pidas revisiones rutinarias ni publiques/envíes datos sin autorización específica.
+> Leé AGENTS.md, el plan y las verificaciones. Fases 0–5, FTS, semántica y harness archivados; Home implementado, cambio activo sin cerrar. Elegí el siguiente cambio por dependencias de la hoja de ruta y mantené pruebas UI headless, sin usar la pantalla del usuario ni afirmar cobertura del host nativo con el puente CLI. Documentá lo que requiere intervención, no pidas revisiones rutinarias ni publiques/envíes datos sin autorización específica.
 
 ## 16. Antecedentes y fuentes
 
@@ -547,16 +932,75 @@ preservados, sin causa demostrada ni cambios de cuotas/validación/objetivos.
 Ver [lector](pdfkit-reader.md), [verificación](verification-pdfkit-reader.md) y
 [ADR0021](decisions/0021-bounded-pdfkit-reader.md).
 Esto no completa5a: integración del perfil nativo, OCR dePDF y ampliaciones
-Excel siguen pendientes. Home activo9/17 no participa. Límite vigente de5a:
-18/10 02:16 UTC (17/10 22:16 Bolivia); detener de forma segura e informar si sigue
-abierta, sin reiniciar el contador.
+Excel siguen pendientes. Home activo9/17 no participa. Plazo histórico vencido el 18/10 02:16 UTC; la continuación del 20/10 está autorizada hasta completar fase 5, sin iniciar fase 6.
 
 
-**Integración PDFKit en curso:** `add-local-pdfkit-extraction`,2/8 tareas
-verificadas: baseline542/22, fixtures reales13 con backup/restore exacto, consumidor
-Rust y codec canónico privado. Siete tests por perfil y22 PDF reales por perfil,
-Clippy/fmt aprobados.014, persistencia/cola, lectura compartida/API54/MCP y packaging
-siguen pendientes; el codec es parte parcial de3.1, no persistencia terminada.
-Producto conservado en SQLite13/API53/MCP25/45/46/batch9;22 binarios y todo el
-catálogo anterior exactos, Home9/17 intacto. Ver [estado](pdfkit-extraction.md).
-No se sincroniza ni archiva este cambio parcial. Deadline5a sigue02:16UTC.
+**Integración PDFKit verificada (20/10):** `add-local-pdfkit-extraction`, 8/8 tareas,
+SQLite14/APIv1/54, MCP26/46/47 y batch9. Migración real13 vacía/mixta en ambos
+perfiles, backup/restore/clientes/rollback, 53 contratos previos exactos, 339 Rust
+por perfil, 25 SDK por perfil, 85 tests cliente/editor y 3.442 checks headless.
+Cuatro gates consecutivos aprobados: query p95 máximo176,788 ms y lock16,197 ms,
+con corpus/cuotas/validación/objetivos intactos; fallos previos preservados.
+[Guía](pdfkit-extraction.md) y [evidencia](verification-pdfkit-extraction.md).
+Cuatro deltas sincronizados/contrastados y cambio archivado como2026-10-20-add-local-pdfkit-extraction; Home9/17 intacto.
+Este cierre backend no completa5a: faltan integración UI/FTS de PDFKit, OCR dePDF,
+tablas/ampliaciones PDF y ampliaciones Excel. 5b/5c no se iniciaron; fase6 excluida.
+
+
+**PDFKit en UI/FTS verificado (20/10):** `add-local-pdfkit-search-ui`,10/10 tareas,
+SQLite15/API54/MCP26/46/47/batch9. Migración real14/rollback/clientes/backup,
+52 operaciones previas exactas,345 Rust y25 SDK por perfil,86 cliente/editor y
+4264 checks headless. Cuatro gates originales aprobados con query p95 máximo
+174,526ms y lock17,094ms; corpus adicional con3.519.600 bytes nativos y400 páginas
+aprobó143,365/10,405ms. [Guía](pdfkit-search-ui.md),
+[evidencia](verification-pdfkit-search-ui.md), [revisión](review-pdfkit-search-ui.md).
+Cuatro deltas sincronizados/contrastados; archivo2026-10-20-add-local-pdfkit-search-ui.
+No completa5a: OCR dePDF, tablas/ampliaciones PDF y hojas/encabezados/rangos XLSX
+requieren el siguiente recorte. 5b/5c sin iniciar; Home9/17 intacto y fase6 excluida.
+
+
+**PDF OCR verificado y archivado (20/10):** `add-local-pdf-ocr` implementa `pdf_ocr`,
+CoreGraphics→PNG→Vision existente con presupuesto compartido5s, canónico y lector
+paginado, FTS y paneles explícitos. Fuente de trabajo SQLite16/API55/MCP27/47/48,
+batch9; baseline independiente anterior15/54. [Guía](pdf-ocr.md), [ADR0024 adoptado](decisions/0024-local-pdf-ocr.md).
+Doce tareas verificadas de doce; cinco gates y revisión final aprobados, cinco deltas sincronizados/contrastados y archivo2026-10-20-add-local-pdf-ocr.362 Rust por
+perfil,28 SDK por perfil,85 pruebas cliente/editor y4714 checks headless pasaron;
+corpus propio21 casos por perfil y calidad limpia CER1,99%/WER10,45% (352 caracteres,
+67 palabras), con errores de orientación fuera de ese subconjunto. Migración15
+independiente, backup/rollback y contratos52 comunes exactos verificados.
+Home no se sincroniza ni archiva. Tablas/ampliaciones PDF
+y hojas/encabezados/rangos XLSX siguen pendientes de5a;5b/5c no comenzaron. Home
+permanece9/17 y sus archivos protegidos intactos. Corte máximo16:43:39UTC vigente.
+
+
+**Lectura XLSX por rango verificada21/10:** `add-local-xlsx-range-reader`6/6,
+SQLite16/API56/MCP28/48/49/batch9, sin migración. Hoja/rango/encabezado explícitos,
+celdas dispersas/ordinals/procedencia completos, mismo loader verificado.367 Rust
+por perfil,28 SDK por perfil,90 frontend y4860 headless; gates query máximo
+195,630542ms/lock17,499958ms, extra lector41,802375ms. Ver [guía](xlsx-range-reader.md)
+y [evidencia](verification-xlsx-range-reader.md). Sync/archivo sólo tras contraste.
+PDF tables/integración siguen pendientes: `add-bounded-pdf-table-projector` propone
+un componente independiente, no API57 ni cierre5a.5b/5c sin iniciar y Home9/17 intacto.
+
+
+**Proyector PDF independiente verificado21/10:** `add-bounded-pdf-table-projector`6/6,
+una biblioteca Rust sin I/O para organizar regiones OCR existentes en columnas
+explícitas/filas geométricas. Conserva toda evidencia/ordinals/exteriores y falla
+ante cruces/ambigüedad. [Guía](pdf-table-projector.md), [evidencia](verification-pdf-table-projector.md).
+Seis tests por perfil, PDF propio real7 regiones/seis celdas exactas y benchmark
+sintético512 regiones/celdas27,275459ms p95. Sin nueva operación, persistencia, FTS
+ni UI: producto16/API56 intacto. Integración de tablas aún requerida antes de cerrar5a.
+
+
+**Relevo21/10:** `add-local-pdf-table-reader` cuenta con propuesta/deltas/diseño/tareas,
+0/8 implementadas; API57 es propuesta y no disponible. Estado real16/API56,
+MCP28/48/49/batch9. XLSX6/6 y proyector PDF independiente6/6 sincronizados/contrastados
+y archivados. Pendiente integrar tablas PDF, reevaluar cierre5a y sólo entonces5b/5c.
+Se prepara checkpoint para detenerse antes del corte20:11:26UTC; no se inicia nueva
+implementación con la ventana de verificación insuficiente.
+
+
+Autorización vigente21/10: el usuario levantó el límite de una hora; continuar hasta completar5a, luego5b y5c, y detenerse antes de fase6. Los cortes horarios citados arriba son históricos y están revocados. Se conservan todos los invariantes, Home9/17 y la prohibición de activar modelos/proveedores.
+
+
+**Aclaración de portabilidad21/10:** el usuario pidió alternativas locales de PDFKit/Vision para Mac y Windows, optimizadas según plataforma y capacidades reales del hardware. Autorizó comparar candidatos en un entorno aislado, incluidos pesos OCR necesarios para el ensayo. Esto no activa modelos/proveedores en Noteka, no instala pesos LLM/embeddings ni convierte el staging `.exe` existente en soporte Windows verificado. La investigación y benchmarks se conservan fuera de Git; adopción de un motor nuevo requiere perfil/procedencia, contención, recuperación y aceptación de plataforma propios. Fase6 permanece excluida.

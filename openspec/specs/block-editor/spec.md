@@ -1,7 +1,7 @@
 # block-editor Specification
 
 ## Purpose
-Editar notas enriquecidas offline mediante bloques identificables y un formato semántico independiente de la interfaz de edición.
+Editar notas y tareas enriquecidas offline mediante bloques identificables y un formato semántico independiente de la interfaz de edición.
 
 ## Requirements
 
@@ -48,3 +48,31 @@ Exportación JSON SHALL conservar referencias incrustadas y Markdown SHALL adver
 #### Scenario: Restauración del conjunto
 - **WHEN** se restaura un backup con plantilla, nota v3, colección/vista y adjuntos locales
 - **THEN** sus IDs/configuraciones/originales se conservan y la nota consulta los registros del workspace restaurado sin usar red
+
+### Requirement: Inicio visible del contenido de una Task
+
+El editor SHALL ofrecer un cuerpo de Task con nombre accesible propio, indicación visible de dónde escribir, bloques por `/`, undo/redo y foco desde Enter en el título. Para un cuerpo vacío SHALL ofrecer Página vacía, Lista de pasos y Notas de tarea como estructuras locales. MUST aplicar una estructura sólo por selección explícita y mientras el cuerpo siga vacío, asignar identidades válidas a sus bloques y conservar el guardado explícito y las guardias del buffer existente.
+
+#### Scenario: Empezar una Task vacía
+- **WHEN** se abre una Task sin cuerpo y se escribe en su área de contenido o se usa Enter desde el título
+- **THEN** el mismo editor recibe foco y permite escribir bloques; sólo una edición real o elección de estructura marca el cuerpo pendiente, sin guardar al abrir o enfocar
+
+#### Scenario: Estructura y contenido previo
+- **WHEN** se elige Lista de pasos o Notas de tarea con cuerpo vacío
+- **THEN** se prepara contenido semántico local en el borrador actual, con IDs propios y undo/redo; con contenido existente esas opciones no reemplazan bloques
+
+#### Scenario: Salida o fallo de guardado
+- **WHEN** el cuerpo contiene cambios y se cierra, navega, cancela o falla guardar
+- **THEN** se aplican Guardar/Descartar/Cancelar y los errores existentes sin borrar el buffer ni afirmar persistencia, manteniendo Notes y sus documentos importados intactos
+
+### Requirement: Inicio visible del cuerpo de una Note
+
+La Note normal SHALL ofrecer escritura directa, placeholder, Enter desde el título y estructuras Página vacía/Checklist/Nota con secciones sólo sobre un cuerpo vacío. MUST conservar IDs y prefijo importado al editar, usar el editor y guardado explícito compartidos y no sustituir cuerpos con encabezados, listas u otro contenido existente. Abrir o enfocar MUST mantener el estado guardado; las estructuras sólo preparan el borrador y no ejecutan operaciones de entidades.
+
+#### Scenario: Inicio vacío
+- **WHEN** se abre una Note sin bloques visibles o con un solo párrafo vacío y se presiona Enter desde el título
+- **THEN** el editor recibe foco sin escritura persistente ni estado pendiente por el foco; las estructuras dejan de ofrecer reemplazo después de empezar
+
+#### Scenario: Estructura y prefijo conservados
+- **WHEN** se elige una estructura en una Note vacía importada o se edita una Note con código existente
+- **THEN** se prepara sólo el cuerpo del borrador con IDs propios o se conserva el código editado, manteniendo todos los bloques del prefijo original intactos y las guardias/undo/redo existentes

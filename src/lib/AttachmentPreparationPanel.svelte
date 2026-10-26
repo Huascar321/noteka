@@ -14,64 +14,64 @@
 </script>
 
 <details class="preparation-panel">
-  <summary>Preparar adjuntos locales</summary>
-  <p>Elegí un original ya administrado. Cada paso es explícito: encolar → reanudar si hace falta → ejecutar → consultar → seleccionar generación. Search sólo busca.</p>
-  <p>Salir de este panel no cancela una operación iniciada. No hay polling. Consultá nuevamente para conocer cambios de otros clientes.</p>
+  <summary>Prepare local attachments</summary>
+  <p>Choose an existing managed original. Each step is explicit: enqueue → resume if needed → run → query → select generation. Search only searches.</p>
+  <p>Leaving this panel does not cancel an active operation. There is no polling. Query again to see changes made by other clients.</p>
   {#if refs.length}
-    <label>Referencias de esta nota<select aria-label="Referencia para preparar" value="" onchange={e => controller.select(e.currentTarget.value)}>
-      <option value="" disabled>Elegí una referencia</option>
-      {#each refs as ref (ref.id)}<option value={ref.id}>{ref.id} · Rótulo de bloque: {ref.label}</option>{/each}
+    <label>References in this note<select aria-label="Reference to prepare" value="" onchange={e => controller.select(e.currentTarget.value)}>
+      <option value="" disabled>Choose a reference</option>
+      {#each refs as ref (ref.id)}<option value={ref.id}>{ref.id} · Block label: {ref.label}</option>{/each}
     </select></label>
-    <p>Los rótulos pertenecen al documento, pueden estar pendientes de guardar y no son metadatos del archivo ni indican un dueño exclusivo.</p>
+    <p>Labels belong to the document, may be unsaved, and are not file metadata or evidence of exclusive ownership.</p>
   {/if}
-  <label>ID administrado para preparar<input aria-label="ID administrado para preparar" value={view.attachmentId} oninput={e => controller.select(e.currentTarget.value)} /></label>
+  <label>Managed ID to prepare<input aria-label="Managed ID to prepare" value={view.attachmentId} oninput={e => controller.select(e.currentTarget.value)} /></label>
   <div class="actions">
-    <button disabled={view.busy || !view.attachmentId} onclick={() => void controller.list()}>Consultar trabajos</button>
-    <label>Extractor de preparación<select aria-label="Extractor de preparación" bind:value={extractor} disabled={view.busy}>
-      <option value="utf8_text">utf8_text · .txt/.md literal</option><option value="pdf_text">pdf_text · PDF textual acotado</option><option value="xlsx_cells">xlsx_cells · XLSX Transitional acotado</option><option value="image_ocr">image_ocr · PNG/JPEG inferido local</option>
+    <button disabled={view.busy || !view.attachmentId} onclick={() => void controller.list()}>Query jobs</button>
+    <label>Preparation extractor<select aria-label="Preparation extractor" bind:value={extractor} disabled={view.busy}>
+      <option value="utf8_text">utf8_text · .txt/.md literal</option><option value="pdfium_text">pdfium_text · PDF universal</option><option value="pdf_text">pdf_text · PDF textual acotado</option><option value="xlsx_cells">xlsx_cells · XLSX Transitional acotado</option><option value="image_ocr">image_ocr · PNG/JPEG inferido local</option><option value="pdfkit_text">pdfkit_text · PDFKit seleccionable local</option><option value="paddle_ocr">paddle_ocr · PDF OCR universal</option><option value="pdf_ocr">pdf_ocr · PDF inferido local</option>
     </select></label>
-    <button disabled={view.busy || !view.attachmentId || view.needsConsult} onclick={() => void controller.enqueue(extractor)}>Encolar extracción</button>
+    <button disabled={view.busy || !view.attachmentId || view.needsConsult} onclick={() => void controller.enqueue(extractor)}>Enqueue extraction</button>
   </div>
-  {#if view.busy}<p role="status">Operación local en curso… Las llamadas iniciadas conservan su cupo hasta terminar.</p>{/if}
-  {#if view.error}<div class="preparation-error error" role="alert"><strong>{view.error.code}</strong><p>{view.error.message}</p>{#if view.error.details}<pre>{json(view.error.details)}</pre>{/if}{#if view.error.uncertain}<p>El estado puede haber cambiado. Consultá antes de decidir otra acción; no se repite la escritura.</p>{/if}</div>{/if}
-  {#if view.receipt}<div class="preparation-receipt" role="status"><strong>Resultado de {view.receipt.operation}</strong><pre>{json(view.receipt.data)}</pre><p>Esta operación no ejecuta el paso siguiente. Consultá nuevamente para obtener las revisiones actuales.</p></div>{/if}
+  {#if view.busy}<p role="status">Local operation in progress… Active calls retain their slot until they finish.</p>{/if}
+  {#if view.error}<div class="preparation-error error" role="alert"><strong>{view.error.code}</strong><p>{view.error.message}</p>{#if view.error.details}<pre>{json(view.error.details)}</pre>{/if}{#if view.error.uncertain}<p>The state may have changed. Query before choosing another action; the write is not repeated.</p>{/if}</div>{/if}
+  {#if view.receipt}<div class="preparation-receipt" role="status"><strong>Result of {view.receipt.operation}</strong><pre>{json(view.receipt.data)}</pre><p>This operation does not run the next step. Query again for current revisions.</p></div>{/if}
   {#if view.jobs}
-    <p class="preparation-page">Página {view.pageNumber} · {view.jobs.items.length} trabajos de este adjunto. Snapshot por llamada.</p>
-    {#if !view.jobs.items.length}<p>Sin trabajos para este ID. Esto no comprueba que exista el original.</p>{/if}
+    <p class="preparation-page">Page {view.pageNumber} · {view.jobs.items.length} jobs for this attachment. Snapshot per call.</p>
+    {#if !view.jobs.items.length}<p>No jobs for this ID. This does not confirm that the original exists.</p>{/if}
     <div class="preparation-jobs">{#each view.jobs.items as job (job.id)}
-      <button class="preparation-job" disabled={view.busy} aria-pressed={view.jobId === job.id} onclick={() => controller.chooseJob(job.id)}>{job.id} · {job.extractor} v{job.extractor_version} · {job.state} · r{job.revision} · intentos {job.attempts}{!job.supported ? ' · incompatible' : ''}{job.result_from_previous_attempt ? ' · resultado anterior' : ''}</button>
+      <button class="preparation-job" disabled={view.busy} aria-pressed={view.jobId === job.id} onclick={() => controller.chooseJob(job.id)}>{job.id} · {job.extractor} v{job.extractor_version} · {job.state} · r{job.revision} · intentos {job.attempts}{!job.supported ? ' · incompatible' : ''}{job.result_from_previous_attempt ? " · previous result" : ''}</button>
     {/each}</div>
-    {#if view.jobs.next_cursor}<button disabled={view.busy} onclick={() => void controller.list(true)}>Siguiente página de trabajos</button>{/if}
+    {#if view.jobs.next_cursor}<button disabled={view.busy} onclick={() => void controller.list(true)}>Next jobs page</button>{/if}
   {/if}
-  {#if view.jobId}<p>Trabajo elegido: <code>{view.jobId}</code></p><button disabled={view.busy} onclick={() => void controller.inspect()}>Consultar trabajo elegido</button>{/if}
+  {#if view.jobId}<p>Selected job: <code>{view.jobId}</code></p><button disabled={view.busy} onclick={() => void controller.inspect()}>Query selected job</button>{/if}
   {#if view.job && view.control && view.index}
     {@const job = view.job}
     <section class="preparation-inspection" aria-label="Procesamiento consultado">
       <h3>Procesamiento consultado</h3>
-      <p>Consultas consecutivas independientes; pueden cambiar entre sí. Las escrituras verifican revisiones y generación en Rust.</p>
-      <p>Estado <strong data-preparation="state">{job.state}</strong> · revisión <span data-preparation="revision">{job.revision}</span> · intentos {job.attempts} · soporte {job.supported ? 'compatible' : 'incompatible'} {job.unsupported_reason ?? ''}</p>
-      <p>Ownership activo: {String(job.ownership_active)} · recuperable: {String(job.recoverable)} · resultado de intento anterior: {String(job.result_from_previous_attempt)}</p>
-      {#if job.error}<div role="alert"><strong>Error del trabajo: {job.error.code}</strong><p>{job.error.message}</p><pre>{json(job.error.details)}</pre></div>{/if}
-      <details><summary>Procedencia y configuración del trabajo</summary><pre>{json(job)}</pre></details>
-      <p class="preparation-control">Cola global {view.control.paused ? 'pausada' : 'habilitada'} · revisión {view.control.revision}. Reanudar no ejecuta. Ejecutar por ID también puede recuperar intentos vencidos del workspace.</p>
+      <p>Consecutive queries are independent and may differ. Writes verify revisions and generation in Rust.</p>
+      <p>Status <strong data-preparation="state">{job.state}</strong> · revision <span data-preparation="revision">{job.revision}</span> · intentos {job.attempts} · soporte {job.supported ? 'compatible' : 'incompatible'} {job.unsupported_reason ?? ''}</p>
+      <p>Ownership activo: {String(job.ownership_active)} · recuperable: {String(job.recoverable)} · result from an earlier attempt: {String(job.result_from_previous_attempt)}</p>
+      {#if job.error}<div role="alert"><strong>Job error: {job.error.code}</strong><p>{job.error.message}</p><pre>{json(job.error.details)}</pre></div>{/if}
+      <details><summary>Job provenance and configuration</summary><pre>{json(job)}</pre></details>
+      <p class="preparation-control">Cola global {view.control.paused ? 'pausada' : 'habilitada'} · revision {view.control.revision}. Resuming does not run jobs. Running by ID may also recover expired attempts in the workspace.</p>
       <div class="actions">
-        <button disabled={view.busy} onclick={() => void controller.setPaused()}>{view.control.paused ? 'Reanudar cola global' : 'Pausar cola global'}</button>
-        <button disabled={view.busy || !job.supported || job.state !== 'queued'} onclick={() => void controller.jobAction('run')}>Ejecutar trabajo elegido</button>
-        <button disabled={view.busy || !['queued', 'running', 'cancelled'].includes(job.state)} onclick={() => void controller.jobAction('cancel')}>Cancelar trabajo elegido</button>
+        <button disabled={view.busy} onclick={() => void controller.setPaused()}>{view.control.paused ? "Resume global queue" : "Pause global queue"}</button>
+        <button disabled={view.busy || !job.supported || job.state !== 'queued'} onclick={() => void controller.jobAction('run')}>Run selected job</button>
+        <button disabled={view.busy || !['queued', 'running', 'cancelled'].includes(job.state)} onclick={() => void controller.jobAction('cancel')}>Cancel selected job</button>
         <button disabled={view.busy || !job.supported || ['queued', 'running'].includes(job.state)} onclick={() => void controller.jobAction('retry')}>Reencolar trabajo elegido</button>
       </div>
-      <h3>Generación e índice consultados</h3>
-      {#if job.generation}<p>Generación <code data-preparation="generation">{job.generation.id}</code> · intento {job.generation.attempt} · completa {String(job.generation.complete)} · {job.generation.fragment_count} fragmentos internos. En XLSX/OCR son chunks JSON internos, no celdas ni regiones.</p>{:else}<p>Sin generación publicada.</p>{/if}
-      <p>Índice {view.index.profile} · versión {view.index.version} · revisión <span data-preparation="index-revision">{view.index.revision}</span>. Cobertura filtrada por trabajo; get no verifica originales.</p>
+      <h3>Queried generation and index</h3>
+      {#if job.generation}<p>Generation <code data-preparation="generation">{job.generation.id}</code> · intento {job.generation.attempt} · completa {String(job.generation.complete)} · {job.generation.fragment_count} internal fragments. For XLSX/OCR these are internal JSON chunks, not cells or regions.</p>{:else}<p>No published generation.</p>{/if}
+      <p>Index {view.index.profile} · version {view.index.version} · revision <span data-preparation="index-revision">{view.index.revision}</span>. Coverage is filtered by job; get does not verify originals.</p>
       <pre class="preparation-index">{json(view.index)}</pre>
-      <button disabled={!canPut} onclick={() => void controller.selectGeneration()}>Seleccionar generación para búsqueda</button>
-      <p>Seleccionar no extrae ni busca. Una generación compatible sin texto puede seleccionarse con cero fragmentos. Reemplazar una generación invalida su selección anterior.</p>
+      <button disabled={!canPut} onclick={() => void controller.selectGeneration()}>Select generation for search</button>
+      <p>Selecting does not extract or search. A compatible generation with no text can be selected with zero fragments. Replacing a generation invalidates its previous selection.</p>
     </section>
   {/if}
-  <details class="preparation-limits"><summary>Límites y alcance local</summary>
-    <p>Fuente hasta 1 MiB. UTF-8 estricto sin NUL: .txt/.md literal. PDF 1.0–1.7: 1–100 páginas, Type1 latino Standard/WinAnsi; sin OCR, orden visual, geometría ni tablas estructuradas. XLSX Transitional: hasta 32 hojas/10.000 celdas; fórmulas y cachés separadas, sin recálculo ni encabezados inferidos. OCR local macOS: PNG/JPEG de una imagen, hasta 4.096 por eje/4 Mp, 512 regiones y 1 MiB de representación. Texto inferido: puede faltar o estar equivocado, sin orden visual ni tablas garantizados. El núcleo valida extensión, MIME, contenido y configuración.</p>
-    <p>Máximo 1.000 trabajos queued/running, 10.000 trabajos totales y 32 MiB derivados retenidos. Generación hasta 1 MiB/512 fragmentos de hasta 4.096 bytes. Índice hasta 1.024 selecciones/16.384 fragmentos/8 MiB de texto. Respuesta hasta 2 MiB; sin purga o truncamiento automático.</p>
-    <p>Presupuesto cooperativo de ejecución 5 s, lease 15 s y contención 2.000 ms; no garantía de tiempo real ni límite RSS. Helpers PDF/XLSX descartables con heap solicitado 128 MiB, CPU 4 s y watchdog 5 s. OCR usa Vision r3/fast/es-ES/en-US disponible en el sistema, CPU 4 s, watchdog 5 s y RSS observado hasta 128 MiB con muestreo de 5 ms; no es límite duro RSS/GPU. Una ejecución sin motor falla explícitamente. No se instalan modelos ni se usan proveedores remotos. No se repara ni reinicia el índice desde este panel.</p>
+  <details class="preparation-limits"><summary>Local limits and scope</summary>
+    <p>Source up to 1 MiB. Strict UTF-8 without NUL: literal .txt/.md. PDF 1.0–1.7: 1–100 pages, Latin Type1 Standard/WinAnsi; no OCR, visual order, geometry or structured tables. XLSX Transitional: up to 32 sheets/10,000 cells; separate formulas and caches, no recalculation or inferred headers. Local macOS OCR: single-image PNG/JPEG, up to 4,096 pixels per axis/4 Mp, 512 regions and 1 MiB representation. Inferred text may be missing or incorrect; visual order and tables are not guaranteed. The core validates extension, MIME, content and configuration.</p>
+    <p>Up to 1,000 queued/running jobs, 10,000 total jobs and 32 MiB retained output. Generations up to 1 MiB/512 fragments of up to 4,096 bytes. Index up to 1,024 selections/16,384 fragments/8 MiB of text. Responses up to 2 MiB; no automatic purging or truncation.</p>
+    <p>Cooperative execution budget: 5 s, lease: 15 s, contention: 2,000 ms; no real-time guarantee or RSS limit. Disposable PDF/XLSX helpers request 128 MiB heap, 4 s CPU and a 5 s watchdog. OCR uses system Vision r3/fast/es-ES/en-US, 4 s CPU, a 5 s watchdog and observed RSS up to 128 MiB sampled every 5 ms; this is not a hard RSS/GPU limit. Execution without an engine fails explicitly. No models are installed or remote providers used. This panel does not repair or reset the index.</p>
   </details>
 </details>
 

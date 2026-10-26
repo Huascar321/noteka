@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "build": "npm run contracts:check && npm run check && vite build",
+    "build": "npm run icons:check && npm run contracts:check && npm run check && vite build",
     "tauri": "tauri",
     "pdf:prepare": "node scripts/prepare-pdf-worker.mjs",
     "contracts:generate": "node scripts/contracts.mjs",
@@ -19,13 +19,17 @@
     "test:batches": "node --test tests/subscription-batch.mjs",
     "test:mcp": "node --test tests/local-mcp.mjs",
     "test:editor": "node --experimental-strip-types --test tests/editor-adapter.mjs tests/embedded-reads.mjs tests/home-reads.mjs",
+    "test:desktop-navigation": "node scripts/headless-navigation-smoke.mjs",
     "extraction:prepare": "node scripts/prepare-extraction-workers.mjs",
     "test:attachment-preparation": "node --experimental-strip-types --test tests/attachment-preparation.mjs",
     "test:headless-preparation": "node scripts/headless-preparation-smoke.mjs",
     "test:generation-reader": "node --experimental-strip-types --test tests/attachment-generation-reader.mjs",
-    "test:headless-reader": "node scripts/headless-reader-smoke.mjs"
+    "test:headless-reader": "node scripts/headless-reader-smoke.mjs",
+    "icons:generate": "node scripts/generate-icons.mjs",
+    "icons:check": "node scripts/generate-icons.mjs --check"
   },
   "dependencies": {
+    "@animateicons/vanilla": "0.1.0",
     "@tauri-apps/api": "2.12.3",
     "@tiptap/core": "3.31.4",
     "@tiptap/extension-task-item": "3.31.4",

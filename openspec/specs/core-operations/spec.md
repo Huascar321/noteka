@@ -43,7 +43,7 @@ El sistema SHALL exponer un catálogo versionado con esquemas de entrada, salida
 
 #### Scenario: Catálogo de extracción acotado
 - **WHEN** se describe el núcleo con extracción e índice mixto implementados
-- **THEN** las trece operaciones de extracción distinguen utf8_text, pdf_text, xlsx_cells e image_ocr acotados y sus proyecciones explícitas, sin compatibilidad de extracción como paso/check ni anuncio de PDF/Excel genérico, embeddings, LLM o ejecución residente
+- **THEN** las diecisiete operaciones de extracción distinguen utf8_text, pdf_text, xlsx_cells, image_ocr pdfkit_text y pdf_ocr acotados y sus proyecciones explícitas, sin compatibilidad de extracción como paso/check ni anuncio de PDF/Excel genérico, embeddings, LLM o ejecución residente
 
 #### Scenario: Paridad de herramientas MCP habilitadas
 - **WHEN** CLI y MCP autorizado ejecutan entradas equivalentes de su superficie común sobre workspaces actuales equivalentes, dentro de los límites de entrega MCP
@@ -51,7 +51,7 @@ El sistema SHALL exponer un catálogo versionado con esquemas de entrada, salida
 
 #### Scenario: Catálogo completo y disponibilidad por transporte
 - **WHEN** se compara el catálogo compartido con tools/list y el recurso noteka://catalog
-- **THEN** existen 53 operaciones y 25/45/46 herramientas; extraction.ocr_regions es aditiva y sólo index/search amplían sus DTOs de extractor/localizador OCR, los otros 50 contratos y las siete exclusiones MCP se conservan
+- **THEN** existen57 operaciones y29/49/50 herramientas; respecto del baseline14/54 sólo index/search amplían enums/localizadores PDFKit y su metadata, mientras los52 contratos restantes, errores, nueve mutaciones batchables y siete exclusiones MCP se conservan
 
 ### Requirement: Escritura atómica validada
 
@@ -359,7 +359,7 @@ El núcleo SHALL publicar `extraction.index` y `extraction.search` en API v1, ca
 
 #### Scenario: Catálogo y compatibilidad
 - **WHEN** un cliente inspecciona el catálogo y ejecuta las operaciones por núcleo o CLI
-- **THEN** encuentra 52 operaciones con esquemas de entrada/salida y errores compartidos; los 49 contratos anteriores al índice, lectores separados y search.query/rebuild mantienen shapes y significado
+- **THEN** encuentra57 operaciones con esquemas de entrada/salida y errores compartidos; los 49 contratos anteriores al índice, lectores separados y search.query/rebuild mantienen shapes y significado
 
 #### Scenario: Entrada estricta por acción
 - **WHEN** se omiten revisiones/generación requeridas, se mezclan campos de acciones o se envían campos desconocidos, IDs/cursor/límites inválidos, shell, ruta de helper o proveedor
@@ -402,7 +402,7 @@ El sistema MUST mantener la whitelist actual de nueve mutaciones de changes.prev
 El núcleo SHALL ofrecer ejecución scoped con ruta canónica, identidad y política fijadas por el host, sin admitir override del cliente. MUST comprobar versión e identidad en la conexión/snapshot realmente usados y rechazar un workspace no actual sin crear, migrar, restaurar ni reparar. Esta entrada conserva execute/execute_json y apertura explícita CLI/UI; la evolución de index/search y la migración v12 son las excepciones documentadas a la igualdad con v11.
 
 #### Scenario: Scope actual y versión incompatible
-- **WHEN** se ejecuta la entrada scoped sobre v12 válido y sobre fixtures ausente, anterior, futura o inconsistente
+- **WHEN** se ejecuta la entrada scoped sobre el esquema vigente válido y sobre fixtures ausente, anterior, futura o inconsistente
 - **THEN** sólo el actual se admite; los demás conservan sus datos y devuelven not_found, unsupported_workspace_version o storage_error según corresponda, sin backup de migración ni cambios de formato
 
 #### Scenario: Identidad comprobada en la operación
@@ -411,7 +411,7 @@ El núcleo SHALL ofrecer ejecución scoped con ruta canónica, identidad y polí
 
 #### Scenario: Clientes anteriores conservados
 - **WHEN** se contrastan inputs/outputs/definiciones/errores/lotes con baseline v11/52 y se ejecutan CLI/UI sin la entrada scoped
-- **THEN** sólo evolucionan los enums/DTOs y descriptor de index/search previstos; los otros 50 contratos, lectores y whitelist se conservan, con apertura explícita v12 sin ejecución implícita
+- **THEN** sólo evolucionan los enums/DTOs y descriptor de index/search previstos; los otros 50 contratos, lectores y whitelist se conservan, con apertura explícita al esquema vigente sin ejecución implícita
 
 ### Requirement: Lecturas scoped sin mutaciones persistentes
 
@@ -462,7 +462,7 @@ El núcleo SHALL conservar `extraction.xlsx_cells` y CLI `extraction xlsx-cells`
 El catálogo/API v1 SHALL añadir extraction.ocr_regions y exponer image_ocr/proyección de regiones en index/search sin modificar los otros cincuenta contratos previos, errores, nueve mutaciones batchables o siete exclusiones MCP. MUST compartir validaciones entre Rust/CLI/MCP/UI, rechazar entradas ajenas y usar campos decimales explícitos sin convertir OCR en UTF-8 original o resultado XLSX.
 
 #### Scenario: Clientes y catálogo OCR
-- **WHEN** se describen las 53 operaciones y se solicitan regiones equivalentes por CLI y MCP autorizado
+- **WHEN** se describe el catálogo vigente de57 operaciones y se solicitan regiones equivalentes por CLI y MCP autorizado
 - **THEN** los inputs/outputs/errores son completos y equivalentes, con fuente/manifest/localizadores y límites reales, salvo metadatos de ejecución documentados
 
 #### Scenario: Entradas lectores y versiones
@@ -472,3 +472,123 @@ El catálogo/API v1 SHALL añadir extraction.ocr_regions y exponer image_ocr/pro
 #### Scenario: Compatibilidad contractual completa
 - **WHEN** se comparan catálogos y DTOs con el baseline v12 durable quitando sólo adiciones y ampliaciones identificadas
 - **THEN** los cincuenta contratos no afectados, las nueve mutaciones, límites y formatos de documento se conservan exactamente, sin habilitar funciones futuras
+
+### Requirement: Contrato compartido de páginas PDFKit
+
+El catálogo/API v1 SHALL añadir extraction.pdfkit_pages y CLI extraction pdfkit-pages con DTOs estrictos y validación Rust compartida. MUST conservar lectores previos, errores, whitelist batch9 y siete exclusiones MCP; las ampliaciones identificadas de index/search no cambian este lector. No acepta rutas de helper, comandos, contraseñas o selección remota en solicitudes.
+
+#### Scenario: Paridad y contratos anteriores
+- **WHEN** se compara el catálogo con baseline13 durable y se leen páginas equivalentes mediante núcleo/CLI/MCP autorizado
+- **THEN** los51 contratos del baseline13 ajenos a index/search permanecen iguales y la nueva lectura devuelve los mismos datos/cobertura, sin convertirse en step batchable
+
+#### Scenario: Entradas estrictas
+- **WHEN** se envían campos desconocidos, límites/cursor/tipo ajenos o se intenta insertar la lectura en un batch
+- **THEN** se rechaza antes de writes/procesamiento, sin ampliar permisos o whitelist
+
+### Requirement: Extensión contractual acotada de búsqueda PDFKit
+
+El catálogo SHALL identificar pdfkit_text y pdfkit_page_text en los DTOs de index/search, con perfil/proyección, página/rango y motor/limitaciones reales. MUST conservar52 contratos restantes del baseline14/54, errores, batch9/MCP29/49/50 y equivalencia Rust/CLI/MCP/UI; no añade operaciones, helper/ruta o permisos al input.
+
+#### Scenario: Contratos y paridad
+- **WHEN** se comparan catálogos completos con el cliente14 durable y se busca/selecciona PDFKit por CLI y MCP autorizado
+- **THEN** sólo los dos contratos nombrados amplían sus tipos y los resultados son equivalentes con las mismas cuotas/cercas/errores; los lectores anteriores son idénticos
+
+#### Scenario: Input estricto y permisos conservados
+- **WHEN** un cliente envía campos/locators no admitidos, indexa sin escritura o intenta usar extracción/indexación como step batchable
+- **THEN** se rechaza sin preparar fuentes, ampliar whitelist, recibir comandos/rutas de helper o cambiar la política de transporte
+
+### Requirement: Contrato compartido de regiones PDF OCR
+
+El catálogo SHALL añadir extraction.pdf_ocr_regions en APIv1/CLI/MCP con DTOs estrictos y validar pdf_ocr/localizadores en index/search. MUST conservar52 operaciones no afectadas del baseline15/54, errores, batch9 y siete exclusiones; el lector no acepta helpers, rutas, comandos, credenciales o activación remota.
+
+#### Scenario: Paridad y catálogo completo
+- **WHEN** se comparan catálogos15/16 descontando las adiciones posteriores nombradas extraction.xlsx_range y extraction.pdf_ocr_table y se consulta la misma generación por núcleo/CLI/MCP autorizado
+- **THEN** el delta PDF OCR sólo amplía index/search y añade su lector; el catálogo vigente API57/MCP29/49/50 comparte datos/validaciones salvo metadatos de ejecución documentados
+
+#### Scenario: Entradas y pasos ajenos
+- **WHEN** se aportan campos desconocidos, cursor/límite/tipo ajenos o la lectura/extracción/indexación como step batchable
+- **THEN** rechaza sin writes/procesamiento ni ampliación de whitelist/permisos
+
+### Requirement: Contrato compartido aditivo de rango XLSX
+
+El catálogo SHALL añadir extraction.xlsx_range y CLI extraction xlsx-range en APIv1, con DTOs estrictos y validación Rust compartida. MUST conservar exactamente55 contratos anteriores, errores, batch9 y SQLite16; no admite selección remota, comandos, rutas de helper o configuración persistida.
+
+#### Scenario: Paridad y compatibilidad completa
+- **WHEN** se compara el catálogo con el cliente16/API55 independiente descontando la adición posterior extraction.pdf_ocr_table y se consulta el mismo rango por invoke/CLI
+- **THEN** el delta de rango sólo añade extraction.xlsx_range, las55 operaciones previas son idénticas y el resultado es equivalente; el workspace sigue accesible con el cliente16 previo
+
+#### Scenario: Entradas y lotes ajenos
+- **WHEN** se aportan campos desconocidos o se intenta usar la nueva lectura en un lote
+- **THEN** rechaza sin writes ni ampliar whitelist; describe entrega57 operaciones y validaciones estrictas
+
+### Requirement: Contrato aditivo de tabla PDF OCR
+
+APIv1 SHALL añadir extraction.pdf_ocr_table y CLI extraction pdf-ocr-table con DTOs estrictos y validación Rust compartida, conservando exactamente56 contratos previos, errores y batch9. MUST mantener SQLite16 y excluir helpers/rutas/modelos/credenciales del input y la lectura de los pasos batchables.
+
+#### Scenario: Paridad y catálogo57 verificado
+- **WHEN** se contrasta cliente56 independiente y se consulta la misma tabla por invoke/CLI
+- **THEN** sólo la operación nueva y sus raíces/defs nombradas evolucionan, con datos/cobertura equivalentes y compatibilidad de workspace/backup16
+
+#### Scenario: Entradas y lotes inválidos
+- **WHEN** se envían campos/cursores/tipos/límites ajenos o se incorpora la lectura como step batchable
+- **THEN** se rechaza antes de efectos sin ampliar whitelist o reinterpretar instrucciones del contenido
+
+### Requirement: Operaciones versionadas de recuperación semántica
+
+El núcleo SHALL exponer `embedding.index` (status/build/reset) y `retrieval.search` (híbrido/semántico/léxico) dentro de API v1, con esquemas de entrada, salida y errores. MUST aplicar las mismas validaciones, límites y permisos en interfaz, CLI y MCP; build/reset requieren escritura, status y search son lectura. MUST NOT aceptar SQL, shell, rutas de modelos, credenciales ni endpoints no loopback.
+
+#### Scenario: Catálogo, CLI y MCP coherentes
+- **WHEN** se consulta el catálogo o se ejecutan las nuevas operaciones por CLI y MCP
+- **THEN** los nombres, esquemas, acciones y metadatos de lote coinciden, `embedding.index status` y `retrieval.search` funcionan en scope de lectura, y build/reset requieren escritura
+
+#### Scenario: Entrada inválida o prohibida
+- **WHEN** se envía una acción desconocida, un campo adicional, un límite fuera de rango, un endpoint remoto o una operación no incluida en el scope
+- **THEN** el núcleo rechaza la solicitud con validación o permiso denegado, sin crear generaciones ni modificar datos
+
+### Requirement: Operaciones versionadas del harness de agentes
+
+El núcleo SHALL exponer `agent.ask`, `agent.cancel` y `agent.trace` en API v1 con esquemas y errores. `agent.ask` MUST requerir ejecución, `agent.cancel` escritura y `agent.trace` lectura; CLI, interfaz y MCP MUST aplicar la misma política. MUST NOT aceptar SQL, shell, credenciales, endpoints remotos ni herramientas fuera de la lista.
+
+#### Scenario: Catálogo y scopes coherentes
+- **WHEN** se consulta el catálogo o se ejecutan las operaciones por CLI/MCP
+- **THEN** los nombres, esquemas, acciones y permisos coinciden; `agent.trace` funciona en lectura y `agent.ask` requiere ejecución
+
+#### Scenario: Operación prohibida
+- **WHEN** se solicita una herramienta, endpoint o acción no incluida
+- **THEN** el núcleo rechaza la solicitud sin iniciar proveedor, escribir traza ni modificar datos
+
+### Requirement: Catálogo y filtros del extractor PDFium
+
+El catálogo SHALL anunciar `pdfium_text` entre los extractores admitidos y el CLI/UI MUST permitir encolarlo, prepararlo y filtrarlo. El filtro de búsqueda de adjuntos y el catálogo de perfiles MUST distinguir `pdfium_text` de `pdf_text`/`pdfkit_text` sin cambiar las operaciones existentes.
+
+#### Scenario: Catálogo y filtro
+- **WHEN** se consulta el catálogo o se filtra la búsqueda por `pdfium_text`
+- **THEN** el extractor aparece con su nombre exacto y los resultados usan el mismo lector/localizador de páginas
+
+#### Scenario: Extractor desconocido
+- **WHEN** se envía un nombre fuera de los extractores publicados
+- **THEN** el núcleo rechaza la solicitud sin crear trabajos ni generaciones
+
+### Requirement: Catálogo y filtros PaddleOCR
+
+El catálogo SHALL anunciar `paddle_ocr` y CLI/UI MUST permitir encolarlo, prepararlo y filtrarlo. El filtro de adjuntos MUST distinguirlo de `pdf_ocr`/`pdfium_text` sin agregar operaciones.
+
+#### Scenario: Catálogo y filtro
+- **WHEN** se consulta el catálogo o se filtra por `paddle_ocr`
+- **THEN** el extractor aparece con su perfil y los hits conservan página y procedencia
+
+#### Scenario: Nombre no publicado
+- **WHEN** se envía un extractor desconocido
+- **THEN** el núcleo lo rechaza sin crear trabajos
+
+### Requirement: Operación de estructura PDF universal
+
+El núcleo SHALL exponer `extraction.pdf_structure` en API v1 y CLI/MCP con esquema estricto, lectura por job y salida acotada. MUST conservar las 62 operaciones previas y no otorgar escritura ni acceso genérico.
+
+#### Scenario: Catálogo y lectura
+- **WHEN** se consulta el catálogo o se lee la estructura de un job Paddle
+- **THEN** la operación aparece con su esquema y devuelve datos sin modificar el workspace
+
+#### Scenario: Entrada inválida
+- **WHEN** el job/generación no existe o el input tiene campos desconocidos
+- **THEN** el núcleo rechaza con validación/no encontrado

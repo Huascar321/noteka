@@ -38,3 +38,7 @@ ningún write de UI ni preparación/indexación automática. Cero requests exter
 Evidencia en `active-unified-search-path.txt`, `logs/headless-final.log` y
 `runtime/noteka-headless-gOuLXR/`. No es recuperación semántica ni aceptación nativa.
 La [aceptación conjunta](verification-local-preparation-closure.md) registra regresión/gates y revisión; su delta está sincronizado/contrastado y el cambio archivado el 17/10.
+
+La [integración PDFKit](pdfkit-search-ui.md) presenta el localizador nativo completo
+y sus limitaciones; OCR de imágenes se identifica como texto inferido. Los grupos
+siguen siendo consultas independientes y no una recuperación semántica.

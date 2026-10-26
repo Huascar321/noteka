@@ -108,11 +108,11 @@ fn exhaustive_policy_matches_all_typed_operations_and_catalog_without_changing_i
         );
         names.push(name.as_str());
     }
-    assert_eq!(names.len(), 53);
-    assert_eq!(READ.len(), 25);
-    assert_eq!(WRITE.len(), 20);
+    assert_eq!(names.len(), 66);
+    assert_eq!(READ.len(), 34);
+    assert_eq!(WRITE.len(), 23);
     assert_eq!(EXCLUDED.len(), 7);
-    for (w, r, n) in [(false, false, 25), (true, false, 45), (true, true, 46)] {
+    for (w, r, n) in [(false, false, 34), (true, false, 57), (true, true, 59)] {
         let p = Policy::new(w, r).unwrap();
         assert_eq!(
             names
@@ -192,17 +192,29 @@ fn scope_creation_is_physically_pure_and_versions_never_migrate() {
         crate::workspace::SCHEMA_VERSION - 1,
         crate::workspace::SCHEMA_VERSION + 1,
     ] {
+        if v < crate::workspace::SCHEMA_VERSION {
+            let drops = if v == 19 {
+                "DROP TABLE IF EXISTS entity_external_resources;DROP TABLE IF EXISTS external_resources;"
+            } else if v == 18 {
+                "DROP TABLE IF EXISTS extraction_pdf_structures;"
+            } else if v == 17 {
+                "DROP TABLE IF EXISTS agent_runs;DROP TABLE IF EXISTS extraction_pdf_structures;"
+            } else {
+                "DROP TABLE IF EXISTS semantic_chunks;DROP TABLE IF EXISTS semantic_control;DROP TABLE IF EXISTS semantic_generations;DROP TABLE IF EXISTS semantic_profiles;DROP TABLE IF EXISTS agent_runs;DROP TABLE IF EXISTS extraction_pdf_structures;"
+            };
+            w.conn.execute_batch(drops).unwrap();
+        }
         w.conn
             .execute("UPDATE workspace_meta SET schema_version=?1", [v])
             .unwrap();
         w.conn.pragma_update(None, "user_version", v).unwrap();
         let b = files(&w.path);
-        assert!(matches!(
-            LocalScope::new(&w.path, Policy::new(false, false).unwrap())
-                .unwrap_err()
-                .code,
-            crate::error::ErrorCode::UnsupportedWorkspaceVersion
-        ));
+        let error = LocalScope::new(&w.path, Policy::new(false, false).unwrap()).unwrap_err();
+        assert_eq!(
+            format!("{:?}", error.code),
+            "UnsupportedWorkspaceVersion",
+            "version {v}: {error:?}"
+        );
         assert_eq!(b, files(&w.path));
     }
     assert!(matches!(
@@ -365,6 +377,8 @@ fn every_read_class_succeeds_on_readonly_main_with_committed_wal_and_preserves_o
             > 32
     );
     let ocr = crate::ocr_tests::seed(&mut w, crate::ocr_tests::recognition(2));
+    let pdfkit = crate::pdfkit_tests::seed(&mut w, crate::pdfkit_tests::document(2));
+    let pdf_ocr = crate::pdf_ocr_storage_tests::seed(&mut w, crate::pdf_ocr_tests::document(2, 1));
     let reads = [
         ("changes.list", json!({})),
         (
@@ -376,15 +390,29 @@ fn every_read_class_succeeds_on_readonly_main_with_committed_wal_and_preserves_o
         ("database.query", json!({"collection_id":collection["id"]})),
         ("entity.get", json!({"id":record["id"]})),
         ("entity.list", json!({})),
+        ("external.list", json!({"entity_id":record["id"]})),
         ("extraction.control", json!({"action":"get"})),
         ("extraction.fragments", json!({"id":jobs[0]["id"]})),
         ("extraction.get", json!({"id":jobs[0]["id"]})),
         ("extraction.index", json!({"action":"get"})),
         ("extraction.list", json!({})),
+        ("embedding.index", json!({"action":"status"})),
+        ("retrieval.search", json!({"query":"Synthetic"})),
         ("extraction.ocr_regions", json!({"id":ocr.id})),
         ("extraction.pdf_fragments", json!({"id":jobs[1]["id"]})),
+        ("extraction.pdf_ocr_regions", json!({"id":pdf_ocr.id})),
+        ("extraction.pdf_structure", json!({"id":pdf_ocr.id})),
+        (
+            "extraction.pdf_ocr_table",
+            json!({"id":pdf_ocr.id,"page_number":1,"x_edges":["0","1"],"y_min":"0","y_max":"1"}),
+        ),
+        ("extraction.pdfkit_pages", json!({"id":pdfkit.id})),
         ("extraction.search", json!({"query":"Synthetic"})),
         ("extraction.xlsx_cells", json!({"id":jobs[2]["id"]})),
+        (
+            "extraction.xlsx_range",
+            json!({"id":jobs[2]["id"],"sheet_id":1,"range":"A1:A2"}),
+        ),
         (
             "home.query",
             json!({"view":"notes_all","as_of":"2026-10-15"}),
@@ -403,6 +431,7 @@ fn every_read_class_succeeds_on_readonly_main_with_committed_wal_and_preserves_o
         ("template.get", json!({"id":template["id"]})),
         ("template.list", json!({"collection_id":collection["id"]})),
         ("workflow.query", json!({"view":"inbox"})),
+        ("agent.trace", json!({"action":"list"})),
     ];
     assert_eq!(reads.iter().map(|(op, _)| *op).collect::<Vec<_>>(), READ);
     let reader = LocalScope::new(&w.path, Policy::new(false, false).unwrap()).unwrap();
@@ -410,7 +439,16 @@ fn every_read_class_succeeds_on_readonly_main_with_committed_wal_and_preserves_o
     let originals = files(&w.path.join("attachments"));
     for (op, input) in reads {
         let response = run(&reader, op, input);
-        assert!(response.ok, "{op}: {:?}", response.error);
+        if op == "extraction.pdf_structure" {
+            // El fixture no tiene una generación Paddle con estructura; el scope
+            // sigue siendo de lectura y el fallo debe ser de validación, no permiso.
+            assert!(matches!(
+                response.error.unwrap().code,
+                crate::error::ErrorCode::ValidationError
+            ));
+        } else {
+            assert!(response.ok, "{op}: {:?}", response.error);
+        }
         assert_eq!(before, raw(&w.conn), "{op}");
     }
     assert_eq!(originals, files(&w.path.join("attachments")));

@@ -510,7 +510,13 @@ pub(crate) fn search_scoped(
             })
         };
         let mut raw = query(false)?;
-        let expected = query(true)?;
+        let expected =
+            if raw.is_empty() && index::canonical_has_match(&tx, &expression)? == Some(false) {
+                Vec::new()
+            } else {
+                index::ensure_expected(&tx, &b, &verified.entries)?;
+                query(true)?
+            };
         if raw != expected || raw.iter().any(|r| !r.score.is_finite()) {
             let mut e = index::error("invalid_attachment_index");
             e.details["current_revision"] = serde_json::json!(revision);

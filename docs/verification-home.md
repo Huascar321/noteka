@@ -1,6 +1,6 @@
 # Verificación — Home local
 
-Cambio: `add-local-home-dashboard`. Implementación: 12/10/2026; revisión/regresión fresca: 13/10/2026. **Implementado, recorrido integrado headless aprobado y revisión final cerrada; aceptación nativa pendiente. No archivado.** Nueve de diecisiete tareas completamente verificadas; las ocho restantes incluyen pruebas nativas aún pendientes. Código: SQLite v7, documentos v1/v2/v3 y formatos futuros conservados, 38 operaciones compartidas. [Guía](home.md), [ADR 0009](decisions/0009-shared-home-projections.md), [referencia](home-reference.md) y [revisión detallada de 26 escenarios](review-home.md).
+Cambio: `add-local-home-dashboard`. Implementación: 12/10/2026; revisión/regresión fresca: 13/10/2026. **Implementado, recorrido headless y aceptación nativa completos; 17/17 tareas.** Archivado el 22/10/2026. Código: SQLite v7, documentos v1/v2/v3 y formatos futuros conservados, 38 operaciones compartidas. [Guía](home.md), [ADR 0009](decisions/0009-shared-home-projections.md), [referencia](home-reference.md) y [revisión detallada de 26 escenarios](review-home.md).
 
 ## Entorno y comandos
 
@@ -39,7 +39,7 @@ npx --yes @fission-ai/openspec@1.14.1 validate --all --strict
 
 Evidencia fresca fuera de Git: `/private/var/folders/8r/02kb8hk545j51f9p2zbxz96h0000gn/T/opencode/noteka-headless-W2Lg5q/`: `results.json`, `network-results.json`, `dark/keyboard-results.json`, `light/keyboard-results.json`, workspaces/restaurados y ocho capturas (tres anchos + Board por tema). Runner cerró su sesión y el puente; no se modificó el perfil personal existente. Evidencia previa de 602 checks y capturas inspeccionadas en `noteka-headless-njfPyQ/`, sin borrarla ni atribuirle los cuatro intercalados nuevos. Ejemplos de `docs/home.md` ejecutados previamente con cuatro respuestas JSON exitosas en `noteka-home-demo.H5rohl/workspace` bajo ese temporal; contratos/CLI no cambiaron en esta revisión.
 
-OpenSpec estricto: **12/12 ítems** aprobados (cambio + once specs), exclusivamente documental. Tarea 4.3 completada con [revisión individual de once requisitos/veintiséis escenarios](review-home.md); 2.1–2.6/3.2/4.2 permanecen abiertas por aceptación nativa. No se sincronizan ni archivan los deltas todavía.
+OpenSpec estricto: **17/17 ítems** aprobados (17 specs, sin cambios activos) al cierre. Tarea 4.3 completada con [revisión individual de once requisitos/veintiséis escenarios](review-home.md); 2.1–2.6/3.2/4.2 completadas por aceptación nativa. Los dos deltas se sincronizaron y el cambio se archivó como `2026-10-22-add-local-home-dashboard`.
 
 ## Trazabilidad de once requisitos / veintiséis escenarios
 
@@ -104,3 +104,32 @@ Correcciones durante ejecución:
 - Revisión 13/10: se reprodujo apertura Home lenta que admitía ⌘N antes de terminar, con riesgo de limpiar un buffer competidor; `working` ahora protege la primera lectura y la preparación de captura, liberándose antes de enfocar el draft. Dos intercalados por tema pasan con CLI real, retención de transporte y teclado Playwright. El intento anterior falló en el assert nuevo, no se contó como aprobado. También se corrigió el rechazo incorrecto de TMPDIR `/var` frente a `/private/var`; el test adicional conserva los checks de escape/dangling symlink. La cobertura Rust nueva verifica filtros/órdenes que antes sólo tenían evidencia indirecta, 1/3 = 33%, null/futuros y frontera de 10.000 fuentes.
 
 No se inspeccionaron/importaron notas personales de Notion ni descargaron fotos/modelos; sin credenciales/proveedores externos. Sin prueba de lectores de pantalla/teclado físico, notarización, firma de distribución, sincronización o capacidades futuras. Bundle frontend supera aviso orientativo 500 kB por editor/contratos compartidos: no se elevó el umbral ni se afirmó resolverlo.
+
+## Aceptación nativa completa (22/10/2026)
+
+Se ejecutó el recorrido nativo autorizado con ventana real:
+
+```sh
+NOTEKA_NATIVE_SCREEN=1 \
+NOTEKA_CAPTURE_HELPER=<helper externo de ventana> \
+NOTEKA_TEST_TMP=<directorio externo> \
+npm run test:native
+```
+
+Resultado: **6/6 sesiones nativas completas**, todas con `ok:true`:
+
+| Tema | main | reopen | restored |
+| --- | ---: | ---: | ---: |
+| dark | 237 | 25 | 34 |
+| light | 237 | 25 | 34 |
+
+Total: **592 checks nativos**, incluyendo foco real de ventana/WKWebView, cierre
+protegido, reapertura Tauri, restauración, IPC y CLI reales. Los seis resultados
+están en `.../native-home/noteka-native-6gYTbz/results.json` (evidencia externa,
+fuera de Git). Se generaron capturas de la ventana de prueba en 1920×845,
+1280×800 y 900×800, más Board, para ambos temas.
+
+El helper de captura usa Screen Recording y captura sólo la ventana
+`noteka-desktop`; no captura el escritorio completo ni otras aplicaciones. El
+workspace es sintético, el CLI corre bajo sandbox sin red y no se usaron notas,
+credenciales ni datos personales. La aceptación nativa ya no está pendiente.

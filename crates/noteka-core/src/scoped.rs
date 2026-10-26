@@ -65,15 +65,23 @@ pub const READ: &[&str] = &[
     "database.query",
     "entity.get",
     "entity.list",
+    "external.list",
     "extraction.control",
     "extraction.fragments",
     "extraction.get",
     "extraction.index",
     "extraction.list",
+    "embedding.index",
+    "retrieval.search",
     "extraction.ocr_regions",
     "extraction.pdf_fragments",
+    "extraction.pdf_ocr_regions",
+    "extraction.pdf_structure",
+    "extraction.pdf_ocr_table",
+    "extraction.pdfkit_pages",
     "extraction.search",
     "extraction.xlsx_cells",
+    "extraction.xlsx_range",
     "home.query",
     "operations.describe",
     "record.get",
@@ -83,14 +91,18 @@ pub const READ: &[&str] = &[
     "template.get",
     "template.list",
     "workflow.query",
+    "agent.trace",
 ];
 pub const WRITE: &[&str] = &[
+    "agent.cancel",
     "changes.apply",
     "collection.create",
     "entity.archive",
     "entity.create",
     "entity.restore",
     "entity.update",
+    "external.link",
+    "external.unlink",
     "extraction.cancel",
     "extraction.enqueue",
     "extraction.retry",
@@ -116,7 +128,13 @@ pub const EXCLUDED: &[&str] = &[
     "document.export",
 ];
 pub fn named_access(name: &str, policy: Policy) -> Option<Access> {
-    if matches!(name, "extraction.control" | "extraction.index") && policy.write {
+    if name == "agent.ask" {
+        Some(Access::Run)
+    } else if matches!(
+        name,
+        "extraction.control" | "extraction.index" | "embedding.index"
+    ) && policy.write
+    {
         Some(Access::Write)
     } else if READ.contains(&name) {
         Some(Access::Read)
@@ -134,9 +152,11 @@ pub fn operation_access(op: &Operation) -> Access {
     use Operation::*;
     match op {
         ExtractionControl(ExtractionControlInput::Get {})
-        | ExtractionIndex(AttachmentIndexInput::Get { .. }) => Access::Read,
+        | ExtractionIndex(AttachmentIndexInput::Get { .. })
+        | EmbeddingIndex(EmbeddingIndexInput::Status {}) => Access::Read,
         ExtractionControl(ExtractionControlInput::Set { .. })
-        | ExtractionIndex(AttachmentIndexInput::Put { .. } | AttachmentIndexInput::Reset { .. }) => {
+        | ExtractionIndex(AttachmentIndexInput::Put { .. } | AttachmentIndexInput::Reset { .. })
+        | EmbeddingIndex(EmbeddingIndexInput::Build { .. } | EmbeddingIndexInput::Reset { .. }) => {
             Access::Write
         }
         Describe(_)
@@ -147,27 +167,38 @@ pub fn operation_access(op: &Operation) -> Access {
         | DatabaseQuery(_)
         | EntityGet(_)
         | EntityList(_)
+        | ExternalList(_)
         | ExtractionFragments(_)
         | ExtractionGet(_)
         | ExtractionList(_)
         | ExtractionPdfFragments(_)
         | ExtractionSearch(_)
         | ExtractionXlsxCells(_)
+        | ExtractionXlsxRange(_)
+        | ExtractionPdfOcrTable(_)
+        | ExtractionPdfStructure(_)
+        | ExtractionPdfkitPages(_)
+        | ExtractionPdfOcrRegions(_)
         | ExtractionOcrRegions(_)
         | HomeQuery(_)
         | RecordGet(_)
         | RecordInverse(_)
         | RelationList(_)
         | SearchQuery(_)
+        | RetrievalSearch(_)
+        | AgentTrace(_)
         | TemplateGet(_)
         | TemplateList(_)
         | WorkflowQuery(_) => Access::Read,
-        ChangesApply(_)
+        AgentCancel(_)
+        | ChangesApply(_)
         | CollectionCreate(_)
         | EntityArchive(_)
         | EntityCreate(_)
         | EntityRestore(_)
         | EntityUpdate(_)
+        | ExternalLink(_)
+        | ExternalUnlink(_)
         | ExtractionCancel(_)
         | ExtractionEnqueue(_)
         | ExtractionRetry(_)
@@ -182,7 +213,7 @@ pub fn operation_access(op: &Operation) -> Access {
         | TemplateInstantiate(_)
         | TemplateSave(_)
         | ViewSave(_) => Access::Write,
-        ExtractionRun(_) => Access::Run,
+        AgentAsk(_) | ExtractionRun(_) => Access::Run,
         WorkspaceCreate(_) | WorkspaceOpen(_) | WorkspaceBackup(_) | WorkspaceRestore(_)
         | AttachmentImport(_) | AttachmentRead(_) | DocumentExport(_) => Access::Excluded,
     }

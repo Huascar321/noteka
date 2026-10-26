@@ -251,7 +251,9 @@ fn canonical_representation_rejects_unknown_noncanonical_and_size_excess() {
 fn migration013_failure_rolls_back_all_rows_and_backup_can_restore_v12() {
     for before in [true, false] {
         let (t, mut w) = setup();
-        w.conn.execute_batch("DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;UPDATE workspace_meta SET schema_version=12;PRAGMA user_version=12").unwrap();
+        w.conn.execute_batch("DROP TABLE extraction_pdf_ocr_chunks;DROP TABLE extraction_pdf_ocr_generations;DROP TABLE extraction_pdfkit_chunks;DROP TABLE extraction_pdfkit_generations;DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;DROP TABLE IF EXISTS semantic_chunks;DROP TABLE IF EXISTS semantic_control;DROP TABLE IF EXISTS semantic_generations;DROP TABLE IF EXISTS semantic_profiles;DROP TABLE IF EXISTS agent_runs;
+DROP TABLE IF EXISTS extraction_pdf_structures;
+UPDATE workspace_meta SET schema_version=12;PRAGMA user_version=12").unwrap();
         if before {
             w.conn.execute_batch("CREATE TRIGGER fail13 BEFORE UPDATE OF schema_version ON workspace_meta WHEN NEW.schema_version=13 BEGIN SELECT RAISE(ABORT,'injected');END").unwrap();
         }
@@ -493,7 +495,7 @@ fn shared_retention_counts_ocr_and_discounts_only_its_own_job() {
 
 #[cfg(target_os = "macos")]
 #[test]
-fn actual_ocr_publication_enforces_exact_four_format_retention_without_eviction() {
+fn actual_ocr_publication_enforces_exact_six_format_retention_without_eviction() {
     let (_t, mut w) = setup();
     let source =
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/ocr/blank.png");
@@ -519,6 +521,26 @@ fn actual_ocr_publication_enforces_exact_four_format_retention_without_eviction(
         .job
         .unwrap();
     let ocr_bytes = read(&w, &done, 20, None)
+        .unwrap()
+        .manifest
+        .representation_bytes;
+    let native = crate::pdfkit_tests::seed(&mut w, crate::pdfkit_tests::document(3));
+    let pdfkit_bytes = w
+        .extraction_pdfkit_pages(ReadPdfkitPages {
+            id: native.id,
+            limit: None,
+            cursor: None,
+        })
+        .unwrap()
+        .manifest
+        .representation_bytes;
+    let pdf_ocr = crate::pdf_ocr_storage_tests::seed(&mut w, crate::pdf_ocr_tests::document(2, 1));
+    let pdf_ocr_bytes = w
+        .extraction_pdf_ocr_regions(ReadPdfOcrRegions {
+            id: pdf_ocr.id,
+            limit: None,
+            cursor: None,
+        })
         .unwrap()
         .manifest
         .representation_bytes;
@@ -549,7 +571,9 @@ fn actual_ocr_publication_enforces_exact_four_format_retention_without_eviction(
         .job;
     let p = crate::pdf_storage::prepare(vec![noteka_pdf_protocol::PageText {
         page_number: 1,
-        text: "p".repeat(1_048_576 - ocr_bytes as usize),
+        text: "p".repeat(
+            1_048_576 - ocr_bytes as usize - pdfkit_bytes as usize - pdf_ocr_bytes as usize,
+        ),
     }])
     .unwrap();
     let id = install(&w, &j, p.fragments.len() as u32);
@@ -571,7 +595,10 @@ fn actual_ocr_publication_enforces_exact_four_format_retention_without_eviction(
         crate::xlsx_storage::publish(&w.conn, &id, &j.id, &p).unwrap();
     }
     store::integrity(&w.conn).unwrap();
-    assert_eq!(os::retained(&w.conn, "").unwrap(), MAX_DERIVED_BYTES);
+    assert_eq!(
+        crate::pdf_ocr_storage::retained(&w.conn, "").unwrap(),
+        MAX_DERIVED_BYTES
+    );
     w.extraction_retry(ExtractionRevision {
         id: done.id.clone(),
         expected_revision: done.revision,
@@ -588,7 +615,10 @@ fn actual_ocr_publication_enforces_exact_four_format_retention_without_eviction(
         replaced.generation.as_ref().unwrap().id,
         done.generation.unwrap().id
     );
-    assert_eq!(os::retained(&w.conn, "").unwrap(), MAX_DERIVED_BYTES);
+    assert_eq!(
+        crate::pdf_ocr_storage::retained(&w.conn, "").unwrap(),
+        MAX_DERIVED_BYTES
+    );
     put(&w, &replaced).unwrap();
     let selected_revision = rev(&w);
     let a = w
@@ -606,7 +636,10 @@ fn actual_ocr_publication_enforces_exact_four_format_retention_without_eviction(
             .details["reason"],
         "derived_size_limit"
     );
-    assert_eq!(os::retained(&w.conn, "").unwrap(), MAX_DERIVED_BYTES);
+    assert_eq!(
+        crate::pdf_ocr_storage::retained(&w.conn, "").unwrap(),
+        MAX_DERIVED_BYTES
+    );
     assert_eq!(rev(&w), selected_revision);
     assert_eq!(
         read(&w, &replaced, 20, None).unwrap().generation.id,
@@ -625,11 +658,16 @@ fn populated_v12_index_is_verified_before_ocr_tables_exist() {
     let expected =
         serde_json::to_value(api::search(&w.path, dto(json!({"query":"migration"}))).unwrap())
             .unwrap();
-    w.conn.execute_batch("DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;UPDATE workspace_meta SET schema_version=12;PRAGMA user_version=12").unwrap();
+    w.conn.execute_batch("DROP TABLE extraction_pdf_ocr_chunks;DROP TABLE extraction_pdf_ocr_generations;DROP TABLE extraction_pdfkit_chunks;DROP TABLE extraction_pdfkit_generations;DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;DROP TABLE IF EXISTS semantic_chunks;DROP TABLE IF EXISTS semantic_control;DROP TABLE IF EXISTS semantic_generations;DROP TABLE IF EXISTS semantic_profiles;DROP TABLE IF EXISTS agent_runs;
+DROP TABLE IF EXISTS extraction_pdf_structures;
+UPDATE workspace_meta SET schema_version=12;PRAGMA user_version=12").unwrap();
     w.backup(&w.path.parent().unwrap().join("prior-v12"))
         .unwrap();
     let opened = Workspace::open(&w.path).unwrap();
-    assert_eq!(opened.info().unwrap().schema_version, 13);
+    assert_eq!(
+        opened.info().unwrap().schema_version,
+        workspace::SCHEMA_VERSION
+    );
     assert_eq!(
         serde_json::to_value(api::search(&opened.path, dto(json!({"query":"migration"}))).unwrap())
             .unwrap(),

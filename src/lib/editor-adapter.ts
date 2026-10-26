@@ -11,7 +11,7 @@ const containers = new Set(['bullet_list', 'ordered_list', 'list_item', 'task_li
 const keys: Record<string, string[]> = { heading: ['level'], ordered_list: ['start'], task_item: ['checked'], code_block: ['language'], image: ['attachment_id', 'alt'], file: ['attachment_id', 'name'], collection_view: ['collection_id', 'view_id'] };
 
 export function toEditor(document: Document): JSONContent {
-  if (![1, 2, 3].includes(document.schema_version)) throw new Error('Versión de documento no soportada.');
+  if (![1, 2, 3].includes(document.schema_version)) throw new Error("Unsupported document version.");
   function inline(t: Text): JSONContent | null {
     if (t.type === 'hard_break') return { type: 'hardBreak' };
     if (!t.text) return null;
@@ -20,7 +20,7 @@ export function toEditor(document: Document): JSONContent {
   function block(b: Block): JSONContent {
     if (!(b.type in names)) throw new Error(`Bloque no soportado: ${b.type}`);
     const attributes = b.attrs as Record<string, unknown> | undefined;
-    if (b.type === 'collection_view' && (document.schema_version !== 3 || b.content.length || b.children?.length || !attributes || Object.keys(attributes).some(k => !keys.collection_view.includes(k)) || keys.collection_view.some(k => typeof attributes[k] !== 'string' || !attributes[k]))) throw new Error('Referencia de vista no reconocida.');
+    if (b.type === 'collection_view' && (document.schema_version !== 3 || b.content.length || b.children?.length || !attributes || Object.keys(attributes).some(k => !keys.collection_view.includes(k)) || keys.collection_view.some(k => typeof attributes[k] !== 'string' || !attributes[k]))) throw new Error("Unrecognized view reference.");
     const content = containers.has(b.type) ? (b.children ?? []).map(block) : b.content.map(inline).filter((n): n is JSONContent => n !== null);
     return { type: names[b.type], attrs: { ...((b.attrs ?? {}) as Record<string, unknown>), id: b.id }, ...(content.length ? { content } : {}) };
   }
@@ -28,19 +28,19 @@ export function toEditor(document: Document): JSONContent {
 }
 
 export function fromEditor(json: JSONContent, minimumVersion = 2): Document {
-  if (json.type !== 'doc') throw new Error('El editor no devolvió un documento.');
-  if (![1, 2, 3].includes(minimumVersion)) throw new Error('Versión mínima no soportada.');
+  if (json.type !== 'doc') throw new Error("The editor did not return a document.");
+  if (![1, 2, 3].includes(minimumVersion)) throw new Error("Unsupported minimum version.");
   let version = Math.max(2, minimumVersion);
   const ids = new Set<string>();
   function block(n: JSONContent): Block {
     const type = Object.entries(names).find(([, name]) => name === n.type)?.[0] as Block['type'] | undefined;
-    if (!type) throw new Error(`Bloque del editor no soportado: ${n.type}`);
+    if (!type) throw new Error(`Unsupported editor block: ${n.type}`);
     if (type === 'collection_view') {
-      if (n.content?.length || Object.keys(n.attrs ?? {}).some(k => !['id', ...keys.collection_view].includes(k)) || keys.collection_view.some(k => typeof n.attrs?.[k] !== 'string' || !n.attrs[k])) throw new Error('Referencia de vista no reconocida.');
+      if (n.content?.length || Object.keys(n.attrs ?? {}).some(k => !['id', ...keys.collection_view].includes(k)) || keys.collection_view.some(k => typeof n.attrs?.[k] !== 'string' || !n.attrs[k])) throw new Error("Unrecognized view reference.");
       version = 3;
     }
     const id = n.attrs?.id as string;
-    if (!id || ids.has(id)) throw new Error('El editor generó un ID vacío o duplicado. No se guardó.');
+    if (!id || ids.has(id)) throw new Error("The editor generated an empty or duplicate ID. Nothing was saved.");
     ids.add(id);
     const attrs: Record<string, unknown> = {};
     for (const k of keys[type] ?? []) if (n.attrs?.[k] !== undefined) attrs[k] = n.attrs[k];

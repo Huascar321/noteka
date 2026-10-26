@@ -70,6 +70,13 @@ pub(crate) fn structure(conn: &Connection) -> Result<()> {
             include_str!("../migrations/011.sql"),
             include_str!("../migrations/012.sql"),
             include_str!("../migrations/013.sql"),
+            include_str!("../migrations/014.sql"),
+            include_str!("../migrations/015.sql"),
+            include_str!("../migrations/016.sql"),
+            include_str!("../migrations/017.sql"),
+            include_str!("../migrations/018.sql"),
+            include_str!("../migrations/019.sql"),
+            include_str!("../migrations/020.sql"),
         ] {
             c.execute_batch(sql)
                 .expect("Migraciones incorporadas válidas");

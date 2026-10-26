@@ -5,5 +5,5 @@ export function readTheme(store: () => Store): Theme {
   try { return store().getItem(THEME_KEY) === 'light' ? 'light' : 'dark'; } catch { return 'dark'; }
 }
 export function saveTheme(theme: Theme, store: () => Store): string {
-  try { store().setItem(THEME_KEY, theme); return ''; } catch { return 'Tema aplicado; no se pudo guardar la preferencia local.'; }
+  try { store().setItem(THEME_KEY, theme); return ''; } catch { return "Theme applied. Your preference could not be saved on this device."; }
 }

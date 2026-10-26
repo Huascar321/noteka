@@ -460,7 +460,9 @@ fn migration_rollback_before_and_after_version_update_keeps_v11() {
         let (_t, mut w) = setup();
         let _j = seed(&mut w, book(2));
         w.conn
-            .execute_batch("DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;UPDATE workspace_meta SET schema_version=11;PRAGMA user_version=11")
+            .execute_batch("DROP TABLE extraction_pdf_ocr_chunks;DROP TABLE extraction_pdf_ocr_generations;DROP TABLE extraction_pdfkit_chunks;DROP TABLE extraction_pdfkit_generations;DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;DROP TABLE IF EXISTS semantic_chunks;DROP TABLE IF EXISTS semantic_control;DROP TABLE IF EXISTS semantic_generations;DROP TABLE IF EXISTS semantic_profiles;DROP TABLE IF EXISTS agent_runs;
+DROP TABLE IF EXISTS extraction_pdf_structures;
+UPDATE workspace_meta SET schema_version=11;PRAGMA user_version=11")
             .unwrap();
         if before_update {
             w.conn.execute_batch("CREATE TRIGGER fail_v12 BEFORE UPDATE OF schema_version ON workspace_meta WHEN NEW.schema_version=12 BEGIN SELECT RAISE(ABORT,'injected'); END").unwrap();
@@ -909,7 +911,15 @@ pub(crate) fn legacy_index_shapes(value: &mut Value) {
     match value {
         Value::Object(obj) => {
             if let Some(defs) = obj.get_mut("$defs").and_then(Value::as_object_mut) {
-                for name in ["OcrTextProjection", "OcrBoundingBox"] {
+                for name in [
+                    "PdfOcrTextProjection",
+                    "RasterIdentity",
+                    "OcrEngine",
+                    "OcrTextProjection",
+                    "OcrBoundingBox",
+                    "PdfkitTextProjection",
+                    "Engine",
+                ] {
                     defs.remove(name);
                 }
                 defs.remove("XlsxTextProjection");
@@ -919,7 +929,14 @@ pub(crate) fn legacy_index_shapes(value: &mut Value) {
                     .and_then(|v| v.get_mut("enum"))
                     .and_then(Value::as_array_mut)
                 {
-                    values.retain(|v| v != "xlsx_cells" && v != "image_ocr");
+                    values.retain(|v| {
+                        v != "xlsx_cells"
+                            && v != "pdfium_text"
+                            && v != "paddle_ocr"
+                            && v != "image_ocr"
+                            && v != "pdfkit_text"
+                            && v != "pdf_ocr"
+                    });
                 }
                 if let Some(variants) = defs
                     .get_mut("AttachmentTextLocator")
@@ -929,6 +946,8 @@ pub(crate) fn legacy_index_shapes(value: &mut Value) {
                     variants.retain(|v| {
                         v["properties"]["kind"]["const"] != "xlsx_cell_text"
                             && v["properties"]["kind"]["const"] != "image_ocr_region_text"
+                            && v["properties"]["kind"]["const"] != "pdfkit_page_text"
+                            && v["properties"]["kind"]["const"] != "pdf_ocr_region_text"
                     });
                 }
             }

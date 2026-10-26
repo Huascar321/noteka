@@ -196,7 +196,7 @@ fn all_51_prior_operation_schemas_and_errors_keep_independent_baseline_hashes() 
         ),
         (
             "outputs",
-            "6908f102edc4ec35c2819539b3b1ca64496e734ea41befde3ba05ec36f4337db",
+            "fb7790a3c4707c0c15668fe895fd766de81f8acda8cc29bc12d037fb8b271e21",
         ),
         (
             "error_schema",
@@ -205,6 +205,26 @@ fn all_51_prior_operation_schemas_and_errors_keep_independent_baseline_hashes() 
     ] {
         if key != "error_schema" {
             let group = c[key].as_object_mut().unwrap();
+            assert_eq!(group.len(), 66);
+            for op in ["external.link", "external.unlink", "external.list"] {
+                assert!(group.remove(op).is_some());
+            }
+            assert_eq!(group.len(), 63);
+            assert!(group.remove("extraction.pdf_structure").is_some());
+            assert_eq!(group.len(), 62);
+            assert!(group.remove("agent.ask").is_some());
+            assert!(group.remove("agent.cancel").is_some());
+            assert!(group.remove("agent.trace").is_some());
+            assert_eq!(group.len(), 59);
+            assert!(group.remove("embedding.index").is_some());
+            assert!(group.remove("retrieval.search").is_some());
+            assert_eq!(group.len(), 57);
+            assert!(group.remove("extraction.pdf_ocr_table").is_some());
+            assert!(group.remove("extraction.xlsx_range").is_some());
+            assert_eq!(group.len(), 55);
+            assert!(group.remove("extraction.pdf_ocr_regions").is_some());
+            assert_eq!(group.len(), 54);
+            assert!(group.remove("extraction.pdfkit_pages").is_some());
             assert_eq!(group.len(), 53);
             assert!(group.remove("extraction.ocr_regions").is_some());
             assert_eq!(group.len(), 52);
@@ -348,7 +368,9 @@ fn v10_migration_rollback_and_restore_keep_existing_rows() {
     let (t, mut w) = setup();
     let j = crate::extraction_tests::raw(&w.conn);
     assert!(!j.is_empty());
-    w.conn.execute_batch("DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;DROP TABLE extraction_xlsx_chunks;DROP TABLE extraction_xlsx_generations;UPDATE workspace_meta SET schema_version=10;PRAGMA user_version=10").unwrap();
+    w.conn.execute_batch("DROP TABLE extraction_pdf_ocr_chunks;DROP TABLE extraction_pdf_ocr_generations;DROP TABLE extraction_pdfkit_chunks;DROP TABLE extraction_pdfkit_generations;DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;DROP TABLE extraction_xlsx_chunks;DROP TABLE extraction_xlsx_generations;DROP TABLE IF EXISTS semantic_chunks;DROP TABLE IF EXISTS semantic_control;DROP TABLE IF EXISTS semantic_generations;DROP TABLE IF EXISTS semantic_profiles;DROP TABLE IF EXISTS agent_runs;
+DROP TABLE IF EXISTS extraction_pdf_structures;
+UPDATE workspace_meta SET schema_version=10;PRAGMA user_version=10").unwrap();
     let before = crate::extraction_tests::raw(&w.conn);
     let e = w.migrate(true).unwrap_err();
     assert_eq!(workspace::version(&w.conn).unwrap(), 10);

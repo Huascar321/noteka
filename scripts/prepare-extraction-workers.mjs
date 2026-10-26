@@ -32,5 +32,7 @@ console.log(JSON.stringify({ worker, profile: release ? 'release' : 'debug', tri
 
 // Vision sólo se prepara para macOS; el overlay de esa plataforma lo distribuye.
 if (triple.endsWith('-apple-darwin')) {
+  execFileSync(process.execPath, [path.join(root, 'scripts/prepare-pdfkit-worker.mjs'), ...(tauri ? ['--tauri'] : []), ...(release ? ['--release'] : [])], { cwd: root, stdio: 'inherit' });
+  execFileSync(process.execPath, [path.join(root, 'scripts/prepare-pdf-raster-worker.mjs'), ...(tauri ? ['--tauri'] : []), ...(release ? ['--release'] : [])], { cwd: root, stdio: 'inherit' });
   execFileSync(process.execPath, [path.join(root, 'scripts/prepare-ocr-worker.mjs'), ...(tauri ? ['--tauri'] : []), ...(release ? ['--release'] : [])], { cwd: root, stdio: 'inherit' });
 }

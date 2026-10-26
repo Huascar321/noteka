@@ -40,25 +40,35 @@ async (page) => {
       if (!response.ok) throw new Error(JSON.stringify(response)); return response.data;
     };
     const open = async path => {
-      await page.getByLabel('Ruta del workspace', { exact: true }).fill(path);
-      await page.getByRole('button', { name: 'Abrir workspace', exact: true }).click();
+      await page.getByLabel("Workspace path", { exact: true }).fill(path);
+      await page.getByRole('button', { name: "Open workspace", exact: true }).click();
       await page.locator('.home [data-home-section="person"] .home-coverage').waitFor();
       workspace = path;
     };
-    const changeWorkspace = async path => { await page.getByRole('button', { name: 'Cambiar workspace', exact: true }).click(); await open(path); };
+    const changeWorkspace = async path => { await page.getByRole('button', { name: 'Settings', exact: true }).click(); await page.locator('.settings-navigation').getByRole('button', { name: 'General', exact: true }).click(); await page.getByRole('button', { name: "Change workspace", exact: true }).click(); await open(path); };
     const enter = async () => {
       await page.getByRole('button', { name: 'Search', exact: true }).click();
-      await page.getByLabel('Ámbito de búsqueda', { exact: true }).selectOption('attachments');
-      await page.getByLabel('Texto de adjuntos', { exact: true }).waitFor();
+      await page.locator('.context-search-footer button').click();
+      try { await page.getByLabel("Search scope", { exact: true }).selectOption('attachments'); } catch(error) { throw Error(JSON.stringify({stage:'enter advanced search',error:String(error),view:await page.locator('.workspace-tab-panel.active').innerText()})); }
+      await page.getByLabel("Attachment text", { exact: true }).waitFor();
     };
+    const searchBesideBuffer = async () => {
+      const noteTab = await page.getByRole('tab', { selected: true }).getAttribute('id');
+      const notePane = page.locator(`[aria-labelledby="${noteTab}"]`);
+      await page.getByRole('button', { name: "New tab", exact: true }).click(); await page.locator('.context-search-footer button').click();
+      await page.getByLabel("Search scope", { exact: true }).selectOption('attachments');
+      const searchTab = await page.getByRole('tab', { selected: true }).getAttribute('id');
+      return { noteTab, notePane, searchTab };
+    };
+    const closeSearchTab = async id => { await page.locator('.workspace-tab').filter({ has: page.locator('#' + id) }).getByRole('button', { name: /Cerrar pestaña/ }).click(); await page.locator('#' + id).waitFor({ state: 'detached' }); };
     const fill = async (text, filters = {}) => {
-      await page.getByLabel('Texto de adjuntos', { exact: true }).fill(text);
-      await page.getByLabel('Extractor de adjuntos', { exact: true }).selectOption(filters.extractor || '');
-      await page.getByLabel('Trabajo de adjuntos', { exact: true }).fill(filters.job_id || '');
-      await page.getByLabel('ID de adjunto', { exact: true }).fill(filters.attachment_id || '');
+      await page.getByLabel("Attachment text", { exact: true }).fill(text);
+      await page.getByLabel("Attachment extractor", { exact: true }).selectOption(filters.extractor || '');
+      await page.getByLabel("Attachment job", { exact: true }).fill(filters.job_id || '');
+      await page.getByLabel("Attachment ID", { exact: true }).fill(filters.attachment_id || '');
     };
     const settled = () => page.waitForFunction(() => Boolean(document.querySelector('.attachment-coverage, .attachment-error')));
-    const submit = async (text, filters = {}) => { await fill(text, filters); await page.getByRole('button', { name: 'Buscar adjuntos', exact: true }).click(); await settled(); };
+    const submit = async (text, filters = {}) => { await fill(text, filters); await page.getByRole('button', { name: "Search attachments", exact: true }).click(); await settled(); };
     const assertPage = async (expected, label) => {
       const actual = await page.locator('.attachment-hit').evaluateAll(nodes => nodes.map(node => ({
         job: node.dataset.job, generation: node.dataset.generation, ordinal: Number(node.dataset.ordinal),
@@ -79,24 +89,24 @@ async (page) => {
       expect(await page.locator('[data-page="profile"]').textContent() === expected.profile && await page.locator('[data-page="revision"]').textContent() === String(expected.revision), label + ': perfil/revisión');
     };
     await page.goto(origin); await open(workspace);
-    await page.getByLabel('Tema', { exact: true }).selectOption(theme);
+    await page.getByRole('button', { name: 'Settings', exact: true }).click(); await page.getByLabel("Theme", { exact: true }).selectOption(theme); await page.getByRole('button', { name: "Close Settings", exact: true }).click();
     const before = await snapshot(); await enter();
     expect((await operations()).filter(op => op.operation === 'extraction.search').length === 0, 'Montar ámbito no consulta ni prepara');
-    expect(await page.locator('.attachment-status').textContent() === 'Ingresá texto y buscá adjuntos. Todavía no se consultó el índice.', 'Estado inicial no es cero hits');
-    expect(await page.getByRole('button', { name: 'Buscar adjuntos', exact: true }).isDisabled(), 'Consulta vacía no se envía');
-    expect(await page.getByLabel('Tipo de búsqueda', { exact: true }).count() === 0 && await page.getByRole('button', { name: 'Reconstruir índice', exact: true }).count() === 0, 'Sin filtros de entidad ni reconstrucción en adjuntos');
+    expect(await page.locator('.attachment-status').textContent() === "Enter text and search attachments. The index has not been queried yet.", 'Estado inicial no es cero hits');
+    expect(await page.getByRole('button', { name: "Search attachments", exact: true }).isDisabled(), 'Consulta vacía no se envía');
+    expect(await page.getByLabel("Search type", { exact: true }).count() === 0 && await page.getByRole('button', { name: "Rebuild index", exact: true }).count() === 0, 'Sin filtros de entidad ni reconstrucción en adjuntos');
 
-    await fill('nkprobe'); await page.getByLabel('Texto de adjuntos', { exact: true }).focus(); await page.keyboard.press('Enter'); await settled();
+    await fill('nkprobe'); await page.getByLabel("Attachment text", { exact: true }).focus(); await page.keyboard.press('Enter'); await settled();
     expect(await page.locator('.attachment-hit').count() === 20, 'Enter envía consulta de adjuntos por teclado');
     await assertPage(fixture.pages[0], 'Primera página');
-    await page.getByRole('button', { name: 'Siguiente página de adjuntos', exact: true }).focus(); await page.keyboard.press('Enter'); await settled();
+    await page.getByRole('button', { name: "Next attachment page", exact: true }).focus(); await page.keyboard.press('Enter'); await settled();
     expect(await page.locator('.attachment-hit').count() === 11, 'Enter pagina adjuntos por teclado');
     await assertPage(fixture.pages[1], 'Segunda página sin acumulación');
-    expect(await page.getByRole('button', { name: 'Siguiente página de adjuntos', exact: true }).count() === 0, 'Cursor nulo termina paginación');
-    await page.getByRole('button', { name: 'Volver al inicio de adjuntos', exact: true }).click(); await settled();
+    expect(await page.getByRole('button', { name: "Next attachment page", exact: true }).count() === 0, 'Cursor nulo termina paginación');
+    await page.getByRole('button', { name: "Back to the first attachment page", exact: true }).click(); await settled();
     await assertPage(fixture.pages[0], 'Reinicio explícito');
     const count = (await operations()).filter(op => op.operation === 'extraction.search').length;
-    await page.getByRole('button', { name: 'Actualizar', exact: true }).click(); await settled();
+    await page.getByRole('button', { name: "Refresh", exact: true }).click(); await settled();
     expect((await operations()).filter(op => op.operation === 'extraction.search').length === count + 1, 'Actualizar consulta una vez, no reconstruye');
 
     for (const extractor of ['utf8_text', 'pdf_text', 'xlsx_cells']) {
@@ -125,11 +135,11 @@ async (page) => {
     for (const [text, filters] of [['🚀'.repeat(100), {}], [Array(17).fill('nkprobe').join(' '), {}], ['nkprobe\u0001', {}], ['nkprobe', { job_id: 'no-es-uuid' }]]) {
       await submit(text, filters);
       expect((await page.locator('.attachment-error').textContent()).includes('validation_error'), 'Input inválido conservado para validación Rust');
-      expect(await page.getByLabel('Texto de adjuntos', { exact: true }).inputValue() === text && await page.locator('.attachment-coverage, .attachment-hit').count() === 0, 'Error no trunca input ni conserva evidencia anterior');
+      expect(await page.getByLabel("Attachment text", { exact: true }).inputValue() === text && await page.locator('.attachment-coverage, .attachment-hit').count() === 0, 'Error no trunca input ni conserva evidencia anterior');
     }
     await submit('nkprobe', { extractor: 'utf8_text' });
     const opsBeforeEdit = (await operations()).length;
-    await page.getByLabel('Texto de adjuntos', { exact: true }).fill('evidencia');
+    await page.getByLabel("Attachment text", { exact: true }).fill('evidencia');
     expect(await page.locator('.attachment-coverage, .attachment-hit').count() === 0 && (await operations()).length === opsBeforeEdit, 'Editar retira página/cursor sin consulta automática');
     expect(equal(await snapshot(), before), 'Todas las consultas/inspecciones previas conservan SQL/fuentes/generaciones/índice');
 
@@ -161,12 +171,12 @@ async (page) => {
       for (const axis of ['texto', 'filtro', 'ámbito', 'sección', 'workspace']) {
         await fill(reject ? '🚀'.repeat(100) : 'nkprobe'); await hold();
         try {
-          await page.getByRole('button', { name: 'Buscar adjuntos', exact: true }).click();
+          await page.getByRole('button', { name: "Search attachments", exact: true }).click();
           await page.waitForFunction(() => window.__evidenceHeld);
           expect(await page.evaluate(() => window.__evidenceResponse.ok) === !reject, 'Respuesta retenida real ' + axis + '/' + reject);
           if (axis === 'ámbito') {
-            await page.getByLabel('Ámbito de búsqueda', { exact: true }).selectOption('notes');
-            await page.getByLabel('Ámbito de búsqueda', { exact: true }).selectOption('attachments');
+            await page.getByLabel("Search scope", { exact: true }).selectOption('notes');
+            try { await page.getByLabel("Search scope", { exact: true }).selectOption('attachments'); } catch(error) { throw Error(JSON.stringify({stage:'enter advanced search',error:String(error),view:await page.locator('.workspace-tab-panel.active').innerText()})); }
           } else if (axis === 'sección') {
             await page.getByRole('button', { name: 'Home', exact: true }).click();
             await page.locator('.home [data-home-section="person"] .home-coverage').waitFor(); await enter();
@@ -174,7 +184,7 @@ async (page) => {
             await changeWorkspace(workspace === fixture.workspace ? restored.path : fixture.workspace); await enter();
           }
           await fill('evidencia', axis === 'filtro' ? { extractor: 'pdf_text' } : {});
-          await page.getByRole('button', { name: 'Buscar adjuntos', exact: true }).click();
+          await page.getByRole('button', { name: "Search attachments", exact: true }).click();
           expect(await page.locator('.attachment-hit, .attachment-error').count() === 0 && await page.evaluate(() => window.__evidenceActive) === 1, 'Nueva lectura espera cupo sin resultado viejo ' + axis);
           await page.evaluate(() => window.__evidenceRelease()); await settled();
           await assertPage(await query({ query: 'evidencia', ...(axis === 'filtro' ? { extractor: 'pdf_text' } : {}) }), 'Intercalado ' + axis + '/' + reject);
@@ -189,45 +199,48 @@ async (page) => {
     expect(await page.locator('.attachment-coverage, .attachment-hit').count() === 0, 'Reapertura no recupera resultados ni cursores');
     await submit('nkprobe'); await assertPage(fixture.pages[0], 'Reapertura UI');
     await control('evidence_reset', { workspace }); const reset = await snapshot();
-    await page.getByRole('button', { name: 'Siguiente página de adjuntos', exact: true }).click(); await settled();
+    await page.getByRole('button', { name: "Next attachment page", exact: true }).click(); await settled();
     expect((await page.locator('.attachment-error').textContent()).includes('index_revision_changed') && await page.locator('.attachment-hit, .attachment-coverage').count() === 0, 'Cursor vencido no mezcla revisión ni reinicia');
     expect(equal(await snapshot(), reset), 'Error de cursor no muta ni repara');
-    await page.getByRole('button', { name: 'Buscar de nuevo', exact: true }).click(); await settled();
+    await page.getByRole('button', { name: "Search again", exact: true }).click(); await settled();
     expect(await page.locator('.attachment-empty').count() === 1, 'Buscar de nuevo explícito refleja reset');
 
     await changeWorkspace(fixture.workspace); await enter();
-    await page.getByLabel('Ámbito de búsqueda', { exact: true }).selectOption('notes');
-    await page.getByLabel('Texto de búsqueda', { exact: true }).fill('nknotefixture');
-    await page.getByRole('button', { name: 'Buscar', exact: true }).click();
-    await page.locator('.search-hit').first().click(); await page.getByLabel('Título de la nota', { exact: true }).waitFor();
+    await page.getByLabel("Search scope", { exact: true }).selectOption('notes');
+    await page.getByLabel("Search text", { exact: true }).fill('nknotefixture');
+    await page.getByRole('button', { name: "Search", exact: true }).click();
+    await page.locator('.search-hit').first().click(); await page.getByLabel("Note title", { exact: true }).waitFor();
     expect((await page.locator('.source-locator').textContent()).includes('evidence-paragraph'), 'Notas abre entidad/bloque originales');
-    await page.getByLabel('Título de la nota', { exact: true }).fill('Buffer protegido evidencia');
-    await page.getByLabel('Ámbito de búsqueda', { exact: true }).selectOption('attachments');
+    await page.getByLabel("Note title", { exact: true }).fill('Buffer protegido evidencia');
+    const preserved = await searchBesideBuffer();
     await submit('nkprobe', { extractor: 'utf8_text' });
-    expect(await page.getByLabel('Título de la nota', { exact: true }).inputValue() === 'Buffer protegido evidencia', 'Alternar/buscar conserva buffer pendiente');
+    expect(await page.getByLabel("Note title", { exact: true }).inputValue() === 'Buffer protegido evidencia', 'Alternar/buscar conserva buffer pendiente');
     await page.locator('.attachment-hit summary').click();
-    await page.getByRole('button', { name: 'Home', exact: true }).click(); await page.getByRole('button', { name: 'Cancelar', exact: true }).click();
-    expect(await page.getByLabel('Título de la nota', { exact: true }).inputValue() === 'Buffer protegido evidencia' && await page.locator('.attachment-hit').count() === 1, 'Cancelar navegación conserva buffer y selección de evidencia');
-    await page.getByRole('button', { name: 'Home', exact: true }).click(); await page.getByRole('button', { name: 'Guardar y continuar', exact: true }).click();
+    await page.locator('#' + preserved.noteTab).click();
+    await page.getByRole('button', { name: 'Home', exact: true }).click(); await page.getByRole('button', { name: "Cancel", exact: true }).click();
+    expect(await page.getByLabel("Note title", { exact: true }).inputValue() === 'Buffer protegido evidencia' && await page.locator('.attachment-hit').count() === 1, 'Cancelar navegación conserva buffer y selección de evidencia');
+    await page.getByRole('button', { name: 'Home', exact: true }).click(); await page.getByRole('button', { name: "Save and continue", exact: true }).click();
     await page.locator('.home [data-home-section="person"] .home-coverage').waitFor();
     expect(await page.locator('.home').count() === 1, 'Guardar y continuar respeta guardia');
-    await enter(); await page.getByLabel('Ámbito de búsqueda', { exact: true }).selectOption('notes');
-    await page.getByRole('button', { name: 'Buscar', exact: true }).click(); await page.locator('.search-hit').first().click();
+    await closeSearchTab(preserved.searchTab);
+    await enter(); await page.getByLabel("Search scope", { exact: true }).selectOption('notes');
+    await page.getByRole('button', { name: "Search", exact: true }).click(); await page.locator('.search-hit').first().click();
     await page.waitForFunction(() => document.querySelector('.title-input')?.value === 'Buffer protegido evidencia');
-    await page.getByLabel('Título de la nota', { exact: true }).fill('Descartable evidencia');
-    await page.getByLabel('Ámbito de búsqueda', { exact: true }).selectOption('attachments');
-    await page.getByRole('button', { name: 'Home', exact: true }).click(); await page.getByRole('button', { name: 'Descartar', exact: true }).click();
+    await page.getByLabel("Note title", { exact: true }).fill('Descartable evidencia');
+    const discarded = await searchBesideBuffer(); await page.locator('#' + discarded.noteTab).click();
+    await page.getByRole('button', { name: 'Home', exact: true }).click(); await page.getByRole('button', { name: "Discard", exact: true }).click();
     await page.locator('.home [data-home-section="person"] .home-coverage').waitFor();
     expect(await page.locator('.home-cover, .home').count() >= 1, 'Descartar respeta guardia sin cambiar Home');
+    await closeSearchTab(discarded.searchTab);
     await enter();
     for (const reject of [false, true]) {
-      await page.getByLabel('Ámbito de búsqueda', { exact: true }).selectOption('notes');
-      await page.getByLabel('Texto de búsqueda', { exact: true }).fill(reject ? Array(17).fill('nkprobe').join(' ') : 'nknotefixture');
+      await page.getByLabel("Search scope", { exact: true }).selectOption('notes');
+      await page.getByLabel("Search text", { exact: true }).fill(reject ? Array(17).fill('nkprobe').join(' ') : 'nknotefixture');
       await hold('search.query');
       try {
-        await page.getByRole('button', { name: 'Buscar', exact: true }).click(); await page.waitForFunction(() => window.__evidenceHeld);
+        await page.getByRole('button', { name: "Search", exact: true }).click(); await page.waitForFunction(() => window.__evidenceHeld);
         expect(await page.evaluate(() => window.__evidenceResponse.ok) === !reject, 'Notas: respuesta retenida real ' + reject);
-        await page.getByLabel('Ámbito de búsqueda', { exact: true }).selectOption('attachments');
+        try { await page.getByLabel("Search scope", { exact: true }).selectOption('attachments'); } catch(error) { throw Error(JSON.stringify({stage:'enter advanced search',error:String(error),view:await page.locator('.workspace-tab-panel.active').innerText()})); }
         await submit('nkprobe', { extractor: 'utf8_text' });
         await page.evaluate(() => window.__evidenceRelease()); await page.waitForFunction(() => window.__evidenceActive === 0);
         expect(await page.locator('.attachment-hit').count() === 1 && await page.locator('.search-hit, .entity-list > .error').count() === 0, 'Notas: éxito/error tardío no aparece en adjuntos ' + reject);

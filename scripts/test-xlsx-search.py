@@ -44,7 +44,7 @@ def main():
         shutil.copy2(target / helper.name, helper)
         ws = root / 'workspace'
         call = lambda group, action, payload, error=None: support.call(cli, ws, group, action, payload, error)
-        assert call('workspace', 'create', dict(timezone='UTC'))['schema_version'] == 13
+        assert call('workspace', 'create', dict(timezone='UTC'))['schema_version'] == 15
         ctl = call('extraction', 'control', dict(action='get'))
         call('extraction', 'control', dict(action='set', paused=False, expected_revision=ctl['revision']))
         done = []

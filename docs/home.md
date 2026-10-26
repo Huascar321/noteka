@@ -58,7 +58,7 @@ Tabs son botones `aria-pressed` con Tab/Enter/Espacio del navegador; grupos usan
 
 ## Cobertura y tema
 
-Portada CSS propia azul/verde, casa, navegación y orden **Tasks → Notes → Projects → Tags → Goals → People**. Cabeceras, filas/grupos, cinco columnas y galería textual funcionan con datos originales. Franja clima y Goals permanecen en posición con avisos, sin datos ficticios. No es paridad completa con Ultimate Brain.
+Portada CSS propia azul/verde, casa, navegación y orden **Tasks → Notes → Projects → Tags → Goals → People**. Cabeceras, filas/grupos, cinco columnas y galería de personas con fotos locales opcionales funcionan con datos originales. [Goals](goals.md) muestra sus originales y progreso por hitos; la franja de clima conserva el aviso pendiente. No es paridad completa con Ultimate Brain.
 
 | Zona | Implementado | Pendiente |
 | --- | --- | --- |
@@ -68,8 +68,8 @@ Portada CSS propia azul/verde, casa, navegación y orden **Tasks → Notes → P
 | Notes | Notes/Inbox | Fav./Clips/Voice/Journal/Meetings/All diferenciada |
 | Projects | Active/Planned/Board y resumen Noteka | Paridad con campos/fórmulas de referencia no inspeccionados |
 | Tags | Recent/A–Z/Types; Topic conservado | Fav.; tipo Entity requiere decisión/modelo propio |
-| Goals | Cabecera/aviso | Entidad, Active/Dream/Achieved, relaciones/fechas/progreso y By Activity/By Deadline/Achieved |
-| People | Contacts/New/Updated textual, relaciones directas | Fotos/organización, Check-Ins/Birthdays/Pipeline/Active Projects |
+| Goals | Páginas tipadas, Active/Dream/Achieved, relaciones/fechas/progreso por hitos y By Activity/By Deadline/By Tag/Achieved | Sincronización o fórmula universal de actividad |
+| People | Contacts con fotos locales/relaciones/empresa, New/Updated/Check-Ins, calendario Birthdays, Pipeline y Active Projects por persona | Sincronización continua, recordatorios y arrastre de Pipeline |
 
 Tema en `localStorage` WebView, clave **noteka.theme.v1**, sólo dark/light. Oscuro inicial/fallback ante valor inválido o lectura inaccesible. Fallo de escritura permite tema activo y avisa que no se guardó. No guarda notas/rutas/secretos, no toca SQLite ni buffers y no pertenece al backup del workspace. Borrar datos WebView elimina la preferencia, no el contenido. Scroll/vistas/grupos son efímeros por ruta.
 
@@ -88,3 +88,26 @@ printf '{"view":"projects_board","as_of":"2026-10-12","limit":50}' | cargo run -
 ```
 
 En stdout sólo Response JSON; errores/códigos como las demás operaciones. Esquema y TypeScript se generan desde Rust. [ADR 0009](decisions/0009-shared-home-projections.md) explica la decisión.
+
+Actualización People del 24/10/2026: [guía de las siete vistas](people-reference.md) y [revisión acotada](verification-people-reference.md). La galería carga diez contactos y Load more acumula páginas; los miembros de otra colección People se conservan en el listado general.
+
+Actualización del encabezado del 24/10/2026: se retiraron Navegación y Actualizar
+Home. **⌘R / Ctrl+R o F5** refresca las lecturas del Home activo, conservando sus
+vistas y los buffers de la sesión. [Revisión](verification-home-refresh.md).
+
+
+## Pies y filas de acción al 24/10/2026
+
+Los contadores y fechas de consulta no se muestran al pie de Tasks/Notes/
+Projects/Tags/People; su cobertura queda en Opciones de vista. El aviso técnico
+final de Home se retiró. Load more y New page sin borde ocupan toda la fila;
+la captura con borde conserva su estilo. Cargar más acumula elementos únicos y
+sólo se ofrece si existe otra página. Ver [revisión actual](verification-tasks-page.md).
+
+## Orientación y detalles al 26/10/2026
+
+El [indicador persistente](scroll-outline.md) identifica las seis secciones de
+Home y sigue su scroll. Los originales y borradores abren según el
+[modo de detalle](detail-peek.md), inicialmente Side peek derecho. El origen
+conserva su vista y posición al mover el foco al detalle o cerrarlo; actualizar
+explícitamente o reactivar la pestaña mantiene las reglas de consulta vigentes.

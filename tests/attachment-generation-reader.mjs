@@ -11,7 +11,7 @@ function setup(read) { const calls = [], changes = []; const c = new AttachmentG
 test('Montar/editar/dispose no lee; ID vacío no dispara operación', async () => {
   const { c, calls } = setup(() => page()); c.edit(); await c.read({ id: ' ', kind: 'pdf_text' }); c.dispose(); await c.read(criteria('pdf_text')); assert.deepEqual(calls, []);
 });
-for (const [kind, operation] of [['utf8_text', 'extraction.fragments'], ['pdf_text', 'extraction.pdf_fragments'], ['xlsx_cells', 'extraction.xlsx_cells'], ['image_ocr', 'extraction.ocr_regions']]) test(`${kind}: una lectura explícita exacta, sin get/import/índice`, async () => {
+for (const [kind, operation] of [['utf8_text', 'extraction.fragments'], ['pdf_text', 'extraction.pdf_fragments'], ['xlsx_cells', 'extraction.xlsx_cells'], ['image_ocr', 'extraction.ocr_regions'], ['pdfkit_text', 'extraction.pdfkit_pages'], ['pdf_ocr', 'extraction.pdf_ocr_regions']]) test(`${kind}: una lectura explícita exacta, sin get/import/índice`, async () => {
   const raw = page(kind), { c, calls } = setup(async () => raw); await c.read(criteria(kind));
   assert.deepEqual(calls, [{ operation, input: { id: 'job', limit: 20 } }]); assert.equal(c.state.page.kind, kind); assert.equal(c.state.page.data, raw); assert.equal(c.state.page.data.generation.future.unchanged, true); c.dispose();
 });
@@ -49,4 +49,60 @@ test('Remount no libera cupo físico y cancelar cola no inicia otro lector', asy
 test('Cambiar tipo invalida criterios sin leer ni mezclar páginas', async () => {
   const { c, calls } = setup(async cmd => page(cmd.operation.endsWith('xlsx_cells') ? 'xlsx_cells' : 'utf8_text', [], 'cursor'));
   await c.read(criteria('utf8_text')); c.edit(); await c.next(); assert.equal(calls.length, 1); await c.read(criteria('xlsx_cells')); assert.equal(c.state.page.kind, 'xlsx_cells'); assert.equal(c.state.pageNumber, 1); c.dispose();
+});
+
+test('Rango XLSX conserva todos los criterios en cada página sin inferir encabezado', async () => {
+  const args = { id: ' job ', kind: 'xlsx_range', sheet_id: 7, range: 'A1:C30', header_row: 1 };
+  const { c, calls } = setup(async () => ({ ...page('xlsx_cells', [], 'range-cursor'), sheet: { id: 7 }, range: 'A1:C30', header_row: 1, headers: [] }));
+  await c.read(args); args.range = 'changed'; await c.next();
+  assert.deepEqual(calls[0], { operation: 'extraction.xlsx_range', input: { id: 'job', sheet_id: 7, range: 'A1:C30', header_row: 1, limit: 20 } });
+  assert.deepEqual(calls[1].input, { id: 'job', sheet_id: 7, range: 'A1:C30', header_row: 1, limit: 20, cursor: 'range-cursor' });
+  assert.equal(c.state.page.kind, 'xlsx_range'); c.edit(); await c.next(); assert.equal(calls.length, 2); c.dispose();
+});
+test('Rango sin encabezado omite header_row y comprueba criterios de la respuesta', async () => {
+  let wrong = false;
+  const { c, calls } = setup(async () => ({ ...page('xlsx_cells'), sheet: { id: wrong ? 2 : 1 }, range: 'A1', header_row: null, headers: [] }));
+  const args = { id: 'job', kind: 'xlsx_range', sheet_id: 1, range: 'A1' };
+  await c.read(args); assert.equal('header_row' in calls[0].input, false); assert.equal(c.state.error, null);
+  wrong = true; await c.read(args); assert.equal(c.state.page, null); assert.equal(c.state.error.code, 'transport_error'); c.dispose();
+});
+test('Rango tardío se descarta sin liberar el cupo físico compartido', async () => {
+  const d = deferred(), first = setup(() => d.promise);
+  const pending = first.c.read({ id: 'job', kind: 'xlsx_range', sheet_id: 1, range: 'A1' }); await tick(); first.c.edit();
+  const second = setup(async () => page()); const waiting = second.c.read(criteria('utf8_text')); await tick(); assert.equal(second.calls.length, 0);
+  d.resolve({ ...page('xlsx_cells'), sheet: { id: 1 }, range: 'A1', header_row: null, headers: [] });
+  await Promise.all([pending, waiting]); assert.equal(first.c.state.page, null); assert.equal(second.calls.length, 1); first.c.dispose(); second.c.dispose();
+});
+for (const field of ['sheet_id', 'header_row']) test(`Rango ${field} no finito no se convierte en null ni se envía`, async () => {
+  const { c, calls } = setup(async () => page('xlsx_cells'));
+  await c.read({ id: 'job', kind: 'xlsx_range', sheet_id: 1, range: 'A1', [field]: Number.NaN });
+  assert.equal(calls.length, 0); assert.equal(c.state.page, null); assert.equal(c.state.error.code, 'validation_error'); c.dispose();
+});
+
+const tableCriteria = () => ({ id: ' job ', kind: 'pdf_ocr_table', page_number: 2, x_edges: ['0', '0.5', '1'], y_min: '0', y_max: '1', header_row: 1 });
+const tablePage = (cursor = null) => ({ ...page('pdf_ocr', [], cursor), page: { raster: { page_number: 2 } }, x_edges: ['0', '0.5', '1'], y_min: '0', y_max: '1', header_row: 1, outside: [{ ordinal: 0 }], covers_generation: false, covers_table: !cursor });
+test('Tabla PDF conserva grid/cursor, clona los bordes y distingue cobertura de generación', async () => {
+  const args = tableCriteria(); let n = 0;
+  const { c, calls } = setup(async () => tablePage(++n === 1 ? 'table-cursor' : null));
+  await c.read(args); args.x_edges[1] = 'changed'; args.page_number = 1; await c.next();
+  const expected = { id: 'job', page_number: 2, x_edges: ['0', '0.5', '1'], y_min: '0', y_max: '1', header_row: 1, limit: 20 };
+  assert.deepEqual(calls[0], { operation: 'extraction.pdf_ocr_table', input: expected });
+  assert.deepEqual(calls[1].input, { ...expected, cursor: 'table-cursor' });
+  assert.equal(c.state.page.kind, 'pdf_ocr_table'); assert.equal(c.state.page.data.covers_generation, false); assert.equal(c.state.pageNumber, 2); c.dispose();
+});
+for (const mismatch of ['page', 'edges', 'y_min', 'y_max', 'header_row', 'coverage', 'outside']) test(`Tabla respuesta ${mismatch} ajena se rechaza`, async () => {
+  const bad = tablePage(); if (mismatch === 'page') bad.page.raster.page_number = 1;
+  else if (mismatch === 'edges') bad.x_edges = ['0', '1'];
+  else if (mismatch === 'coverage') bad.covers_generation = true;
+  else if (mismatch === 'outside') bad.outside = Array(513).fill({});
+  else bad[mismatch] = mismatch === 'header_row' ? null : '0.2';
+  const { c } = setup(async () => bad); await c.read(tableCriteria()); assert.equal(c.state.page, null); assert.equal(c.state.error.code, 'transport_error'); c.dispose();
+});
+for (const field of ['page_number', 'header_row']) test(`Tabla ${field} no finito no se convierte silenciosamente a null`, async () => {
+  const { c, calls } = setup(async () => tablePage()); await c.read({ ...tableCriteria(), [field]: NaN }); assert.equal(calls.length, 0); assert.equal(c.state.error.code, 'validation_error'); c.dispose();
+});
+test('Tabla tardía descartada mantiene ocupado cupo real hasta finalizar', async () => {
+  const d = deferred(), one = setup(() => d.promise); const pending = one.c.read(tableCriteria()); await tick(); one.c.dispose();
+  const two = setup(async () => page()); const waiting = two.c.read(criteria('utf8_text')); await tick(); assert.equal(two.calls.length, 0);
+  d.resolve(tablePage()); await Promise.all([pending, waiting]); assert.equal(one.c.state.page, null); assert.equal(two.calls.length, 1); two.c.dispose();
 });

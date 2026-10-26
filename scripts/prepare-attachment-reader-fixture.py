@@ -32,7 +32,7 @@ def main():
     assert not directory.is_relative_to(ROOT) and not directory.exists()
     directory.mkdir(parents=True)
     workspace = directory / 'workspace'
-    binary = ROOT / 'target' / args.profile / 'noteka'
+    binary = Path(os.environ.get('NOTEKA_CLI', ROOT / 'target' / args.profile / 'noteka')).resolve()
     calls = []
 
     def call(operation, input):
@@ -45,7 +45,7 @@ def main():
         calls.append(operation)
         return response['data']
 
-    assert call('workspace.create', dict(timezone='UTC'))['schema_version'] == 13
+    assert call('workspace.create', dict(timezone='UTC'))['schema_version'] >= 16
     control = call('extraction.control', dict(action='get'))
     call('extraction.control', dict(action='set', paused=False, expected_revision=control['revision']))
     pdf = load('reader_ui_pdf', 'tests/fixtures/pdf/generate.py')
@@ -75,7 +75,7 @@ def main():
     book = xlsx.book([xlsx.sheet(cells, name='Hoja Ñ', visibility='very_hidden', declared='A1:A25', observed='A1:A25', merges=['A1:B1'])])
     sources = [('literal.txt', literal.encode(), 'utf8_text', None), ('pages.pdf', pdf_bytes, 'pdf_text', None),
                ('cells.xlsx', xlsx.pack(parts), 'xlsx_cells', book), ('empty.txt', b'', 'utf8_text', None)]
-    selected = {case['name']: case for case in xlsx.cases() if case['name'] in ['empty-stored', 'formula-shared', 'formula-array', 'date-system-and-number-formats', 'sparse-maximum-coordinate']}
+    selected = {case['name']: case for case in xlsx.cases() if case['name'] in ['empty-stored', 'formula-shared', 'formula-array', 'date-system-and-number-formats', 'sparse-maximum-coordinate', 'result-1048576']}
     for name, case in selected.items():
         sources.append((name + '.xlsx', case['source'], 'xlsx_cells', case['expected']))
     fixtures = {}

@@ -22,13 +22,13 @@ class NotesTextReader {
     try {
       const page = await notesPool.run(() => { signal.throwIfAborted(); return this.read(input); }, signal);
       if (!this.lifetime.current(token)) return;
-      if (page.items.length > 20) throw new Error('Página de entidades excesiva. Buscá de nuevo.');
+      if (page.items.length > 20) throw new Error("Entity page is too large. Search again.");
       this.publish({ page, pageNumber, busy: false, error: null });
     } catch (error) {
       if (!this.lifetime.current(token)) return;
       this.committed = null;
       const detail = error instanceof Error && 'detail' in error ? error.detail as CoreError : null;
-      this.publish({ page: null, pageNumber: 0, busy: false, error: { code: detail?.code ?? 'transport_error', message: detail?.message ?? (error instanceof Error ? error.message : 'No se pudo consultar entidades.'), details: detail?.details } });
+      this.publish({ page: null, pageNumber: 0, busy: false, error: { code: detail?.code ?? 'transport_error', message: detail?.message ?? (error instanceof Error ? error.message : "Could not query entities."), details: detail?.details } });
     }
   }
   dispose() { this.disposed = true; this.lifetime.dispose(); this.committed = null; }

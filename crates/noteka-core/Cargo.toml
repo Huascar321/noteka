@@ -4,8 +4,12 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+noteka-pdf-table = { path = "../noteka-pdf-table" }
+noteka-pdfkit-protocol = { path = "../noteka-pdfkit-protocol" }
+noteka-pdfkit-runtime = { path = "../noteka-pdfkit-runtime" }
 noteka-ocr-protocol = { path = "../noteka-ocr-protocol" }
 noteka-pdf-protocol = { path = "../noteka-pdf-protocol" }
+noteka-pdfium-protocol = { path = "../noteka-pdfium-protocol" }
 noteka-xlsx-protocol = { path = "../noteka-xlsx-protocol" }
 serde.workspace = true
 serde_json.workspace = true
@@ -19,6 +23,7 @@ dirs = "6"
 iana-time-zone = "0.1"
 chrono-tz = "0.10"
 base64 = "0.22"
+crc32fast = "1.5.2"
 libc = "0.2"
 
 # sha2 0.10 habilita su backend ARM con detección runtime sólo con `asm`.

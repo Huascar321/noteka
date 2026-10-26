@@ -13,6 +13,7 @@ crate-type = ["lib", "cdylib", "staticlib"]
 
 [dependencies]
 noteka-core = { path = "../crates/noteka-core" }
+noteka-providers = { path = "../crates/noteka-providers" }
 serde_json.workspace = true
 tauri = { version = "2", features = [] }
 rusqlite = { workspace = true, optional = true }

@@ -79,13 +79,18 @@ impl Catalog {
             input["type"] = json!("object");
             let mixed = matches!(
                 operation.as_str(),
-                "extraction.control" | "extraction.index"
+                "extraction.control" | "extraction.index" | "embedding.index"
             );
             if mixed && !policy.allow_write() {
                 input["oneOf"]
                     .as_array_mut()
                     .expect("mixed enum")
-                    .retain(|v| v["properties"]["action"]["const"] == "get");
+                    .retain(|v| {
+                        matches!(
+                            v["properties"]["action"]["const"].as_str(),
+                            Some("get") | Some("status")
+                        )
+                    });
             }
             let annotations = json!({"readOnlyHint":read,"destructiveHint":!read,"idempotentHint":read,"openWorldHint":false});
             let tool: Tool = serde_json::from_value(json!({"name":name,"description":format!("Operación local {operation}; validación y permisos del núcleo."),"inputSchema":input,"outputSchema":output_schema(&core,operation),"annotations":annotations}))
@@ -101,6 +106,12 @@ impl Catalog {
                     vec!["get"]
                 } else {
                     vec!["get", "put", "reset"]
+                }
+            } else if operation == "embedding.index" {
+                if read {
+                    vec!["status"]
+                } else {
+                    vec!["status", "build", "reset"]
                 }
             } else {
                 vec![]
@@ -182,9 +193,9 @@ mod tests {
     #[test]
     fn complete_schemas_pages_and_scoped_cursors() {
         let mut cursors = Vec::new();
-        for (w, r, n) in [(false, false, 25), (true, false, 45), (true, true, 46)] {
+        for (w, r, n) in [(false, false, 34), (true, false, 57), (true, true, 59)] {
             let c = Catalog::new(Policy::new(w, r).unwrap()).unwrap();
-            assert_eq!(c.names.len(), 53);
+            assert_eq!(c.names.len(), 66);
             assert_eq!(c.tools.len(), n);
             for t in &c.tools {
                 for s in [

@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/noteka-core", "crates/noteka-cli", "crates/noteka-pdf-protocol", "crates/noteka-pdf-worker", "crates/noteka-mcp", "crates/noteka-parser-runtime", "crates/noteka-xlsx-protocol", "crates/noteka-xlsx-worker", "crates/noteka-ocr-protocol", "crates/noteka-pdfkit-protocol", "crates/noteka-pdfkit-runtime", "src-tauri"]
+members = ["crates/noteka-core", "crates/noteka-cli", "crates/noteka-providers", "crates/noteka-pdf-protocol", "crates/noteka-pdf-worker", "crates/noteka-pdfium-protocol", "crates/noteka-pdfium-worker", "crates/noteka-mcp", "crates/noteka-parser-runtime", "crates/noteka-xlsx-protocol", "crates/noteka-xlsx-worker", "crates/noteka-ocr-protocol", "crates/noteka-pdfkit-protocol", "crates/noteka-pdfkit-runtime", "src-tauri", "crates/noteka-pdf-table"]
 default-members = ["crates/noteka-core", "crates/noteka-cli"]
 resolver = "2"
 

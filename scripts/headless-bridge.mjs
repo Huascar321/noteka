@@ -10,10 +10,12 @@ import { tmpdir } from 'node:os';
 import { createEvidenceControls } from './headless-evidence.mjs';
 import { createPreparationControls } from './headless-preparation.mjs';
 import { createOcrControls } from './headless-ocr.mjs';
+import { createPdfOcrControls } from './headless-pdf-ocr.mjs';
+import { createPdfkitControls } from './headless-pdfkit.mjs';
 export async function startHeadlessBridge(port = 0) {
 // macOS puede exponer TMPDIR mediante /var -> /private/var; comparar rutas canónicas.
 const root=realpathSync(mkdtempSync(join(process.env.NOTEKA_TEST_TMP || tmpdir(),'noteka-headless-')));
-const binary=resolve('target/debug/noteka');
+const binary=resolve(process.env.NOTEKA_CLI || 'target/debug/noteka');
 let phase='main',theme='dark',record=null,homeRead={};const results=[];
 const workspace=()=>join(root,theme,phase==='restored'?'restored':'workspace');
 // Ninguna ruta entregada por el navegador puede leer/escribir fuera del corpus.
@@ -42,9 +44,13 @@ const data=async(operation,input)=>{const r=await cli(operation,input);if(!r.ok)
 const evidence=createEvidenceControls(root,confined,cli);
 const preparation=createPreparationControls(root,confined,cli);
 const ocr=createOcrControls(root,confined,cli);
+const pdfkit=createPdfkitControls(root,confined,cli);
+const pdfocr=createPdfOcrControls(root,confined,cli);
 const sql=(fn)=>{const db=new DatabaseSync(join(workspace(),'noteka.sqlite'));try{return fn(db);}finally{db.close();}};
 const mapped={get:'entity.get',list:'entity.list',entity_create:'entity.create',cli_update:'entity.update',entity_archive:'entity.archive',entity_restore:'entity.restore',relation_add:'relation.add',relation_remove:'relation.remove',home:'home.query',workflow:'workflow.query',search:'search.query',collections:'collection.list',collection_get:'collection.get',property_define:'property.define',formula_set:'formula.set',record_get:'record.get',record_create:'record.create',record_update:'record.update',database_query:'database.query',view_save:'view.save',templates:'template.list',template_get:'template.get',template_save:'template.save',template_instantiate:'template.instantiate',import_attachment:'attachment.import',read_attachment:'attachment.read'};
 async function control(step,input) {
+  if(step.startsWith('pdfocr_') || step.startsWith('pdftable_'))return pdfocr.control(step,input);
+  if(step.startsWith('pdfkit_'))return pdfkit.control(step,input);
   if(step.startsWith('ocr_'))return ocr.control(step,input);
   if(step.startsWith('prep_'))return preparation.control(step,input);
   if(step.startsWith('evidence_'))return evidence.control(step,input);
@@ -90,7 +96,7 @@ const server=createServer(async(req,res)=>{
         const path=confined(input.workspace);
         const instrument={...homeRead};
         if(input.command.operation==='home.query' && input.command.input.view===instrument.view){if(instrument.delay)await new Promise(r=>setTimeout(r,instrument.delay));if(instrument.failure){result={api_version:1,request_id:randomUUID(),ok:false,error:{code:'storage_error',message:'Lectura Home fallida inyectada sólo en transporte headless.',details:{}}};}}
-        result??=await ocr.run(path,input.command,()=>preparation.run(path,input.command,()=>evidence.run(path,input.command,()=>cli(input.command.operation,input.command.input,path))));
+        result??=await pdfocr.run(path,input.command,()=>pdfkit.run(path,input.command,()=>ocr.run(path,input.command,()=>preparation.run(path,input.command,()=>evidence.run(path,input.command,()=>cli(input.command.operation,input.command.input,path))))));
       }else if(req.url==='/__test__/control'){result=await control(input.step,input.input||{});}else throw new Error('Ruta POST inválida');
       res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify(result));return;
     }
@@ -98,7 +104,7 @@ const server=createServer(async(req,res)=>{
     if(req.url==='/__test__/evidence.cjs'){res.setHeader('content-type','text/javascript');res.end(readFileSync('tests/headless-evidence.cjs'));return;}
     if(req.url==='/__test__/home.js'||req.url==='/__test__/smoke.js'){res.setHeader('content-type','text/javascript');res.end(readFileSync('tests/native/'+req.url.split('/').at(-1)));return;}
     const path=resolve('dist','.'+(req.url==='/'?'/index.html':req.url.split('?')[0]));if(!path.startsWith(resolve('dist')+'/'))throw new Error('Ruta GET inválida');
-    res.setHeader('content-type',({'.html':'text/html','.js':'text/javascript','.css':'text/css'})[extname(path)]||'application/octet-stream');res.end(readFileSync(path));
+    res.setHeader('content-type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png'})[extname(path)]||'application/octet-stream');res.end(readFileSync(path));
   }catch(e){res.writeHead(500,{'content-type':'application/json'});res.end(JSON.stringify({error:String(e)}));}
 });
 await new Promise((done,reject)=>{server.once('error',reject);server.listen(port,'127.0.0.1',done);});

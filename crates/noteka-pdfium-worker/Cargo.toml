@@ -1,0 +1,17 @@
+[package]
+name = "noteka-pdfium-worker"
+version.workspace = true
+edition.workspace = true
+license = "MIT"
+publish = false
+
+[[bin]]
+name = "noteka-pdfium-worker"
+path = "src/main.rs"
+
+[dependencies]
+noteka-parser-runtime = { path = "../noteka-parser-runtime" }
+noteka-pdfium-protocol = { path = "../noteka-pdfium-protocol" }
+pdfium-render = { version = "=0.9.4", default-features = false, features = ["pdfium_7881"] }
+serde_json.workspace = true
+sha2 = "0.10"

@@ -93,9 +93,11 @@ fn schema_empty_registry_and_migration_rollback_preserve_v9() {
     assert_eq!(get(&w)["coverage"]["unindexed_supported_generations"], 1);
     assert!(query(&w, "Original").items.is_empty());
     w.conn
-        .execute_batch("DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;DROP TABLE extraction_xlsx_chunks;DROP TABLE extraction_xlsx_generations")
+        .execute_batch("DROP TABLE extraction_pdf_ocr_chunks;DROP TABLE extraction_pdf_ocr_generations;DROP TABLE extraction_pdfkit_chunks;DROP TABLE extraction_pdfkit_generations;DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;DROP TABLE extraction_xlsx_chunks;DROP TABLE extraction_xlsx_generations")
         .unwrap();
-    w.conn.execute_batch("DROP TABLE extraction_search_entries;DROP TABLE extraction_search_fts;DROP TABLE extraction_search_control;UPDATE workspace_meta SET schema_version=9;PRAGMA user_version=9").unwrap();
+    w.conn.execute_batch("DROP TABLE extraction_search_entries;DROP TABLE extraction_search_fts;DROP TABLE extraction_search_control;DROP TABLE IF EXISTS semantic_chunks;DROP TABLE IF EXISTS semantic_control;DROP TABLE IF EXISTS semantic_generations;DROP TABLE IF EXISTS semantic_profiles;DROP TABLE IF EXISTS agent_runs;
+DROP TABLE IF EXISTS extraction_pdf_structures;
+UPDATE workspace_meta SET schema_version=9;PRAGMA user_version=9").unwrap();
     let before = raw(&w.conn);
     let err = w.migrate(true).unwrap_err();
     assert_eq!(before, raw(&w.conn));
@@ -867,10 +869,30 @@ fn all_49_v9_input_output_contracts_remain_byte_identical() {
         ),
         (
             "outputs",
-            "d4a894fd4932450fe26736d2b90a82eb59f7642223875040afe11042d172e09d",
+            "1bc46e6bc9dc44e6aca5f62a447ad182d6a8d6e818b9feec0b2295d83086e1b3",
         ),
     ] {
         let values = c[group].as_object_mut().unwrap();
+        assert_eq!(values.len(), 66);
+        for op in ["external.link", "external.unlink", "external.list"] {
+            assert!(values.remove(op).is_some());
+        }
+        assert_eq!(values.len(), 63);
+        assert!(values.remove("extraction.pdf_structure").is_some());
+        assert_eq!(values.len(), 62);
+        assert!(values.remove("agent.ask").is_some());
+        assert!(values.remove("agent.cancel").is_some());
+        assert!(values.remove("agent.trace").is_some());
+        assert_eq!(values.len(), 59);
+        assert!(values.remove("embedding.index").is_some());
+        assert!(values.remove("retrieval.search").is_some());
+        assert_eq!(values.len(), 57);
+        assert!(values.remove("extraction.pdf_ocr_table").is_some());
+        assert!(values.remove("extraction.xlsx_range").is_some());
+        assert_eq!(values.len(), 55);
+        assert!(values.remove("extraction.pdf_ocr_regions").is_some());
+        assert_eq!(values.len(), 54);
+        assert!(values.remove("extraction.pdfkit_pages").is_some());
         assert_eq!(values.len(), 53);
         assert!(values.remove("extraction.ocr_regions").is_some());
         assert_eq!(values.len(), 52);

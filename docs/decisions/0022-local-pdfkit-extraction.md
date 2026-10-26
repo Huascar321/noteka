@@ -1,7 +1,7 @@
 # ADR 0022: integración explícita de páginas PDFKit
 
-Estado: propuesto e implementación parcial; no adoptado como formato persistente.
-Cambio activo add-local-pdfkit-extraction, 17 de octubre de 2026.
+Estado: adoptado tras implementación y aceptación técnica, 20/10/2026.
+Cambio activo add-local-pdfkit-extraction; retomado el 20 de octubre de 2026.
 
 ## Context
 
@@ -46,3 +46,19 @@ active-pdfkit-extraction-path.txt apunta a evidencia externa. Runtime/formato pr
 siete tests por perfil y22 PDF reales por perfil, incluida recarga canónica. No existe014 ni
 cambio de versión/API/MCP todavía. La integración completa y adopción del formato
 requieren tareas restantes y aceptación del cambio. Deadline5a permanece02:16UTC.
+
+## Continuación del 20/10
+
+014, persistencia, cola, lectura compartida, CLI/MCP y staging están implementados.
+Migración real v13 mixta y contratos53, rollback/versiones y corpus CLI22 por
+perfil pasaron. La regresión conjunta/gates permanecen pendientes de cierre; no
+se declara adopción final por estos resultados parciales. No hay nuevo plazo
+horario ni alcance de fase6.
+
+## Adoption
+
+La aceptación completa aprobó339 Rust por perfil,25 SDK por perfil,3442 checks UI
+headless y cuatro gates originales consecutivos (query máximo176,788ms,lock16,197ms).
+Se adoptan014 y el formato canónico conforme al diseño; la evidencia histórica
+parcial anterior queda como antecedente, no como estado actual. Ver
+[verificación](../verification-pdfkit-extraction.md).

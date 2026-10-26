@@ -1,17 +1,19 @@
 // Compila únicamente código local con el SDK existente; no descarga recursos.
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, realpathSync, lstatSync, mkdtempSync } from 'node:fs';
+import { mkdirSync, realpathSync, lstatSync, copyFileSync, mkdtempSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import os from 'node:os';
 
 const root = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const args = process.argv.slice(2);
-if (args.some(a => !['--release', '--probes'].includes(a))) throw new Error('Opciones: --release, --probes');
+if (args.some(a => !['--release', '--probes', '--tauri'].includes(a))) throw new Error('Opciones: --release, --probes');
 if (process.platform !== 'darwin') throw new Error('PDFKit requiere macOS y un SDK ya instalado.');
-const release = args.includes('--release'), probes = args.includes('--probes');
+const tauri = args.includes('--tauri');
+const release = args.includes('--release') || (tauri && process.env.TAURI_ENV_DEBUG === 'false'), probes = args.includes('--probes');
+if (tauri && probes) throw new Error('Los probes no se distribuyen.');
 const host = execFileSync('rustc', ['-vV'], { encoding: 'utf8', cwd: root }).match(/^host: (.+)$/m)[1];
-const triple = process.env.CARGO_BUILD_TARGET || host;
+const triple = (tauri && process.env.TAURI_ENV_TARGET_TRIPLE) || process.env.CARGO_BUILD_TARGET || host;
 if (!/^(aarch64|x86_64)-apple-darwin$/.test(triple)) throw new Error('Target PDFKit no admitido');
 const sdk = realpathSync(execFileSync('/usr/bin/xcrun', ['--sdk', 'macosx', '--show-sdk-path'], { encoding: 'utf8' }).trim());
 // swiftc selecciona el modo del driver por argv[0]; validar el destino del enlace
@@ -37,4 +39,10 @@ try {
 execFileSync(swift, ['-sdk', sdk, '-target', target, '-swift-version', '6', '-disable-sandbox', '-module-cache-path', cache,
   ...(release ? ['-O'] : ['-Onone']), ...(probes ? ['-D', 'NOTEKA_PDFKIT_TEST'] : []),
   path.join(root, 'native/pdfkit-worker/main.swift'), '-o', output], { cwd: root, stdio: 'inherit' });
-console.log(JSON.stringify({ output, triple, profile: release ? 'release' : 'debug', probes, target, sdk, cache }));
+if (tauri) {
+  const staging = path.join(root, 'src-tauri/binaries'); mkdirSync(staging, { recursive: true });
+  const destination = path.join(staging, `noteka-pdfkit-worker-${triple}`);
+  try { if (!lstatSync(destination).isFile() || lstatSync(destination).isSymbolicLink()) throw new Error('Staging PDFKit no regular'); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+  copyFileSync(output, destination);
+}
+console.log(JSON.stringify({ output, triple, tauri, profile: release ? 'release' : 'debug', probes, target, sdk, cache }));

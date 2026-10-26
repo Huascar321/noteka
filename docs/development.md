@@ -442,7 +442,7 @@ su integración App. No se instala un modelo ni se activa proveedor remoto.
 
 [OCR integrado](image-ocr.md) está verificado; [resultados y límites](verification-image-ocr.md).
 El preparador general agrega el helper Swift sólo para macOS; `--tauri` prepara
-el staging y el overlay macOS incluye tres sidecars. Las pruebas del lector
+el staging y el overlay macOS incluye cuatro sidecars tras integrar PDFKit. Las pruebas del lector
 privado permiten `--wire-version 1` o `2`; integrar OCR usa v2 y no cambia v1.
 
 `tauri-build` copia los sidecars de `src-tauri/binaries/` al directorio del perfil
@@ -459,3 +459,116 @@ copia; los tests del host se ejecutan por separado. El conjunto de pruebas debe
 seguir completo. Compilar paquetes concretos puede producir hashes distintos
 del workspace por el conjunto de features, aunque compartan fuentes; conservar
 la procedencia, sin presentar una copia restaurada como rebuild reproducible.
+
+### Páginas PDFKit persistidas
+
+[Guía](pdfkit-extraction.md), [ADR0022](decisions/0022-local-pdfkit-extraction.md) y
+[verificación](verification-pdfkit-extraction.md). Schema14/APIv1/54; extractor
+explícito `pdfkit_text` y lectura `extraction pdfkit-pages`, MCP26/46/47 según flags.
+El cierre backend conservó53 contratos previos y batch9; la integración posterior
+permite selección FTS explícita sin modificar el lector.
+El preparador general integra el cuarto sidecar macOS, sin probes de distribución.
+Los scripts `test-pdfkit-migration.py` y `test-pdfkit-cli.py` comprueban recuperación
+v13 independiente y corpus nativo por CLI. Con el cliente15 usá --searchable
+para el corpus; sin flag verifica el rechazo histórico del backend14. Requieren rutas de evidencia externas
+y perfiles realmente preparados; `--help` enumera argumentos. No abrir el host.
+
+
+**PDFKit en búsqueda/UI verificado (20/10):** [guía](pdfkit-search-ui.md) y
+[evidencia](verification-pdfkit-search-ui.md). SQLite15/API54/MCP26/46/47,
+batch9;345 Rust por perfil,25 SDK por perfil y4264 checks headless. Cuatro gates
+originales aprobaron query p95 máximo174,526ms/lock17,094ms; prueba nativa grande
+143,365/10,405ms. Cuatro deltas sincronizados/contrastados y cambio archivado10/10.
+OCR dePDF, tablas y ampliaciones XLSX siguen pendientes de5a; Home9/17 intacto.
+
+
+Estado20/10: `add-local-pdf-ocr` verificado12/12, cinco deltas sincronizados/contrastados
+y archivado. Fuente del cierre20/10 SQLite16/API55/MCP27/47/48/batch9; ver
+[aceptación PDF OCR](verification-pdf-ocr.md). Fase5a aún requiere tablas/ampliaciones PDF y XLSX;
+5b/5c no iniciados, Home9/17 intacto y fase6 excluida. Sin publicación ni modelos.
+
+
+Lectura de rangos XLSX21/10: `extraction.xlsx_range`/`extraction xlsx-range`,
+SQLite16/API56/MCP28/48/49/batch9. Ver [guía](xlsx-range-reader.md) y
+[verificación](verification-xlsx-range-reader.md). Sin migración o cambios de
+canónico/FTS; fuentes/baseline/clientes16 independientes fuera de Git.
+
+### Recuperación semántica y harness
+
+SQLite18/API62/MCP32/53/55. Los adaptadores sólo aceptan endpoints loopback
+HTTP; no hay TLS, credenciales ni proxies. No se instalan pesos ni se activa un
+proveedor al abrir el workspace.
+
+```sh
+# Pruebas y gates (usar CARGO_TARGET_DIR externo; no asumir target/ actualizado)
+cargo test --offline --locked --workspace --exclude noteka-desktop
+cargo test --release --offline --locked --workspace --exclude noteka-desktop
+cargo clippy --offline --locked --workspace --exclude noteka-desktop --all-targets -- -D warnings
+python3 -B scripts/check-semantic-retrieval-contracts.py --cli "$NOTEKA_CLI" \
+  --baseline "$NOTEKA_PHASE5_EVIDENCE/phase5a-accepted/catalog57.json"
+python3 -B scripts/test-semantic-agent-smoke.py --cli "$NOTEKA_CLI" --profile debug
+python3 -B scripts/test-semantic-agent-smoke.py --cli "$CARGO_TARGET_DIR/release/noteka" --profile release
+# Benchmark del backend exacto (release)
+cargo test --release --offline --locked -p noteka-core --lib semantic_backend_benchmark -- --ignored --nocapture
+# Gates FTS originales (sin cambiar corpus/caps/target)
+python3 -B scripts/benchmark-attachment-search.py
+python3 -B scripts/benchmark-xlsx-search.py
+```
+
+El smoke levanta servidores loopback simulados (embeddings y chat), crea un
+workspace/extracción/índice, verifica búsqueda semántica, fallback FTS, respuesta
+con cita y traza. No usa un modelo real. Para el harness real, configurá un
+runtime local OpenAI-compatible en `/v1/chat/completions`; el perfil Jina
+documentado requiere un runtime con adaptador de retrieval y revisión de pesos.
+[5b](semantic-retrieval.md), [5c](agent-harness.md), [ADR0029](decisions/0029-semantic-retrieval.md)
+y [ADR0030](decisions/0030-agent-harness.md).
+
+### PDF universal (PDFium/PaddleOCR)
+
+Prioridad universal sobre PDFKit/Vision. [Guía](universal-pdf.md) y
+[ADR0031](decisions/0031-universal-pdf-backend.md).
+
+```sh
+# PDFium: construir worker y apuntar a la librería dinámica (no se versiona)
+cargo build --offline --locked -p noteka-pdfium-worker
+export NOTEKA_PDFIUM_LIB=/ruta/libpdfium.dylib
+NOTEKA_PDFIUM_LIB="$NOTEKA_PDFIUM_LIB" \
+  cargo test --offline --locked -p noteka-core --lib pdfium_tests::real_pdfium -- --ignored --nocapture
+
+# PaddleOCR: Python/modelos instalados por el usuario; no se descargan
+export NOTEKA_PADDLE_PYTHON=/ruta/venv/bin/python
+export NOTEKA_PADDLE_WORKER="$PWD/native/universal/paddle_ocr_worker.py"
+export NOTEKA_PADDLE_MODEL_PATHS=/ruta/paddle-model-paths.json
+cargo test --offline --locked -p noteka-core --lib paddle_tests::real_paddle -- --ignored --nocapture
+```
+
+`paddle_ocr` usa un presupuesto de 30 s por inicialización/estructura; sólo
+persiste texto por página. Las tablas/estructura PP-StructureV3 no están
+persistidas. Windows/Linux requieren instalar sus binarios/modelos y verificar
+el perfil; no se declaran soportados por esta corrida.
+
+### Autenticación de proveedores
+
+```sh
+cargo build --release --offline --locked -p noteka-providers
+"$CARGO_TARGET_DIR/release/noteka-auth" openai status
+"$CARGO_TARGET_DIR/release/noteka-auth" key status openai
+```
+
+El login ChatGPT y Google requieren navegador/consentimiento y, para Google,
+un cliente OAuth de escritorio. Ver [guía](provider-auth.md). No se ejecutan
+desde tests automáticos ni activan proveedores al abrir/buscar.
+
+## Navegación, pestañas y presentación de documentos
+
+```sh
+node --experimental-strip-types --test tests/context-search.mjs tests/document-presentation.mjs
+npm run test:desktop-navigation
+```
+
+El segundo comando compila la UI y CLI offline, abre su propia sesión Playwright
+headless y usa workspaces SQLite sintéticos. Verifica búsqueda, pestañas,
+conflictos/guardias, carga tardía, portada, movimiento reducido, listados separados
+del detalle y conservación de propiedades/tablas importadas. Guarda resultados
+y capturas bajo un directorio temporal informado en stdout. No usa el perfil
+personal de Notion ni prueba el cierre del host Tauri real.

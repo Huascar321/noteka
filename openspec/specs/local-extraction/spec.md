@@ -785,3 +785,279 @@ El lector SHALL prepararse por target/perfil macOS con SDK instalado, sin descar
 #### Scenario: Producto y evidencia previos
 - **WHEN** se verifican las operaciones y artefactos existentes tras incorporar el lector independiente
 - **THEN** conservan contratos y comportamiento medidos con procedencia de binarios real; no se declara PDF integrado o toda 5a completa por pruebas del lector
+
+### Requirement: Extracción PDFKit persistida sólo por acción explícita
+
+El núcleo SHALL admitir pdfkit_text como extractor explícito distinto de pdf_text y ejecutar su helper sólo mediante run sobre un claim válido. MUST preservar pausa, cancelación, revisiones, hash fuente, ownership y cercas de publicación existentes. Importar, encolar, migrar, leer o buscar no ejecuta parsing, no reemplaza un resultado previo ni activa otro perfil por defecto.
+
+#### Scenario: Run explícito y fuente íntegra
+- **WHEN** se importa un PDF administrado elegible, se encola pdfkit_text y se ejecuta run con cola habilitada
+- **THEN** publica una generación completa ligada a fuente/revisión/configuración admitidas y conserva original, perfil estricto anterior y límites
+
+#### Scenario: Cerca perdida y helper ausente
+- **WHEN** se cancela, pausa, pierde ownership, cambia la fuente o falta/falla el helper durante un intento
+- **THEN** falla o cancela conforme al contrato sin publicar datos parciales, reemplazar el resultado anterior o ejecutar fallback
+
+### Requirement: Páginas nativas canónicas y presupuesto compartido
+
+El resultado SHALL conservar Document v1 del perfil apple_pdfkit_text_v1 una sola vez en JSON canónico validado y chunks UTF-8 de hasta4096 bytes/512, máximo1MiB. MUST verificar hash, metadatos, páginas y conteos completos, sin offsets originales ficticios. Sus bytes se suman a los32MiB compartidos y snapshots64MiB; un exceso rechaza completo sin purga o truncamiento.
+
+#### Scenario: Unicode y estado de página conservados
+- **WHEN** el helper devuelve páginas válidas Unicode y no_text con procedencia real
+- **THEN** persistencia y reapertura conservan exactamente representación, orden físico, texto, metadatos y limitaciones, con hash reproducible
+
+#### Scenario: Fronteras y corrupción
+- **WHEN** se alcanza o excede una cuota o se altera chunk, JSON, propietario, hash o descriptor
+- **THEN** la frontera válida se conserva y el exceso/corrupción se rechaza antes de publicar o leer datos como válidos, sin modificar fuentes o derivados ajenos
+
+### Requirement: Lectura PDFKit paginada sin procesamiento
+
+extraction.pdfkit_pages SHALL leer páginas completas de una generación soportada, con límite1–64/default32, cursor ligado a job/generación/límite, manifest y cobertura explícitos. MUST rechazar cursor/configuración/tipo ajenos y conservar páginas vacías y procedencia. No necesita helper, no regenera ni indexa; su selección FTS requiere put y CAS explícitos independientes.
+
+#### Scenario: Páginas y cursor ligados
+- **WHEN** se recorre una generación de hasta100 páginas, incluidas vacías, y se repite tras reapertura
+- **THEN** devuelve todas las páginas una sola vez con texto completo, cobertura y cursor correcto sin ejecutar helper o escribir resultados
+
+#### Scenario: Cursor ajeno y selección prematura
+- **WHEN** se usa cursor de otro estado/generación/límite, un lector de otro formato o se intenta seleccionar pdfkit_text sin CAS vigente
+- **THEN** devuelve error tipado sin reinterpretar texto como otro formato, reparar o ejecutar preparación implícita
+
+### Requirement: Consumidor Rust nativo cercado y descartable
+
+El consumidor Rust MUST enviar sólo bytes por NKPDK001, verificar toda respuesta y hash esperado y acotar pipes8MiB/8KiB dentro del presupuesto restante de hasta5s. SHALL conservar errores de cancelación/cerca, usar CWD/entorno temporal y recolectar sólo su hijo al salir o fallar; ningún texto nativo pasa a errores. La plataforma/helper no disponible produce razón explícita sin descargas.
+
+#### Scenario: Respuesta hostil y presupuesto
+- **WHEN** el helper entrega respuesta alterada, stderr, exceso, salida no exitosa o bloquea pipes
+- **THEN** se rechaza completo dentro del plazo y el proceso propio termina/recolecta, sin confiar sólo en exit0
+
+#### Scenario: Cancelación antes y durante ejecución
+- **WHEN** la cerca falla antes de spawn o durante el procesamiento
+- **THEN** no inicia o termina/recolecta su hijo y conserva el motivo del núcleo, sin publicación
+
+### Requirement: Proyección PDFKit por página y bytes derivados
+
+El índice SHALL proyectar sólo texto de páginas PDFKit persistidas, conservando página física, rango UTF-8, tamaño de página, perfil, motor/OS y limitaciones. MUST dividir a4096 bytes sin cortar caracteres ni cruzar páginas y conservar512 fragmentos/1MiB por selección, sin indexar JSON/metadata o iniciar helper.
+
+#### Scenario: Unicode páginas vacías y procedencia
+- **WHEN** se selecciona una generación íntegra con Unicode, texto largo y páginas no_text
+- **THEN** los rangos consecutivos reconstruyen exactamente cada página textual; vacías no generan fragmentos, pero conservan cobertura/posición en el lector; perfil/motor/limitaciones no se interpretan como texto indexable
+
+#### Scenario: Frontera y exceso sin omisión
+- **WHEN** una proyección alcanza la máxima fragmentación permitida por100 páginas/1MiB o su documento excede una cuota
+- **THEN** la frontera válida pasa y el exceso se rechaza entero sin truncar páginas, omitir textos o purgar selecciones; el cap512 se conserva aunque resulte inalcanzable bajo esos límites y el lector completo sigue disponible
+
+### Requirement: Integridad PDFKit en índice mixto
+
+Get/search/put MUST validar íntegros JSON/manifiesto PDFKit, hash, proyección, copias y postings, incluso fuera del filtro/página. SHALL incluir metadata completa en la huella y conservar hashes/semántica de formatos anteriores, CAS, invalidación, fuente de candidatos y los límites300/150ms, sin cachés de confianza.
+
+#### Scenario: Corrupción ajena y origen alterado
+- **WHEN** cambia texto/metadato/owner/chunk/posting de una selección PDFKit fuera del filtro, o el original de un candidato
+- **THEN** la consulta falla completa con razón saneada sin devolver cero hits confiables, reparar, reextraer o ampliar límites
+
+#### Scenario: Selección repetida y reemplazo
+- **WHEN** se repite put íntegro con revisión vigente o se reemplaza su generación
+- **THEN** no-op conserva filas/revisión; publicar otra generación retira selección/postings previos atómicamente y vence cursor sin seleccionar la nueva, mientras falla/cancel/retry conservan el resultado anterior
+
+### Requirement: Preparación y lectura PDFKit en escritorio
+
+Los paneles SHALL permitir elegir pdfkit_text, preparar y leer páginas por acciones separadas con operaciones/CAS compartidos. MUST presentar una página de20, manifiesto, texto literal, páginas no_text y procedencia/límites, conservar buffers/guardias/lifetimes/cupo físico y no consultar/procesar al montar o editar criterios.
+
+#### Scenario: Flujo explícito y lectura sin selección
+- **WHEN** se encola, ejecuta y lee PDFKit desde una nota con buffer pendiente
+- **THEN** cada acción tiene recibo propio; sólo run procesa, leer no requiere selección FTS y texto/manifiesto completos no sustituyen el buffer
+
+#### Scenario: Error respuesta tardía y teclado
+- **WHEN** fallan fuente/cursor/transporte, se cambia ID/tipo o se navega durante una llamada, usando ambos temas y teclado
+- **THEN** se retira evidencia anterior y descarta éxito/error tardío manteniendo cupo iniciado; las guardias y controles se conservan sin interpretar texto activo ni modificar Home
+
+### Requirement: OCR de PDF explícito y acotado
+
+El sistema SHALL ofrecer pdf_ocr sólo por enqueue/run explícitos sobre PDF administrado<=1MiB. MUST procesar íntegro el documento o fallar, sin fallback ni alterar originales, con máximo20 páginas/16MP totales,4MP y PNG gris<=1MiB por página y presupuesto compartido5s. El OCR es inferido; no promete transcripción perfecta, orden visual o tablas.
+
+#### Scenario: Escaneo mixto vacío y rotación
+- **WHEN** se ejecuta un PDF compatible con páginas escaneadas, textuales, vacías y rotaciones admitidas
+- **THEN** cada página física tiene raster/hash y regiones inferidas identificables; las vacías conservan su posición, sin extraer texto por otro perfil ni publicar un prefijo parcial
+
+#### Scenario: Formato recurso o motor no disponible
+- **WHEN** la fuente está cifrada/inválida, excede páginas/píxeles/bytes, falta un helper/perfil o vence el presupuesto
+- **THEN** falla con motivo acotado, recolecta únicamente sus hijos y conserva originales y generación previa, sin instalar recursos o ampliar límites
+
+#### Scenario: Cancelación pausa y fuente nueva
+- **WHEN** cambian pausa/ownership/cancelación/source durante render, OCR o publicación
+- **THEN** la cerca impide publicar el resultado viejo; el intento sigue el estado compartido del núcleo y no modifica notas ni datos ajenos
+
+### Requirement: Generación PDF OCR canónica recuperable
+
+El sistema SHALL persistir JSON canónico versionado con página/rotación, raster PNG/hash/tamaño, reconocimiento decimal y motor/OS reales. MUST acotar resultado1MiB/512 chunks UTF-8 y retención compartida32MiB, validar propietarios/particiones/hash/configuración íntegros y publicar una sola generación atómica sin purgar ajenas.
+
+#### Scenario: Unicode inferido y páginas sin regiones
+- **WHEN** el resultado incluye texto multibyte, bbox/confianza decimales y páginas vacías
+- **THEN** conserva exactamente textos/decimales normalizados y descriptores físicos, sin reemplazar el PDF por PNG o tomar inferencia como original
+
+#### Scenario: Corrupción y cuota compartida
+- **WHEN** se altera un chunk/metadato/owner fuera de la página solicitada o se supera retención al reemplazar
+- **THEN** lectura/publicación falla completa; no trunca, normaliza datos desconocidos o elimina generaciones ajenas para caber
+
+### Requirement: Lectura paginada PDF OCR sin ejecución
+
+extraction.pdf_ocr_regions SHALL devolver regiones inferidas con página física, ordinal local/global, manifiesto completo y cobertura, por límite1–64/default32 y cursor ligado a workspace/job/generación/límite. MUST revalidar fuente/derivado íntegros sin helper, escritura, indexación o reparación.
+
+#### Scenario: Recorrido y resultado anterior
+- **WHEN** se pagina una generación persistida, se reabre/restaura o falla/reintenta su job sin helpers
+- **THEN** las regiones aparecen una vez con manifiesto/posición completos y flag de intento previo correcto; cambiar ruta/generación/límite invalida el cursor
+
+#### Scenario: Lector ajeno entrada o fuente inválidos
+- **WHEN** se pide con ID/cursor/configuración/tipo ajenos, campos desconocidos o original alterado
+- **THEN** se rechaza sin fallback, migración o contenido parcial confiable
+
+### Requirement: Preparación y lector PDF OCR en escritorio
+
+Los paneles SHALL ofrecer pdf_ocr explícito y lectura de20 regiones con texto, página/raster, bbox/confianza y motor/limitaciones completos. MUST preservar acciones/CAS/cupos/lifetimes, editor/buffers/guardias y Home; montar/editar no consulta, renderiza, transcribe o selecciona.
+
+#### Scenario: Acciones separadas y buffers
+- **WHEN** se prepara y lee desde una nota pendiente en ambos temas y por teclado
+- **THEN** sólo run procesa; lectura no exige selección FTS y muestra inferencia falible sin sustituir el buffer ni descargar originales en base64
+
+#### Scenario: Errores y respuesta tardía
+- **WHEN** falla una llamada o cambian ID/tipo/nota/workspace mientras está pendiente
+- **THEN** retira evidencia vieja, descarta respuesta tardía y conserva cupo iniciado/guardias sin retries, fallback o reparación automáticos
+
+### Requirement: Lectura XLSX por hoja rango y encabezados explícitos
+
+`extraction.xlsx_range` SHALL leer una hoja y rango A1 canónico de hasta64 columnas, con encabezado opcional dentro del rango, desde la generación confirmada. MUST devolver celdas dispersas completas con ordinal global, manifiesto y encabezados por columna sin inferencia, recálculo o expansión de merges/grilla.
+
+#### Scenario: Región dispersa y encabezados elegidos
+- **WHEN** se consulta una hoja oculta con huecos, nombres duplicados/vacíos, números largos y fórmulas sin caché, indicando o no header_row
+- **THEN** conserva hoja/visibilidad, tipos, fórmulas y cachés; encabezados sólo aparecen por elección y distinguen celda ausente de valor ausente; todas las celdas del rango siguen en items
+
+#### Scenario: Rangos y límites estrictos
+- **WHEN** el rango no es A1 canónico ordenado dentro de A1:XFD1048576, excede64 columnas, falta hoja o el encabezado queda fuera
+- **THEN** devuelve error explícito sin devolver resultado parcial, ejecutar helpers o modificar datos; un rango vacío válido devuelve cero items
+
+### Requirement: Paginación XLSX de rango ligada a criterios completos
+
+El lector SHALL paginar1–64 celdas/default32 con cursor ligado a workspace/ruta/operación/job/generación/límite/hoja/rango/encabezado. MUST validar original y representación completos incluso fuera del rango, conservar cobertura del rango separada de generación y mantener respuesta<=2MiB sin truncamiento.
+
+#### Scenario: Cursor y cambios de criterios
+- **WHEN** se cambia hoja/rango/encabezado/límite/job/ruta/generación al continuar o se aporta cursor inválido
+- **THEN** se rechaza sin mezclar páginas; recorrido estable conserva ordinals y cubre exactamente las celdas seleccionadas, sin acumular la grilla
+
+#### Scenario: Integridad pureza y recuperación
+- **WHEN** se lee sin helper, tras restore o con fuente/derivado alterados fuera del rango
+- **THEN** una lectura íntegra no escribe y la alterada falla completa sin reparación; selección FTS, generaciones, originales y desconocidos permanecen iguales
+
+### Requirement: Proyección independiente de tablas PDF desde evidencia OCR
+
+El proyector SHALL organizar evidencia OCR validada de una página mediante rectángulo y columnas explícitos, agrupando filas por solapamiento vertical común. MUST conservar íntegra la evidencia y referenciar cada ordinal exactamente una vez en celda o fuera del rectángulo, sin inferir columnas/encabezados, separar palabras, filtrar confianza o presentar vigencia del original.
+
+#### Scenario: Columnas filas y encabezado elegidos
+- **WHEN** regiones dispersas de una página caben íntegramente en columnas y filas no ambiguas, con o sin fila de encabezado explícita
+- **THEN** produce filas de arriba abajo y celdas ordenadas por columna, incluidas vacías; conserva texto, geometría, confianza, motor, página/hash y ordinales sin conversión numérica o escritura
+
+#### Scenario: Regiones fuera y texto hostil
+- **WHEN** hay encabezados repetidos, celdas con apariencia de instrucciones y regiones totalmente fuera del rectángulo
+- **THEN** todo permanece como dato original referenciado sin ejecutar instrucciones ni descartar regiones exteriores; la elección de encabezado no elimina celdas
+
+### Requirement: Ambigüedad y capacidad cerradas del proyector PDF
+
+El proyector MUST rechazar regiones que crucen bordes del rectángulo/columnas, filas con solapamiento ambiguo, geometría degenerada y límites excedidos sin resultado parcial. SHALL admitir hasta512 regiones,32 columnas,64 filas y512 celdas con evidencia canónica<=1MiB y salida<=2MiB; no expande merges ni inventa texto fuera de las regiones.
+
+#### Scenario: Cruces y agrupación ambigua
+- **WHEN** una región cruza una columna/rectángulo o une filas sin intersección vertical común
+- **THEN** falla completo con motivo identificable y sin escoger por centro, dividir texto, truncar o emitir una tabla aparentemente completa
+
+#### Scenario: Entradas y fronteras
+- **WHEN** se usan coordenadas/campos/perfil/ordinales inválidos, encabezado fuera de filas o límites en frontera/exceso
+- **THEN** la frontera declarada se conserva y el exceso falla sin alterar la evidencia ni ampliar presupuestos
+
+### Requirement: Proyector PDF sin activación del producto
+
+La entrega SHALL ser una biblioteca local independiente y ejemplo de desarrollo con JSON acotado, sin acceso a workspace, archivos fuente, helpers, red o modelos. MUST conservar SQLite16/API56/MCP28/48/49/batch9 y Home; no constituye integración de tablas, vigencia comprobada de archivos, nueva operación pública ni cierre de5a.
+
+#### Scenario: Evidencia sintética y PDF real controlado
+- **WHEN** se proyecta golden independiente y evidencia obtenida por el OCR vigente de un PDF propio
+- **THEN** se contrasta cada celda/ordinal y región exterior, se registran errores OCR reales y el producto conserva contratos/binarios/originales sin activación implícita
+
+#### Scenario: Límite de autoridad
+- **WHEN** se recibe una evidencia válida con hash declarado por el llamador
+- **THEN** sólo se valida su estructura/proyección, sin atribuir verificación del original, fuente vigente o autorización para escritura/envío remoto
+
+### Requirement: Lectura explícita de tabla PDF OCR vigente
+
+`extraction.pdf_ocr_table` SHALL proyectar una página de generación PDF OCR confirmada con grid/encabezado elegidos, usando el proyector verificado sin OCR nuevo. MUST validar original y representación completos antes de devolver celdas, manifiesto, motor/raster/limitaciones y referencias exteriores, sin persistir grids o modificar fuente/FTS.
+
+#### Scenario: Tabla desde derivado confirmado
+- **WHEN** se elige página/grid válido sobre una generación existente sin helper instalado
+- **THEN** devuelve celdas completas, vacías incluidas, con fila/columna1-based y regiones textuales/ordinals locales/globales exactos; el manifiesto distingue cobertura de tabla/página/generación
+
+#### Scenario: Fuente corrupción y proyección ambigua
+- **WHEN** cambia original/canónico/configuración o una región cruza grid/filas ambiguas, incluso fuera de la página pedida
+- **THEN** falla completo con razón útil, conserva generación previa y desconocidos sin reparación, truncamiento, extracción o writes
+
+### Requirement: Páginas de tabla PDF ligadas a elección y generación
+
+El lector SHALL paginar1–64 celdas/default32 en<=2MiB con cursor<=2KiB ligado a workspace/ruta/operación/job/generación/grid/página/header/límite. MUST conservar límites512 regiones/512 celdas/32 columnas/64 filas del proyector y referencias exteriores, sin convertir una página final en cobertura total ni duplicar índice textual.
+
+#### Scenario: Cursores cobertura y región exterior
+- **WHEN** se recorren celdas en varias páginas y hay regiones fuera del rectángulo
+- **THEN** una página reemplaza la anterior; cada celda mantiene ordinal/localizadores y las referencias exteriores completas permiten volver al lector OCR original sin descartes o cobertura ficticia
+
+#### Scenario: Criterios obsoletos y pureza
+- **WHEN** cambia cualquier criterio/revisión de generación o se consulta tras restore en otra ruta
+- **THEN** el cursor ajeno falla y una lectura nueva funciona sin modificar datos, fuente, selección FTS o contenidos desconocidos
+
+### Requirement: Extracción PDF textual universal con PDFium
+
+El sistema SHALL ofrecer `pdfium_text` para extraer texto por página con PDFium y persistirlo en el formato PDF canónico con parser, versión y localizadores. MUST cargar PDFium desde una ruta explícita, validar el PDF, respetar límites y fallar de forma recuperable si falta la librería. MUST NOT descargar binarios, pesos ni contenido remoto. `pdfium_text` SHALL ser la opción prioritaria para PDF nuevo cuando esté disponible; `pdf_text`/`pdfkit_text` MUST seguir seleccionables.
+
+#### Scenario: PDF con texto nativo
+- **WHEN** se ejecuta `pdfium_text` sobre un PDF válido con texto
+- **THEN** se publican páginas/fragmentos con parser PDFium, la misma procedencia de página y el lector `extraction.pdf_fragments` los devuelve sin cambios
+
+#### Scenario: PDFium ausente o PDF inválido
+- **WHEN** la librería no está disponible, el PDF está cifrado/corrupto o supera los límites
+- **THEN** el trabajo falla con un error recuperable, no publica una generación parcial y las generaciones/otros extractores permanecen intactos
+
+#### Scenario: Prioridad sin ruptura
+- **WHEN** se prepara un PDF nuevo con la opción universal
+- **THEN** la UI/CLI usan `pdfium_text`; las generaciones `pdf_text`/`pdfkit_text` existentes siguen legibles y `pdf_text`/`pdfkit_text` pueden elegirse manualmente
+
+### Requirement: OCR PDF universal con PaddleOCR
+
+El sistema SHALL ofrecer `paddle_ocr` para extraer texto por página con PDFium + PaddleOCR PP-StructureV3, registrando parser y versión en el formato PDF canónico. MUST validar hash, páginas, texto, deadline y salida; el worker externo MUST usar rutas explícitas de Python/script/modelos y MUST NOT acceder a workspace, SQL, shell o red. `paddle_ocr` SHALL ser opción prioritaria para PDF escaneado configurado; las tablas no se presentan como persistidas.
+
+#### Scenario: OCR universal configurado
+- **WHEN** el entorno Paddle está configurado y se ejecuta `paddle_ocr` sobre un PDF
+- **THEN** se publican páginas/fragmentos con parser PaddleOCR y el lector PDF los devuelve con página y bytes derivados
+
+#### Scenario: Runtime/modelos ausentes
+- **WHEN** faltan Python, script, modelos o el proceso falla
+- **THEN** el trabajo falla con `paddle_*` recuperable, no publica parciales y no modifica otros extractores/generaciones
+
+#### Scenario: Límites y procedencia
+- **WHEN** el worker devuelve hash/página/texto inválido o supera el límite
+- **THEN** el núcleo rechaza la salida completa y conserva la generación anterior
+
+### Requirement: Estructura tabular Paddle persistida
+
+`paddle_ocr` SHALL conservar por página las tablas de PP-StructureV3 con filas, columnas y celdas (row/column/spans/texto) en JSON ≤1 MiB, con hash, bytes y versión. MUST NOT inventar celdas ni tratar Markdown/HTML como autoridad. La persistencia SHALL ser nullable y aditiva; una estructura inválida MUST fallar completa sin publicar parciales.
+
+#### Scenario: Tabla Paddle con celdas
+- **WHEN** PP-StructureV3 devuelve una tabla y se ejecuta `paddle_ocr`
+- **THEN** la generación conserva página, filas/columnas, celdas y spans exactos, y el texto de página sigue disponible
+
+#### Scenario: Generación sin estructura o corrupta
+- **WHEN** una generación no es Paddle, la estructura supera el límite o el hash no coincide
+- **THEN** la lectura/extracción falla de forma recuperable y no modifica originales ni otras generaciones
+
+### Requirement: Lectura acotada de estructura PDF
+
+El núcleo SHALL exponer `extraction.pdf_structure` por job con generación, procedencia y estructura completa, limitada a 1 MiB, sin ejecutar OCR ni modificar datos. MUST distinguir ausencia de estructura de estructura vacía y MUST validar job/generación/hash.
+
+#### Scenario: Lectura de estructura
+- **WHEN** se consulta un job Paddle con estructura confirmada
+- **THEN** devuelve páginas/tablas/celdas y procedencia, sin ejecutar el worker
+
+#### Scenario: Job sin estructura
+- **WHEN** el job no es Paddle o no tiene estructura
+- **THEN** devuelve un error de no encontrado/validación explícito, no una tabla vacía inventada

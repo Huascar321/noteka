@@ -18,24 +18,176 @@ pub(crate) fn civil_date(value: &str) -> Result<NaiveDate> {
     }
     Ok(date)
 }
+fn visual(icon: &Option<String>, color: &Option<String>) -> Result<()> {
+    if let Some(icon) = icon {
+        if icon.is_empty()
+            || icon.len() > 40
+            || !icon
+                .bytes()
+                .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+        {
+            return Err(CoreError::validation(
+                "Icono inválido; usá una clave Lucide o image-UUID local en minúsculas.",
+            ));
+        }
+    }
+    if let Some(color) = color {
+        let valid = color.len() == 7
+            && color.starts_with('#')
+            && color[1..].bytes().all(|b| b.is_ascii_hexdigit());
+        if !valid {
+            return Err(CoreError::validation(
+                "Color de icono inválido; usá #RRGGBB.",
+            ));
+        }
+    }
+    Ok(())
+}
 fn optional_date(value: &Option<String>) -> Result<()> {
     if let Some(s) = value {
         civil_date(s)?;
     }
     Ok(())
 }
+pub(crate) fn validate_note_source(source: &NoteSource) -> Result<()> {
+    if source.provider.is_empty()
+        || source.provider.len() > 64
+        || !source
+            .provider
+            .bytes()
+            .all(|c| c.is_ascii_alphanumeric() || c == b'_' || c == b'-')
+        || source.collection.trim().is_empty()
+        || source.collection.len() > 512
+        || source.collection.chars().any(char::is_control)
+        || source
+            .record_id
+            .as_ref()
+            .is_some_and(|s| s.is_empty() || s.len() > 128 || s.chars().any(char::is_control))
+    {
+        return Err(CoreError::validation("Procedencia de nota inválida."));
+    }
+    for date in [&source.created_at, &source.updated_at]
+        .into_iter()
+        .flatten()
+    {
+        if date.len() > 64 || chrono::DateTime::parse_from_rfc3339(date).is_err() {
+            return Err(CoreError::validation(
+                "Timestamp original de nota inválido.",
+            ));
+        }
+    }
+    Ok(())
+}
+pub(crate) fn validate_tag_activity(value: &str) -> Result<()> {
+    if value.len() > 64 || chrono::DateTime::parse_from_rfc3339(value).is_err() {
+        return Err(CoreError::validation(
+            "Timestamp de actividad de tag inválido.",
+        ));
+    }
+    Ok(())
+}
+pub(crate) fn validate_note_fields(fields: &NoteFields) -> Result<()> {
+    visual(&fields.icon, &fields.icon_color)?;
+    if let Some(source) = &fields.source {
+        validate_note_source(source)?;
+    }
+    if fields.goal.is_some() && fields.milestone.is_some() {
+        return Err(CoreError::validation(
+            "Una página no puede ser Goal y Milestone a la vez.",
+        ));
+    }
+    if let Some(goal) = &fields.goal {
+        for date in [&goal.goal_set, &goal.target_deadline, &goal.achieved_on] {
+            optional_date(date)?;
+        }
+        if let Some(snapshot) = &goal.activity_snapshot {
+            validate_tag_activity(&snapshot.at)?;
+            if snapshot.revisions.len() > 10_000
+                || snapshot
+                    .revisions
+                    .iter()
+                    .any(|(id, revision)| *revision == 0 || uuid::Uuid::parse_str(id).is_err())
+            {
+                return Err(CoreError::validation(
+                    "Snapshot de actividad inválido o excesivo.",
+                ));
+            }
+        }
+    }
+    if let Some(milestone) = &fields.milestone {
+        optional_date(&milestone.target_deadline)?;
+        optional_date(&milestone.completed_on)?;
+        if milestone.goal_id.as_ref().is_some_and(|id| {
+            uuid::Uuid::parse_str(id).is_err()
+                || uuid::Uuid::parse_str(id).is_ok_and(|v| v.to_string() != *id)
+        }) {
+            return Err(CoreError::validation(
+                "Goal de Milestone debe ser un ID canónico.",
+            ));
+        }
+    }
+    Ok(())
+}
+pub(crate) fn validate_person_fields(fields: &PersonFields) -> Result<()> {
+    visual(&fields.icon, &fields.icon_color)?;
+    for date in [&fields.birthday, &fields.check_in, &fields.last_check_in] {
+        optional_date(date)?;
+    }
+    if let Some(source) = &fields.source {
+        validate_note_source(source)?;
+    }
+    if fields
+        .company
+        .as_ref()
+        .is_some_and(|s| s.len() > 512 || s.chars().any(char::is_control))
+        || fields.relationships.as_ref().is_some_and(|labels| {
+            labels.len() > 32
+                || labels.iter().any(|s| {
+                    s.trim().is_empty() || s.len() > 128 || s.chars().any(char::is_control)
+                })
+                || labels
+                    .iter()
+                    .collect::<std::collections::BTreeSet<_>>()
+                    .len()
+                    != labels.len()
+        })
+        || fields
+            .photo
+            .as_ref()
+            .is_some_and(|s| uuid::Uuid::parse_str(s).is_err())
+        || fields.photo_position.is_some_and(|position| position > 100)
+        || fields.gallery_order.is_some_and(|order| order > 10_000)
+    {
+        return Err(CoreError::validation(
+            "Metadatos de persona inválidos o excesivos.",
+        ));
+    }
+    Ok(())
+}
 pub(crate) fn payload(kind: &EntityKind, value: Value) -> Result<Value> {
     let v = if value.is_null() { json!({}) } else { value };
     Ok(match kind {
-        EntityKind::Note => serde_json::to_value(serde_json::from_value::<NoteFields>(v)?)?,
+        EntityKind::Note => {
+            let f: NoteFields = serde_json::from_value(v)?;
+            validate_note_fields(&f)?;
+            serde_json::to_value(f)?
+        }
         EntityKind::Task => {
             let f: TaskFields = serde_json::from_value(v)?;
+            visual(&f.icon, &f.icon_color)?;
             optional_date(&f.due_date)?;
             optional_date(&f.planned_date)?;
             serde_json::to_value(f)?
         }
         EntityKind::Project => {
             let f: ProjectFields = serde_json::from_value(v)?;
+            visual(&f.icon, &f.icon_color)?;
+            if let Some(source) = &f.source {
+                validate_note_source(source)?;
+            }
+            if f.board_order.is_some_and(|order| order > 10_000) {
+                return Err(CoreError::validation("Orden de proyecto supera 10000."));
+            }
             optional_date(&f.start_date)?;
             optional_date(&f.end_date)?;
             if f.start_date
@@ -52,8 +204,22 @@ pub(crate) fn payload(kind: &EntityKind, value: Value) -> Result<Value> {
             }
             serde_json::to_value(f)?
         }
-        EntityKind::Tag => serde_json::to_value(serde_json::from_value::<TagFields>(v)?)?,
-        EntityKind::Person => serde_json::to_value(serde_json::from_value::<Empty>(v)?)?,
+        EntityKind::Tag => {
+            let f: TagFields = serde_json::from_value(v)?;
+            visual(&f.icon, &f.icon_color)?;
+            if let Some(source) = &f.source {
+                validate_note_source(source)?;
+            }
+            if let Some(activity) = &f.source_activity_at {
+                validate_tag_activity(activity)?;
+            }
+            serde_json::to_value(f)?
+        }
+        EntityKind::Person => {
+            let f: PersonFields = serde_json::from_value(v)?;
+            validate_person_fields(&f)?;
+            serde_json::to_value(f)?
+        }
     })
 }
 

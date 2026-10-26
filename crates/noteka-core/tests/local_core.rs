@@ -514,7 +514,9 @@ fn older_workspace_migrates_future_main_and_wal_remain_untouched() {
     );
     let c = f.db();
     c.execute_batch(
-        "DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;DROP TABLE extraction_xlsx_chunks;DROP TABLE extraction_xlsx_generations;DROP TABLE extraction_search_entries;DROP TABLE extraction_search_fts;DROP TABLE extraction_search_control;DROP TABLE extraction_pdf_fragments;DROP TABLE extraction_pdf_pages;DROP TABLE extraction_pdf_generations;DROP TABLE extraction_fragments;DROP TABLE extraction_runtime;DROP TABLE extraction_jobs;DROP TABLE extraction_generations;DROP TABLE extraction_control;DROP TABLE templates; DROP TABLE calculations; DROP TABLE views; DROP TABLE property_values; DROP TABLE memberships; DROP TABLE properties; DROP TABLE collections; DROP TABLE changes; DROP TABLE attachments; DROP TABLE search_fts; UPDATE workspace_meta SET schema_version=0; PRAGMA user_version=0;",
+        "DROP TABLE extraction_pdf_ocr_chunks;DROP TABLE extraction_pdf_ocr_generations;DROP TABLE extraction_pdfkit_chunks;DROP TABLE extraction_pdfkit_generations;DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;DROP TABLE extraction_xlsx_chunks;DROP TABLE extraction_xlsx_generations;DROP TABLE extraction_search_entries;DROP TABLE extraction_search_fts;DROP TABLE extraction_search_control;DROP TABLE extraction_pdf_fragments;DROP TABLE extraction_pdf_pages;DROP TABLE extraction_pdf_generations;DROP TABLE extraction_fragments;DROP TABLE extraction_runtime;DROP TABLE extraction_jobs;DROP TABLE extraction_generations;DROP TABLE extraction_control;DROP TABLE templates; DROP TABLE calculations; DROP TABLE views; DROP TABLE property_values; DROP TABLE memberships; DROP TABLE properties; DROP TABLE collections; DROP TABLE changes; DROP TABLE attachments; DROP TABLE search_fts; DROP TABLE IF EXISTS semantic_chunks;DROP TABLE IF EXISTS semantic_control;DROP TABLE IF EXISTS semantic_generations;DROP TABLE IF EXISTS semantic_profiles;DROP TABLE IF EXISTS agent_runs;
+DROP TABLE IF EXISTS extraction_pdf_structures;
+UPDATE workspace_meta SET schema_version=0; PRAGMA user_version=0;",
     )
     .unwrap();
     drop(c);
@@ -538,7 +540,9 @@ fn older_workspace_migrates_future_main_and_wal_remain_untouched() {
         relation["relation"]["id"]
     );
     let c = f.db();
-    c.execute_batch("UPDATE workspace_meta SET schema_version=99; PRAGMA user_version=99;")
+    c.execute_batch("DROP TABLE IF EXISTS semantic_chunks;DROP TABLE IF EXISTS semantic_control;DROP TABLE IF EXISTS semantic_generations;DROP TABLE IF EXISTS semantic_profiles;DROP TABLE IF EXISTS agent_runs;
+DROP TABLE IF EXISTS extraction_pdf_structures;
+UPDATE workspace_meta SET schema_version=99; PRAGMA user_version=99;")
         .unwrap();
     let before = tree(&f.path);
     assert_eq!(
@@ -562,8 +566,8 @@ fn contract_catalog_is_complete_and_strict() {
     );
     assert!(r.ok);
     let catalog = r.data.unwrap();
-    assert_eq!(catalog["inputs"].as_object().unwrap().len(), 53);
-    assert_eq!(catalog["outputs"].as_object().unwrap().len(), 53);
+    assert_eq!(catalog["inputs"].as_object().unwrap().len(), 66);
+    assert_eq!(catalog["outputs"].as_object().unwrap().len(), 66);
     assert!(catalog["contract_schema"]["$defs"]["Document"].is_object());
     assert_eq!(
         code(execute_json(

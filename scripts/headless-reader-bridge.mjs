@@ -7,11 +7,11 @@ import { join, resolve, dirname, extname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { DatabaseSync } from 'node:sqlite';
 const hash = data => createHash('sha256').update(data).digest('hex');
-const readonly = new Set(['workspace.open', 'entity.get', 'entity.list', 'relation.list', 'workflow.query', 'home.query', 'extraction.fragments', 'extraction.pdf_fragments', 'extraction.xlsx_cells', 'extraction.ocr_regions']);
+const readonly = new Set(['workspace.open', 'entity.get', 'entity.list', 'relation.list', 'workflow.query', 'home.query', 'extraction.fragments', 'extraction.pdf_fragments', 'extraction.xlsx_cells', 'extraction.xlsx_range', 'extraction.ocr_regions']);
 export async function startReaderBridge(dist, isolated) {
   const root = realpathSync(mkdtempSync(join(process.env.NOTEKA_TEST_TMP || tmpdir(), 'noteka-reader-headless-')));
   const fixtures = new Map(), operations = [], instruments = new Map(), altered = new Map();
-  const binary = resolve('target/debug/noteka');
+  const binary = resolve(process.env.NOTEKA_CLI || 'target/debug/noteka');
   function confined(path) {
     if (typeof path !== 'string') throw new Error('Ruta requerida');
     const absolute = resolve(path); if (!absolute.startsWith(root + '/')) throw new Error('Ruta fuera del corpus');
@@ -62,7 +62,7 @@ export async function startReaderBridge(dist, isolated) {
       }
       case 'reader_instrument': instruments.set(input.workspace, input.instrument); return true;
       case 'reader_cli': {
-        if (!['extraction.get', 'extraction.retry', 'extraction.run', 'extraction.index'].includes(input.operation)) throw new Error('Operación de prueba inválida');
+        if (!['extraction.get', 'extraction.retry', 'extraction.run', 'extraction.index', 'extraction.xlsx_range'].includes(input.operation)) throw new Error('Operación de prueba inválida');
         return cli(input.workspace, input.operation, input.input);
       }
       case 'reader_tamper': {

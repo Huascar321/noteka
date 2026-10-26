@@ -1,3 +1,30 @@
 {
-  "bundle": {"externalBin": ["binaries/noteka-pdf-worker", "binaries/noteka-xlsx-worker", "binaries/noteka-ocr-worker"]}
+  "bundle": {
+    "externalBin": [
+      "binaries/noteka-pdf-worker",
+      "binaries/noteka-xlsx-worker",
+      "binaries/noteka-ocr-worker",
+      "binaries/noteka-pdfkit-worker",
+      "binaries/noteka-pdf-raster-worker"
+    ]
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Noteka",
+        "width": 1180,
+        "height": 780,
+        "minWidth": 760,
+        "minHeight": 520,
+        "label": "main",
+        "decorations": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": {
+          "x": 14,
+          "y": 24
+        }
+      }
+    ]
+  }
 }

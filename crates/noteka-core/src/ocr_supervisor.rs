@@ -40,6 +40,15 @@ pub(crate) fn run(
 ) -> Result<OcrRecognition> {
     run_at(&runtime()?, bytes, b, check)
 }
+/// La composición PDF exige contención de red también para el helper Vision.
+/// El camino image_ocr existente mantiene su política anterior.
+pub(crate) fn run_sandboxed(
+    bytes: &[u8],
+    b: &Budget<'_>,
+    check: impl FnMut() -> Result<()>,
+) -> Result<OcrRecognition> {
+    run_at_isolated(&runtime()?, bytes, b, check, true)
+}
 struct Reap(Child);
 impl Drop for Reap {
     fn drop(&mut self) {
@@ -79,7 +88,17 @@ pub(crate) fn run_at(
     path: &Path,
     bytes: &[u8],
     b: &Budget<'_>,
+    check: impl FnMut() -> Result<()>,
+) -> Result<OcrRecognition> {
+    run_at_isolated(path, bytes, b, check, false)
+}
+#[cfg(unix)]
+fn run_at_isolated(
+    path: &Path,
+    bytes: &[u8],
+    b: &Budget<'_>,
     mut check: impl FnMut() -> Result<()>,
+    isolated: bool,
 ) -> Result<OcrRecognition> {
     crate::scoped::check_shutdown()?;
     b.check()?;
@@ -99,8 +118,30 @@ pub(crate) fn run_at(
     input.extend_from_slice(&header);
     input.extend_from_slice(bytes);
     let cwd = tempfile::tempdir().map_err(|_| store::storage("ocr_worker_unavailable"))?;
-    let mut child = Reap(
+    let mut command = if isolated {
+        #[cfg(target_os = "macos")]
+        {
+            let path = path
+                .canonicalize()
+                .map_err(|_| store::storage("ocr_worker_unavailable"))?;
+            if !path.is_file() {
+                return Err(store::storage("ocr_worker_unavailable"));
+            }
+            let mut command = Command::new("/usr/bin/sandbox-exec");
+            command
+                .args(["-p", "(version 1)(allow default)(deny network*)"])
+                .arg(path);
+            command
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            return Err(store::storage("ocr_worker_unavailable"));
+        }
+    } else {
         Command::new(path)
+    };
+    let mut child = Reap(
+        command
             .env_clear()
             .current_dir(cwd.path())
             .stdin(Stdio::piped())
@@ -203,6 +244,16 @@ pub(crate) fn run_at(
     _: &[u8],
     _: &Budget<'_>,
     _: impl FnMut() -> Result<()>,
+) -> Result<OcrRecognition> {
+    Err(store::storage("ocr_worker_unavailable"))
+}
+#[cfg(not(unix))]
+fn run_at_isolated(
+    _: &Path,
+    _: &[u8],
+    _: &Budget<'_>,
+    _: impl FnMut() -> Result<()>,
+    _: bool,
 ) -> Result<OcrRecognition> {
     Err(store::storage("ocr_worker_unavailable"))
 }
@@ -331,5 +382,33 @@ mod tests {
                 Some(libc::ESRCH)
             );
         }
+    }
+    #[test]
+    #[cfg(target_os = "macos")]
+    fn pdf_ocr_vision_network_policy_is_applied_by_supervisor() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("worker");
+        let script = r#"#!/bin/sh
+/bin/cat >/dev/null
+/usr/bin/python3 - <<'PYTEST'
+import errno,json,socket
+s=socket.socket()
+try:s.connect(('127.0.0.1',9))
+except OSError as e:
+    if e.errno==errno.EPERM:print(json.dumps(dict(version=2,profile='apple_vision_r3_fast_es_en_v1',outcome=dict(status='error',reason='ocr_profile_unavailable'))))
+    else:print('network_policy_not_applied')
+else:print('network_policy_not_applied')
+PYTEST
+"#;
+        fs::write(&path, script).unwrap();
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o700)).unwrap();
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        let b = Budget::new(&conn).unwrap();
+        assert_eq!(
+            run_at_isolated(&path, b"synthetic", &b, || Ok(()), true)
+                .unwrap_err()
+                .details["reason"],
+            "ocr_profile_unavailable"
+        );
     }
 }

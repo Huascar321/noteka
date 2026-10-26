@@ -73,7 +73,14 @@ pub(crate) fn config_hash(value: &Value) -> Result<String> {
 pub(crate) fn supported(extractor: &str, version: u32, config: &Value) -> bool {
     matches!(
         extractor,
-        "utf8_text" | "pdf_text" | "xlsx_cells" | "image_ocr"
+        "utf8_text"
+            | "pdf_text"
+            | "pdfium_text"
+            | "paddle_ocr"
+            | "xlsx_cells"
+            | "image_ocr"
+            | "pdfkit_text"
+            | "pdf_ocr"
     ) && version == 1
         && serde_json::from_value::<ExtractionConfig>(config.clone())
             .is_ok_and(|c| c == ExtractionConfig::default())
@@ -311,7 +318,7 @@ pub(crate) fn eligible_for(a: &Attachment, extractor: &str) -> Result<()> {
                     "application/octet-stream" | "text/plain" | "text/markdown"
                 )
         }
-        "pdf_text" => {
+        "pdf_text" | "pdfium_text" | "paddle_ocr" | "pdfkit_text" | "pdf_ocr" => {
             extension == "pdf"
                 && matches!(
                     a.mime.as_str(),
@@ -499,6 +506,12 @@ pub(crate) fn page_limit(n: Option<u32>, default: u32, max: u32) -> Result<u32> 
 /// Sólo verificación de integridad: nunca recupera ni descarta jobs futuros.
 pub(crate) fn integrity(conn: &Connection) -> Result<()> {
     queue_integrity(conn)?;
+    if crate::workspace::version(conn)? >= 16 {
+        crate::pdf_ocr_storage::integrity(conn)?;
+    }
+    if crate::workspace::version(conn)? >= 14 {
+        crate::pdfkit_storage::integrity(conn)?;
+    }
     if crate::workspace::version(conn)? >= 9 {
         crate::pdf_storage::integrity(conn)?;
     }
@@ -517,7 +530,7 @@ pub(crate) fn queue_integrity(conn: &Connection) -> Result<()> {
     if counts != (1, 1) {
         return Err(storage("invalid_extraction_singletons"));
     }
-    let invalid=conn.prepare("SELECT 1 FROM extraction_runtime r LEFT JOIN extraction_jobs j ON j.id=r.job_id WHERE r.job_id IS NOT NULL AND (j.id IS NULL OR j.state!='running') UNION ALL SELECT 1 FROM extraction_jobs j LEFT JOIN extraction_runtime r ON r.job_id=j.id WHERE j.state='running' AND r.job_id IS NULL UNION ALL SELECT 1 FROM extraction_generations g LEFT JOIN extraction_jobs j ON j.id=g.job_id WHERE j.generation_id IS NOT g.id OR j.attachment_id!=g.attachment_id OR j.source_sha256!=g.source_sha256 OR j.config_hash!=g.config_hash OR j.source_bytes!=g.source_bytes OR (g.extractor NOT IN ('pdf_text','xlsx_cells','image_ocr') AND (g.fragment_count!=(SELECT count(*) FROM extraction_fragments f WHERE f.generation_id=g.id) OR g.covered_bytes!=coalesce((SELECT sum(byte_end-byte_start) FROM extraction_fragments f WHERE f.generation_id=g.id),0))) OR (g.extractor IN ('pdf_text','xlsx_cells','image_ocr') AND EXISTS(SELECT 1 FROM extraction_fragments f WHERE f.generation_id=g.id)) UNION ALL SELECT 1 FROM (SELECT ordinal,byte_start,coalesce(lag(byte_end) OVER(PARTITION BY generation_id ORDER BY ordinal),0) AS previous_end, row_number() OVER(PARTITION BY generation_id ORDER BY ordinal)-1 AS expected_ordinal FROM extraction_fragments) WHERE byte_start!=previous_end OR ordinal!=expected_ordinal LIMIT 1")?.exists([])?;
+    let invalid=conn.prepare("SELECT 1 FROM extraction_runtime r LEFT JOIN extraction_jobs j ON j.id=r.job_id WHERE r.job_id IS NOT NULL AND (j.id IS NULL OR j.state!='running') UNION ALL SELECT 1 FROM extraction_jobs j LEFT JOIN extraction_runtime r ON r.job_id=j.id WHERE j.state='running' AND r.job_id IS NULL UNION ALL SELECT 1 FROM extraction_generations g LEFT JOIN extraction_jobs j ON j.id=g.job_id WHERE j.generation_id IS NOT g.id OR j.attachment_id!=g.attachment_id OR j.source_sha256!=g.source_sha256 OR j.config_hash!=g.config_hash OR j.source_bytes!=g.source_bytes OR (g.extractor NOT IN ('pdf_text','pdfium_text','paddle_ocr','xlsx_cells','image_ocr','pdfkit_text','pdf_ocr') AND (g.fragment_count!=(SELECT count(*) FROM extraction_fragments f WHERE f.generation_id=g.id) OR g.covered_bytes!=coalesce((SELECT sum(byte_end-byte_start) FROM extraction_fragments f WHERE f.generation_id=g.id),0))) OR (g.extractor IN ('pdf_text','pdfium_text','paddle_ocr','xlsx_cells','image_ocr','pdfkit_text','pdf_ocr') AND EXISTS(SELECT 1 FROM extraction_fragments f WHERE f.generation_id=g.id)) UNION ALL SELECT 1 FROM (SELECT ordinal,byte_start,coalesce(lag(byte_end) OVER(PARTITION BY generation_id ORDER BY ordinal),0) AS previous_end, row_number() OVER(PARTITION BY generation_id ORDER BY ordinal)-1 AS expected_ordinal FROM extraction_fragments) WHERE byte_start!=previous_end OR ordinal!=expected_ordinal LIMIT 1")?.exists([])?;
     if invalid {
         return Err(storage("invalid_extraction_integrity"));
     }

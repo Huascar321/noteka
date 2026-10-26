@@ -83,9 +83,12 @@ pub struct PdfManifest {
 }
 impl PdfManifest {
     pub fn validate(&self) -> Result<()> {
+        let parser_ok = (self.parser_name == PARSER_NAME && self.parser_version == PARSER_VERSION)
+            || (self.parser_name == noteka_pdfium_protocol::PARSER_NAME
+                && self.parser_version == noteka_pdfium_protocol::PARSER_VERSION)
+            || (self.parser_name == "paddleocr_ppstructurev3" && self.parser_version == "3.7.0");
         if self.version != 1
-            || self.parser_name != PARSER_NAME
-            || self.parser_version != PARSER_VERSION
+            || !parser_ok
             || self.limitations != PDF_LIMITATIONS
             || !(1..=MAX_PAGES as u32).contains(&self.page_count)
             || self.pages.len() != self.page_count as usize
@@ -509,7 +512,7 @@ mod tests {
             ),
             (
                 "outputs",
-                "77cfc11115d84ec4ad85ef536f4055dd18f393417b9ece2950fd442508b6ca2e",
+                "2c8a2e74228c217252344bd47a0fcbac15c77fbb95986f5da2e82fa8c2f2af1f",
             ),
             (
                 "error_schema",
@@ -522,10 +525,23 @@ mod tests {
                     .unwrap()
                     .remove("extraction.pdf_fragments");
                 for op in [
+                    "external.link",
+                    "external.unlink",
+                    "external.list",
+                    "agent.ask",
+                    "agent.cancel",
+                    "agent.trace",
+                    "embedding.index",
+                    "retrieval.search",
                     "extraction.index",
                     "extraction.search",
                     "extraction.xlsx_cells",
                     "extraction.ocr_regions",
+                    "extraction.pdfkit_pages",
+                    "extraction.pdf_ocr_regions",
+                    "extraction.xlsx_range",
+                    "extraction.pdf_ocr_table",
+                    "extraction.pdf_structure",
                 ] {
                     c[key].as_object_mut().unwrap().remove(op);
                 }
@@ -542,12 +558,34 @@ mod tests {
         defs.retain(|name, _| {
             !name.starts_with("AttachmentIndex")
                 && !name.starts_with("AttachmentSearch")
+                && !name.starts_with("Agent")
+                && !name.starts_with("Embedding")
+                && !name.starts_with("Semantic")
+                && !name.starts_with("Retrieval")
                 && !name.starts_with("Xlsx")
                 && !name.starts_with("Ocr")
+                && !name.starts_with("Pdfkit")
+                && !name.starts_with("PdfOcr")
+                && !name.starts_with("PdfStructure")
+                && !name.starts_with("PdfTable")
+                && !name.starts_with("External")
                 && !matches!(
                     name.as_str(),
-                    "ReadOcrRegions"
+                    "LinkExternalResource" | "ListExternalResources" | "UnlinkExternalResource"
+                )
+                && !name.starts_with("ReadPdfStructure")
+                && !matches!(
+                    name.as_str(),
+                    "ReadPdfOcrRegions"
+                        | "ReadPdfOcrTable"
+                        | "RasterIdentity"
+                        | "ReadPdfkitPages"
+                        | "Engine"
+                        | "Page8"
+                        | "PageStatus"
+                        | "ReadOcrRegions"
                         | "ReadXlsxCells"
+                        | "ReadXlsxRange"
                         | "Cell"
                         | "CellValue"
                         | "Formula"
@@ -562,6 +600,18 @@ mod tests {
                         | "IndexSourceValidation"
                 )
         });
+        if let Some(one_of) = defs
+            .get_mut("Operation")
+            .and_then(|operation| operation.get_mut("oneOf"))
+            .and_then(Value::as_array_mut)
+        {
+            one_of.retain(|variant| {
+                !matches!(
+                    variant["properties"]["operation"]["const"].as_str(),
+                    Some("external.link" | "external.unlink" | "external.list")
+                )
+            });
+        }
         for name in [
             "Operation",
             "ReadPdfFragments",
@@ -574,13 +624,14 @@ mod tests {
             "PdfFragment",
             "PdfTextLocator",
             "PdfLocatorKind",
+            "Page9",
         ] {
             defs.remove(name);
         }
         assert_eq!(defs.len(), 140);
         assert_eq!(
             fingerprint(&schema["$defs"]),
-            "321d85507dd6400f07d697533ab3c75533874ccd2b92fe24b363f3daafb67e7c"
+            "61632f9c67075e044de95b5606f915ef7d72316b9f795c73583b1016351890d6"
         );
         let props = schema
             .get_mut("properties")
@@ -595,6 +646,28 @@ mod tests {
         props.remove("xlsx_cells");
         props.remove("read_ocr_regions");
         props.remove("ocr_regions");
+        props.remove("pdfkit_pages");
+        props.remove("read_pdfkit_pages");
+        props.remove("read_pdf_ocr_regions");
+        props.remove("pdf_ocr_regions");
+        props.remove("read_xlsx_range");
+        props.remove("xlsx_range");
+        props.remove("read_pdf_ocr_table");
+        props.remove("pdf_ocr_table");
+        props.remove("pdf_structure");
+        props.remove("external_resource");
+        props.remove("external_resources");
+        props.remove("external_resource_result");
+        for name in [
+            "embedding_index",
+            "embedding_status",
+            "retrieval",
+            "agent_run",
+            "agent_trace",
+            "agent_traces",
+        ] {
+            props.remove(name);
+        }
         assert_eq!(
             fingerprint(&schema["properties"]),
             "c9915e01031c7b52d6d9d29a6d25c784b699de516695eccfa8bc6a13af250186"
@@ -613,10 +686,138 @@ mod tests {
                     && v != "xlsx_cells"
                     && v != "read_ocr_regions"
                     && v != "ocr_regions"
+                    && v != "pdfkit_pages"
+                    && v != "read_pdfkit_pages"
+                    && v != "read_pdf_ocr_regions"
+                    && v != "pdf_ocr_regions"
+                    && v != "read_xlsx_range"
+                    && v != "xlsx_range"
+                    && v != "read_pdf_ocr_table"
+                    && v != "pdf_ocr_table"
+                    && v != "pdf_structure"
+                    && v != "embedding_index"
+                    && v != "embedding_status"
+                    && v != "retrieval"
+                    && v != "agent_run"
+                    && v != "agent_trace"
+                    && v != "agent_traces"
+                    && v != "external_resource"
+                    && v != "external_resources"
+                    && v != "external_resource_result"
             });
         assert_eq!(
             fingerprint(&schema["required"]),
             "dcca9a26a774eae93d834a188ee32cd6921029d5be6ac6b5fbb7cb0ba39a69e7"
         );
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct PdfStructure {
+    pub version: u32,
+    pub pages: Vec<PdfStructurePage>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct PdfStructurePage {
+    pub page_number: u32,
+    pub tables: Vec<PdfTable>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct PdfTable {
+    pub rows: u32,
+    pub columns: u32,
+    pub cells: Vec<PdfTableCell>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct PdfTableCell {
+    pub row: u32,
+    pub column: u32,
+    pub row_span: u32,
+    pub col_span: u32,
+    pub text: String,
+}
+impl PdfStructure {
+    pub(crate) fn validate(&self) -> Result<()> {
+        if self.version != 1 || self.pages.is_empty() || self.pages.len() > 20 {
+            return Err(store::invalid("pdf_structure_limit"));
+        }
+        let mut tables = 0u32;
+        for (index, page) in self.pages.iter().enumerate() {
+            if page.page_number as usize != index + 1 {
+                return Err(store::invalid("pdf_structure_pages"));
+            }
+            for table in &page.tables {
+                tables += 1;
+                if tables > 512
+                    || table.rows == 0
+                    || table.columns == 0
+                    || table.rows > 64
+                    || table.columns > 64
+                    || table.cells.is_empty()
+                    || table.cells.len() > 4096
+                {
+                    return Err(store::invalid("pdf_structure_limit"));
+                }
+                let mut occupied = std::collections::HashSet::new();
+                for cell in &table.cells {
+                    if cell.row_span == 0
+                        || cell.col_span == 0
+                        || cell.row_span > 64
+                        || cell.col_span > 64
+                        || cell.row + cell.row_span > table.rows
+                        || cell.column + cell.col_span > table.columns
+                        || cell.text.is_empty()
+                        || cell.text.len() > 512
+                        || cell.text.contains('\0')
+                    {
+                        return Err(store::invalid("pdf_structure_cell"));
+                    }
+                    for row in cell.row..cell.row + cell.row_span {
+                        for column in cell.column..cell.column + cell.col_span {
+                            if !occupied.insert((row, column)) {
+                                return Err(store::invalid("pdf_structure_overlap"));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if serde_json::to_vec(self)?.len() > 1_048_576 {
+            return Err(store::invalid("pdf_structure_limit"));
+        }
+        Ok(())
+    }
+    pub(crate) fn table_count(&self) -> u32 {
+        self.pages.iter().map(|p| p.tables.len() as u32).sum()
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ReadPdfStructure {
+    pub id: String,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct PdfStructureManifest {
+    pub version: u32,
+    pub format: String,
+    pub source_sha256: String,
+    pub structure_sha256: String,
+    pub structure_bytes: u32,
+    pub page_count: u32,
+    pub table_count: u32,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct PdfStructureResult {
+    pub job_id: String,
+    pub generation: ExtractionGeneration,
+    pub result_from_previous_attempt: bool,
+    pub manifest: PdfStructureManifest,
+    pub structure: PdfStructure,
 }

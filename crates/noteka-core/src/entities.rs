@@ -72,16 +72,23 @@ pub(crate) fn get(conn: &Connection, entity_id: &str) -> Result<Entity> {
         .map(|s| serde_json::from_str::<Value>(&s))
         .transpose()
         .map_err(|_| CoreError::new(ErrorCode::StorageError, "Documento almacenado inválido."))?;
+    let kind: EntityKind = serde_json::from_value(json!(raw.0))?;
+    // Existing tasks may have no document yet. Starting one is an explicit
+    // normal update, while an unknown stored document remains protected.
+    let editable = document
+        .as_ref()
+        .map(document_editable)
+        .unwrap_or(kind == EntityKind::Task);
     Ok(Entity {
         id: entity_id.into(),
-        kind: serde_json::from_value(json!(raw.0))?,
+        kind,
         title: raw.1,
         revision: raw.2,
         archived_at: raw.3,
         created_at: raw.4,
         updated_at: raw.5,
         payload: serde_json::from_str(&raw.6)?,
-        document_editable: document.as_ref().is_some_and(document_editable),
+        document_editable: editable,
         document,
     })
 }
@@ -194,13 +201,18 @@ pub(crate) fn create_in_transaction(
 ) -> Result<(Entity, Option<RecordData>)> {
     let title = title(&input.title)?;
     let payload = payload(&input.kind, input.payload)?;
-    if input.kind != EntityKind::Note && input.document.is_some() {
-        return Err(CoreError::validation("Sólo las notas tienen documento."));
+    if input.kind == EntityKind::Note {
+        crate::goals::validate_note_links(conn, None, &payload, None, context)?;
+    }
+    if !matches!(input.kind, EntityKind::Note | EntityKind::Task) && input.document.is_some() {
+        return Err(CoreError::validation(
+            "Sólo las notas y tareas admiten documento.",
+        ));
     }
     let document = if input.kind == EntityKind::Note {
         Some(validate_document(&input.document.unwrap_or_default())?)
     } else {
-        None
+        input.document.map(|d| validate_document(&d)).transpose()?
     };
     let entity_id = context.new_id(conn, "entity", ObjectKind::Entity)?;
     let timestamp = context.now();
@@ -230,7 +242,7 @@ pub(crate) fn create_in_transaction(
     if let Some(link) = input.context {
         let source = get(conn, &entity_id)?;
         let target = get(conn, &link.target_id)?;
-        validate_relation(&source, &target, &link.kind)?;
+        validate_relation(conn, &source, &target, &link.kind)?;
         let relation_id = context.new_id(conn, "relation", ObjectKind::Relation)?;
         context.observe(conn, ObjectKind::Relation, &[&relation_id])?;
         conn.execute(
@@ -335,9 +347,20 @@ pub(crate) fn update_in_transaction(
         })
         .transpose()?
         .unwrap_or(current.payload.clone());
+    if changes_payload && current.kind == EntityKind::Note {
+        crate::goals::validate_note_links(
+            conn,
+            Some(&current.id),
+            &payload,
+            Some(&current.payload),
+            context,
+        )?;
+    }
     if let Some(d) = input.document {
-        if current.kind != EntityKind::Note {
-            return Err(CoreError::validation("Sólo las notas tienen documento."));
+        if !matches!(current.kind, EntityKind::Note | EntityKind::Task) {
+            return Err(CoreError::validation(
+                "Sólo las notas y tareas admiten documento.",
+            ));
         }
         if !current.document_editable {
             return Err(CoreError::new(
@@ -349,7 +372,7 @@ pub(crate) fn update_in_transaction(
         crate::documents::validate_references(conn, root, &d)?;
         context.observe(conn, ObjectKind::Document, &[&input.id])?;
         conn.execute(
-            "UPDATE documents SET schema_version=?3,json=?2 WHERE entity_id=?1",
+            "INSERT INTO documents (entity_id,schema_version,json) VALUES (?1,?3,?2) ON CONFLICT(entity_id) DO UPDATE SET schema_version=excluded.schema_version,json=excluded.json",
             params![
                 input.id,
                 d.to_string(),
@@ -411,7 +434,7 @@ impl Workspace {
         let n = limit(input.limit)?;
         let (time, key) = cursor(input.cursor.as_deref())?;
         if let Some(ref classification) = input.classification
-            && !["area", "resource", "topic"].contains(&classification.as_str())
+            && !["area", "resource", "entity", "topic"].contains(&classification.as_str())
         {
             return Err(CoreError::validation("classification inválida."));
         }
@@ -454,7 +477,7 @@ impl Workspace {
         let source = get(&tx, &input.source_id)?;
         expect(&source, input.expected_revision)?;
         let target = get(&tx, &input.target_id)?;
-        validate_relation(&source, &target, &input.kind)?;
+        validate_relation(&tx, &source, &target, &input.kind)?;
         let existing: Option<String> = tx
             .query_row(
                 "SELECT id FROM relations WHERE source_id=?1 AND target_id=?2 AND kind=?3",
@@ -546,7 +569,12 @@ impl Workspace {
         Ok(page(items, n, |c| json!([c.created_at, c.id]).to_string()))
     }
 }
-fn validate_relation(source: &Entity, target: &Entity, kind: &RelationKind) -> Result<()> {
+fn validate_relation(
+    conn: &Connection,
+    source: &Entity,
+    target: &Entity,
+    kind: &RelationKind,
+) -> Result<()> {
     let compatible = source.id != target.id
         && match kind {
             RelationKind::Project => {
@@ -563,6 +591,7 @@ fn validate_relation(source: &Entity, target: &Entity, kind: &RelationKind) -> R
             "Extremos incompatibles para esta relación.",
         ));
     }
+    crate::goals::validate_tag_link(conn, source, target, kind)?;
     Ok(())
 }
 fn relation_row(r: &rusqlite::Row<'_>) -> rusqlite::Result<Relation> {

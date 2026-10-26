@@ -4,7 +4,7 @@ Cambio `add-local-home-dashboard`, revisión del 13/10/2026. Alcance: implementa
 
 | Dimensión | Resultado |
 | --- | --- |
-| Completitud | 9/17 tareas verificadas; ocho tareas de aceptación nativa pendientes, críticas antes de archivar |
+| Completitud | 17/17 tareas verificadas; aceptación nativa completada y cambio archivado |
 | Corrección | Once requisitos/26 escenarios trazados; tests de núcleo/UI headless aprobados, cobertura del host aún incompleta |
 | Coherencia | Diseño/ADR/diff conciliados; dos defectos corregidos y cobertura directa ampliada, sin migración ni ampliación de alcance |
 
@@ -89,3 +89,9 @@ No se detectó otra divergencia funcional confirmada dentro del diff revisado. E
 | 4.2 | Parte nativa de la regresión final completa; builds/tests no la sustituyen |
 
 Estas ocho tareas bloquean el archivo bajo los criterios actuales. No se lanzan ventanas ni capturas de escritorio sin nueva autorización específica; no se rebajan criterios para marcar checks. Sin sincronización ni archivo prematuros. [Cola de intervención](review-queue.md).
+
+## Actualización 22/10/2026
+
+La aceptación nativa pendiente se completó: 17/17 tareas, seis sesiones Tauri
+reales y 592 checks nativos (`ok:true`). Ver
+[verificación Home](verification-home.md), sección «Aceptación nativa completa».

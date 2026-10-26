@@ -72,7 +72,7 @@ def main():
             return reply['error']
         assert reply['ok'] and process.returncode==0, reply
         return reply['data']
-    assert call('workspace.create',dict(timezone='UTC'))['schema_version']==13
+    assert call('workspace.create',dict(timezone='UTC'))['schema_version']==16
     ctl=call('extraction.control',dict(action='get'));call('extraction.control',dict(action='set',paused=False,expected_revision=ctl['revision']))
     report=dict(profile=args.profile,network_denied=True,headless=True,native_sha256=hashlib.sha256(native.read_bytes()).hexdigest(),cases=[],quality_source='unchanged human-declared standalone corpus; this run verifies persistence from actual native output')
     fixtures={}; manifest=json.loads((corpus/'manifest.json').read_text())
@@ -130,7 +130,7 @@ def main():
     assert call('extraction.search',dict(query='noteka'))['items'][0]['result_from_previous_attempt']
     backup=out/'backup-v13';restored=out/'restored-v13'
     call('workspace.backup',dict(destination=str(backup)))
-    assert call('workspace.restore',dict(backup=str(backup),destination=str(restored)))['schema_version']==13
+    assert call('workspace.restore',dict(backup=str(backup),destination=str(restored)))['schema_version']==16
     original_ws=ws;ws=restored
     assert call('extraction.ocr_regions',dict(id=first['id']))['generation']==first['generation']
     assert call('extraction.search',dict(query='noteka'))['items'][0]['source']['generation_id']==first['generation']['id']

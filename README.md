@@ -2,9 +2,9 @@
 
 Aplicación personal de conocimiento y productividad local-first y AI-first, inspirada en la interfaz de Notion y en las capacidades esenciales de Ultimate Brain. Stack: Tauri 2, Svelte 5, TypeScript, Rust y SQLite.
 
-**Estado al 17 de octubre de 2026:** fases 0–4, búsqueda textual, cola/UTF-8, [PDF acotado](docs/verification-pdf-extraction.md), [búsqueda explícita de adjuntos](docs/attachment-search.md), MCP local, [extracción XLSX acotada](docs/xlsx-extraction.md) y [búsqueda XLSX](docs/xlsx-search.md) verificados y archivados. Baseline vigente: Rust/SQLite v13/API v1/53; sólo index/search amplían sus DTOs y metadatos. La comparación histórica exacta de los otros 50 contratos no se pudo repetir tras perder el baseline v11; [criterio alternativo autorizado](docs/xlsx-search-evidence-recovery.md). El cierre previo de adjuntos fue **19/19 tareas**, tres deltas sincronizados y [cambio cerrado](openspec/changes/archive/2026-10-14-add-local-attachment-search/proposal.md): [benchmarks históricos](docs/verification-attachment-search.md) query p95 214,20–231,07 ms, lock y scratch físico comprobados. Los cierres posteriores se detallan abajo. Tauri/Svelte/Tiptap, notas, productividad, colecciones, cálculos y vistas se conservan. PDF amplio/Excel genérico/OCR de PDF, IA y resto de5a pendientes. Home sigue 9/17: checks headless/CLI no prueban aceptación nativa.
+**Estado al 22 de octubre de 2026:** **fases 0–6 completas en su alcance acotado**, Home archivado; 7/8 son investigación/futuro. Fases 0–4, búsqueda textual, extracción PDF/Excel/OCR, tablas PDF, recuperación semántica y harness de agentes están verificados y archivados por recortes. Baseline: Rust/SQLite20, API v1/66 operaciones, MCP34/57/59, batch9. [5b](docs/verification-semantic-retrieval.md): perfil/huella, adaptador loopback, migración17, escaneo exacto, generaciones e híbrida con fallback FTS. [5c](docs/verification-agent-harness.md): proveedor local, citas verificables, herramientas públicas, preview/apply, límites, cancelación y trazas; migración18. 433 Rust/16 ignoradas y28 SDK por perfil,94 frontend y5.120 checks headless; gates originales dentro de300/150 (máximos189,807/22,925ms). ChatGPT se probó con `gpt-6.1-sol` y Qwen3.5-4B tuvo un smoke local; ninguno acredita calidad real. El OCR Paddle local se ejecuta sólo en extracción explícita. Recorte PDF universal: **PDFium + PaddleOCR** prioritarios sobre PDFKit/Vision; ver [guía](docs/universal-pdf.md), [ADR0031](docs/decisions/0031-universal-pdf-backend.md) y [verificación](docs/verification-universal-pdf.md). Paddle persiste texto y estructura de tablas (filas/columnas/celdas); no bbox/confianza ni orden visual. Home está archivado 17/17. 6a/6b tienen autenticación real verificada en `noteka-auth`: ChatGPT y Google Drive; Google Picker permite seleccionar archivos con `drive.file`, `google selected` devuelve metadatos y `external.link|unlink|list` persisten asociaciones genéricas en SQLite20. 6a y 6b están archivados; la prueba de API keys/cuotas reales de 6a queda diferida por decisión del usuario. Fase 6 cerrada en su alcance acotado. [Recursos externos](docs/external-resources.md).
 
-**Cambio activo implementado, aún no archivado:** [`add-local-home-dashboard`](openspec/changes/add-local-home-dashboard/proposal.md), **9/17 tareas verificadas**. [Home](docs/home.md) ofrece quince vistas compartidas, Today por vencimiento civil y temas claro/oscuro; Goals/clima/fotos y auxiliares siguen pendientes. [Verificación](docs/verification-home.md): **606 checks headless aprobados**, sin ocupar pantalla; [revisión final cerrada](docs/review-home.md). Las ocho tareas restantes requieren aceptación del host nativo, no sustituida por el puente CLI.
+**Home archivado:** [`add-local-home-dashboard`](openspec/changes/archive/2026-10-22-add-local-home-dashboard/proposal.md), **17/17 tareas verificadas**. [Home](docs/home.md) ofrece quince vistas compartidas, Today por vencimiento civil y temas claro/oscuro; Goals/clima/fotos y auxiliares siguen pendientes. [Verificación](docs/verification-home.md): **592 checks headless + 592 nativos** en seis sesiones Tauri; [revisión final cerrada](docs/review-home.md). La aceptación nativa se completó con seis sesiones Tauri y 592 checks; ver la evidencia.
 
 **MCP local, al 15 de octubre:** [`add-local-mcp`](openspec/changes/archive/2026-10-15-add-local-mcp/proposal.md), **22/22 tareas verificadas**, dos deltas sincronizados y cambio archivado. Binario stdio independiente sobre workspace actual, 23 herramientas de lectura/43 con escritura/44 con ejecución explícita; siete operaciones administrativas/de archivos excluidas. [Guía](docs/mcp.md) y [evidencia](docs/verification-mcp.md): **235 tests Rust por perfil**, 17 SDK por perfil, tres rondas raw por perfil y 606 checks headless aprobados. Recorrido exacto FTS5: dos gates con query p95 **134,96–204,81 ms** (<300 ms), sin rebajar validación/caps; fallos anteriores conservados. Sin modelos, proveedores, pantalla ni configuración personal automática.
 
@@ -90,7 +90,8 @@ La UI crea/edita los cinco tipos, captura en contexto, ofrece Inbox/My Day y das
 - [Motor de colecciones](docs/collections.md) y [evidencia 3a](docs/verification-phase-3a.md).
 - [Fórmulas, rollups y fixture de suscripción](docs/formulas.md), [evidencia 3b](docs/verification-phase-3b.md).
 - [Vistas avanzadas](docs/views.md) y [Home solicitado](docs/home-reference.md).
-- [Home implementado y reglas](docs/home.md), [verificación integrada](docs/verification-home.md). Pruebas UI: `npm run test:headless`; el runner nativo requiere consentimiento específico de pantalla.
+- [Home implementado y reglas](docs/home.md), [verificación integrada](docs/verification-home.md), [iconos Lucide y selector de color](docs/icons.md).
+- [Importación local del export de Notion](docs/notion-import.md): 1.103 páginas, 147 adjuntos y límites de jerarquía/iconos originales. Pruebas UI: `npm run test:headless`; el runner nativo requiere consentimiento específico de pantalla.
 - [Plantillas](docs/templates.md), [bases incrustadas](docs/embedded-collections.md) y [evidencia 3c](docs/verification-phase-3c-templates.md): defaults estáticos, IDs independientes, referencias originales y apertura protegida; [cambio archivado, 17/17 tareas](openspec/changes/archive/2026-10-12-add-collection-templates-and-embeds/proposal.md).
 - [Extracción local](docs/extraction.md), [verificación](docs/verification-extraction.md) y [ADR 0011](docs/decisions/0011-explicit-local-extraction.md): jobs persistentes, fencing/lease, fragmentos literales/procedencia y backup/restore independientes del editor.
 - [MCP local](docs/mcp.md), [verificación](docs/verification-mcp.md) y [ADR 0014](docs/decisions/0014-scoped-local-mcp.md): permisos por operación/acción, workspace fijo, discovery modern/legacy y cancelación sin falso rollback.
@@ -111,3 +112,33 @@ Estos comandos administran documentos; no sustituyen los tests ni recorridos nat
 procedencia y limitaciones, sin integración con jobs/API/búsqueda/UI ni OCR dePDF.
 [Aceptación](docs/verification-pdfkit-reader.md):326 Rust por perfil,59 casos nativos
 por perfil y cuatro gates finales. Esto no cierra toda la fase5a.
+
+**Integración PDFKit verificada (20/10):** [páginas persistidas](docs/pdfkit-extraction.md),
+8/8 tareas y [aceptación](docs/verification-pdfkit-extraction.md): SQLite14/API54,
+MCP26/46/47 y batch9. Conserva53 contratos, originales y Home9/17;339 Rust por
+perfil y3442 checks headless. Cuatro gates query p95 máximo176,788ms y lock16,197ms.
+PDFKit UI/FTS, OCR dePDF y ampliaciones PDF/Excel siguen pendientes de5a; no se
+iniciaron5b/5c ni fase6.
+
+
+**PDFKit en búsqueda/UI verificado (20/10):** [guía](docs/pdfkit-search-ui.md) y
+[evidencia](docs/verification-pdfkit-search-ui.md). SQLite15/API54/MCP26/46/47,
+batch9;345 Rust por perfil,25 SDK por perfil y4264 checks headless. Cuatro gates
+originales aprobaron query p95 máximo174,526ms/lock17,094ms; prueba nativa grande
+143,365/10,405ms. Cuatro deltas sincronizados/contrastados y cambio archivado10/10.
+OCR dePDF, tablas y ampliaciones XLSX siguen pendientes de5a; Home9/17 intacto.
+
+
+Estado20/10: `add-local-pdf-ocr` verificado12/12, cinco deltas sincronizados/contrastados
+y archivado. Fuente del cierre20/10 SQLite16/API55/MCP27/47/48/batch9; ver
+[aceptación PDF OCR](docs/verification-pdf-ocr.md). Fase5a aún requiere tablas/ampliaciones PDF y XLSX;
+5b/5c no iniciados, Home9/17 intacto y fase6 excluida. Sin publicación ni modelos.
+
+
+Lectura XLSX por hoja/rango/encabezado explícitos verificada: [guía](docs/xlsx-range-reader.md).
+Fuente21/10 SQLite16/API56/MCP28/48/49; fase5a aún requiere tablas PDF, antes de5b/5c.
+
+**Cierre final22/10:** las tablas PDF y el cierre5a se completaron; después se
+cerraron5b y5c. Fuente vigente SQLite20/API66/MCP34/57/59/batch9, con asociaciones externas y 6b archivado. Ver el estado
+al inicio de este README y las verificaciones de [5b](docs/verification-semantic-retrieval.md)
+y [5c](docs/verification-agent-harness.md). Home, 6a y 6b archivados; 6c conserva su recorte inicial.

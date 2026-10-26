@@ -28,6 +28,18 @@ enum Command {
         #[command(subcommand)]
         action: ExtractionAction,
     },
+    Agent {
+        #[command(subcommand)]
+        action: AgentAction,
+    },
+    Embedding {
+        #[command(subcommand)]
+        action: EmbeddingAction,
+    },
+    Retrieval {
+        #[command(subcommand)]
+        action: RetrievalAction,
+    },
     Home {
         #[command(subcommand)]
         action: HomeAction,
@@ -84,6 +96,10 @@ enum Command {
         #[command(subcommand)]
         action: RelationAction,
     },
+    External {
+        #[command(subcommand)]
+        action: ExternalAction,
+    },
     Changes {
         #[command(subcommand)]
         action: ChangesAction,
@@ -122,7 +138,26 @@ enum ExtractionAction {
     Fragments,
     PdfFragments,
     XlsxCells,
+    XlsxRange,
+    PdfStructure,
+    PdfOcrTable,
     OcrRegions,
+    PdfkitPages,
+    PdfOcrRegions,
+}
+#[derive(Subcommand)]
+enum AgentAction {
+    Ask,
+    Cancel,
+    Trace,
+}
+#[derive(Subcommand)]
+enum EmbeddingAction {
+    Index,
+}
+#[derive(Subcommand)]
+enum RetrievalAction {
+    Search,
 }
 #[derive(Subcommand)]
 enum FormulaAction {
@@ -199,6 +234,12 @@ enum RelationAction {
     List,
 }
 #[derive(Subcommand)]
+enum ExternalAction {
+    Link,
+    Unlink,
+    List,
+}
+#[derive(Subcommand)]
 enum ChangesAction {
     List,
     Preview,
@@ -219,9 +260,21 @@ impl Command {
                 ExtractionAction::Control => "extraction.control",
                 ExtractionAction::Fragments => "extraction.fragments",
                 ExtractionAction::PdfFragments => "extraction.pdf_fragments",
+                ExtractionAction::PdfOcrTable => "extraction.pdf_ocr_table",
+                ExtractionAction::XlsxRange => "extraction.xlsx_range",
+                ExtractionAction::PdfStructure => "extraction.pdf_structure",
                 ExtractionAction::XlsxCells => "extraction.xlsx_cells",
+                ExtractionAction::PdfOcrRegions => "extraction.pdf_ocr_regions",
+                ExtractionAction::PdfkitPages => "extraction.pdfkit_pages",
                 ExtractionAction::OcrRegions => "extraction.ocr_regions",
             },
+            Self::Agent { action } => match action {
+                AgentAction::Ask => "agent.ask",
+                AgentAction::Cancel => "agent.cancel",
+                AgentAction::Trace => "agent.trace",
+            },
+            Self::Embedding { .. } => "embedding.index",
+            Self::Retrieval { .. } => "retrieval.search",
             Self::Home { .. } => "home.query",
             Self::Template { action } => match action {
                 TemplateAction::Save => "template.save",
@@ -269,6 +322,11 @@ impl Command {
                 RelationAction::Add => "relation.add",
                 RelationAction::Remove => "relation.remove",
                 RelationAction::List => "relation.list",
+            },
+            Self::External { action } => match action {
+                ExternalAction::Link => "external.link",
+                ExternalAction::Unlink => "external.unlink",
+                ExternalAction::List => "external.list",
             },
             Self::Changes { action } => match action {
                 ChangesAction::List => "changes.list",
@@ -379,7 +437,7 @@ mod tests {
             }
         }
         assert_eq!(actual, declared);
-        assert_eq!(actual.len(), 53);
+        assert_eq!(actual.len(), 66);
         let schema = noteka_core::contract_schema();
         let variants = schema["$defs"]["Operation"]["oneOf"]
             .as_array()

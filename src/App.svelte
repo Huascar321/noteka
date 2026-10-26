@@ -1,448 +1,388 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { onMount, tick, setContext } from 'svelte';
   import { isTauri } from '@tauri-apps/api/core';
   import { listen } from '@tauri-apps/api/event';
-  import { operate, OperationError, setPending, closeConfirmed } from './lib/api';
-  import BlockEditor from './lib/BlockEditor.svelte';
-  import EntityFields from './lib/EntityFields.svelte';
-  import DatabasePanel from './lib/DatabasePanel.svelte';
-  import HomePanel from './lib/HomePanel.svelte';
-  import AttachmentSearchPanel from './lib/AttachmentSearchPanel.svelte';
-  import AttachmentPreparationPanel from './lib/AttachmentPreparationPanel.svelte';
-  import AttachmentGenerationPanel from './lib/AttachmentGenerationPanel.svelte';
-  import GroupedSearchPanel from './lib/GroupedSearchPanel.svelte';
+  import { operate, setPending, closeConfirmed } from './lib/api';
+  import WorkspacePane from './lib/WorkspacePane.svelte';
+  import SearchDialog from './lib/SearchDialog.svelte';
+  import SettingsDialog from './lib/SettingsDialog.svelte';
+  import SectionIcon from './lib/SectionIcon.svelte';
+  import AppIcon from './lib/AppIcon.svelte';
+  import WindowTitlebar from './lib/WindowTitlebar.svelte';
+  import PanelResizeHandle from './lib/PanelResizeHandle.svelte';
+  import { sidebarIconMotion } from './lib/sidebar-icon-motion';
+  import { PRIMARY_SECTIONS, targetTitle, targetIcon, type NavigationTarget, type PaneState, type Section, type WorkspacePaneApi } from './lib/navigation';
+  import { readPrimaryColor, savePrimaryColor, primaryPalette, normalizeColor } from './lib/primary-color';
   import { readTheme, saveTheme, type Theme } from './lib/theme';
-  import { pendingJson } from './lib/editor-adapter';
-  import type { Entity, EntityKind, WorkspaceInfo, Document, Contract, Relation, ContextLink, WorkflowView, SearchHit } from './lib/contracts.generated';
-  type PageEntity = Contract['entities'];
-  type PageRelation = Contract['relations'];
+  import { readPeekMode, savePeekMode, type PeekMode, type PeekPresentation } from './lib/peek-mode';
+  import { readPanelWidths, savePanelWidths, panelLimits, effectivePanelWidth, clampPanelWidth, sidePeekExcludesSidebar, PANEL_MOTION_MS, type PanelKind, type PanelWidths } from './lib/panel-widths';
+  import type { WorkspaceInfo } from './lib/contracts.generated';
+  import { WORKSPACE_ICON_CONTEXT } from './lib/visual-icon';
 
-  type Section = EntityKind | 'home' | 'archive' | Exclude<WorkflowView, 'context'> | 'areas' | 'resources' | 'search' | 'collections';
-  type Draft = { kind: EntityKind; title: string; payload: Record<string, unknown>; document?: Document; context?: ContextLink };
-  type Status = 'saved' | 'dirty' | 'saving' | 'error' | 'conflict';
-  const sections: { id: Section; label: string; icon: string }[] = [
-    { id: 'home', label: 'Home', icon: '⌂' },
-    { id: 'collections', label: 'Collections', icon: '▦' },
-    { id: 'search', label: 'Search', icon: '⌕' },
-    { id: 'inbox', label: 'Inbox', icon: '⇣' }, { id: 'my_day', label: 'My Day', icon: '☀' },
-    { id: 'note', label: 'Notes', icon: '▤' }, { id: 'task', label: 'Tasks', icon: '☑' },
-    { id: 'project', label: 'Projects', icon: '◈' }, { id: 'tag', label: 'Tags', icon: '#' },
-    { id: 'person', label: 'People', icon: '♙' }, { id: 'archive', label: 'Archive', icon: '▣' },
-    { id: 'pending', label: 'Pending', icon: '○' }, { id: 'overdue', label: 'Overdue', icon: '!' },
-    { id: 'active_projects', label: 'Active Projects', icon: '◈' }, { id: 'areas', label: 'Areas', icon: '#' }, { id: 'resources', label: 'Resources', icon: '#' },
-  ];
+  type Tab = { id: string; initialTarget: NavigationTarget; state: PaneState; ownerId?: string; presentation?: PeekPresentation; returnFocus?: HTMLElement; sideHidden?: boolean; sideEpoch?: number; closing?: boolean };
   let workspace = $state<WorkspaceInfo | null>(null);
+  setContext(WORKSPACE_ICON_CONTEXT, () => workspace?.path);
   let path = $state('');
-  let section = $state<Section>('note');
-  let entities = $state<Entity[]>([]);
-  let nextCursor = $state<string | null>(null);
-  let selected = $state<Entity | null>(null);
-  let draft = $state<Draft | null>(null);
-  let status = $state<Status>('saved');
-  let error = $state('');
-  let listError = $state('');
-  let loading = $state(false);
-  let listGeneration = 0;
+  let tabs = $state<Tab[]>([]);
+  let activeId = $state('');
+  let focusedId = $state('');
+  let paneRefs = $state<Record<string, WorkspacePaneApi | undefined>>({});
   let working = $state(false);
-  let remoteRevision = $state<number | null>(null);
-  let relationships = $state<{ relation: Relation; other: Entity }[]>([]);
-  let guard = $state<(() => Promise<void>) | null>(null);
-  let recovery = $state('');
-  let titleInput = $state<HTMLInputElement>();
-  let editorEpoch = $state(0);
-  let editorInitial: Document | null = $state(null);
-  let exportPath = $state('');
-  let exportMessage = $state('');
-  let invalidEditor = $state('');
-  let workflowDate = $state('');
-  let dashboard = $state<Entity[]>([]);
-  let dashboardCursor = $state<string | null>(null);
-  let relationKind = $state<'project' | 'tag' | 'person'>('project');
-  let relationTarget = $state('');
-  let searchQuery = $state('');
-  let searchScope = $state<'notes' | 'attachments' | 'combined'>('notes');
-  let groupedPanel = $state<{ refreshPanel: () => Promise<void> }>();
-  let attachmentPanel = $state<{ refreshPanel: () => Promise<void> }>();
-  let searchKind = $state('');
-  let searchArchived = $state(false);
-  let searchRelated = $state('');
-  let searchHits = $state<SearchHit[]>([]);
-  let searchMessage = $state('');
-  let sourceLocator = $state('');
-  let sourceBlock = $state<string | undefined>();
-  const createKind = $derived(['note', 'task', 'project', 'tag', 'person'].includes(section) ? section as EntityKind : section === 'areas' || section === 'resources' ? 'tag' : section === 'my_day' || section === 'pending' || section === 'overdue' ? 'task' : section === 'active_projects' ? 'project' : 'note');
-  const createLabel: Record<EntityKind, string> = { note: 'Nueva nota', task: 'Nueva tarea', project: 'Nuevo proyecto', tag: 'Nuevo tag', person: 'Nueva persona' };
-  let collectionPending = $state(false);
-  let homePanel = $state<{ refreshPanel: () => Promise<void> }>();
+  let preparing = $state(false);
+  let error = $state('');
+  let searchMode = $state<'current' | 'new' | null>(null);
+  let settingsOpen = $state(false);
+  let sidebarOpen = $state(false);
+  let sidebarCollapsed = $state(false);
+  let compactSidebar = $state(window.matchMedia('(max-width: 760px)').matches);
+  let viewportWidth = $state(window.innerWidth);
+  let preferredWidths = $state<PanelWidths>(readPanelWidths(() => localStorage));
+  let panelWidthError = $state('');
+  let resizing = $state<PanelKind | null>(null);
+  let resizeSnapshot: { widths: PanelWidths; open: boolean; collapsed: boolean } | null = null;
+  const sidebarWidth = $derived(effectivePanelWidth('sidebar', preferredWidths, viewportWidth));
+  const sidePeekWidth = $derived(effectivePanelWidth('sidePeek', preferredWidths, viewportWidth));
+  const sideWide = $derived(sidePeekExcludesSidebar(sidePeekWidth, viewportWidth));
+  const sidebarLimits = $derived(panelLimits('sidebar', viewportWidth));
+  const sidePeekLimits = $derived(panelLimits('sidePeek', viewportWidth));
+  const sidebarVisible = $derived(compactSidebar ? sidebarOpen : !sidebarCollapsed);
+  function setSidebarVisible(visible: boolean) { sidebarOpen = visible; sidebarCollapsed = !visible; }
+  function toggleSidebar() {
+    const opening = !sidebarVisible;
+    if (opening && activePeek?.presentation === 'side' && sideWide) hideSide(activePeek);
+    setSidebarVisible(opening);
+  }
+  function beginResize(kind: PanelKind) {
+    resizeSnapshot = { widths: { ...preferredWidths }, open: sidebarOpen, collapsed: sidebarCollapsed };
+    resizing = kind;
+  }
+  function resizePanel(kind: PanelKind, width: number) {
+    preferredWidths = { ...preferredWidths, [kind]: clampPanelWidth(kind, width, viewportWidth) };
+    if (kind === 'sidePeek' && sideWide && activePeek && peekVisible(activePeek)) setSidebarVisible(false);
+  }
+  function endResize(cancelled: boolean) {
+    if (cancelled && resizeSnapshot) {
+      preferredWidths = resizeSnapshot.widths; sidebarOpen = resizeSnapshot.open; sidebarCollapsed = resizeSnapshot.collapsed;
+    } else if (!cancelled) panelWidthError = savePanelWidths(preferredWidths, () => localStorage);
+    resizing = null; resizeSnapshot = null;
+  }
   let theme = $state<Theme>(readTheme(() => localStorage));
   let themeError = $state('');
+  let primaryColor = $state(readPrimaryColor(() => localStorage));
+  let primaryColorError = $state('');
+  let defaultPeekMode = $state<PeekMode>(readPeekMode(() => localStorage));
+  let peekPreferenceError = $state('');
+  function changeDefaultPeekMode(mode: PeekMode) { defaultPeekMode = mode; peekPreferenceError = savePeekMode(mode, () => localStorage); }
+  $effect(() => {
+    for (const [name, value] of Object.entries(primaryPalette(primaryColor, theme))) document.documentElement.style.setProperty(name, value);
+  });
+  function changePrimaryColor(next: string) {
+    const valid = normalizeColor(next);
+    if (!valid) return;
+    primaryColor = valid; primaryColorError = savePrimaryColor(valid, () => localStorage);
+  }
+  const activeTab = $derived(tabs.find(tab => tab.id === activeId));
+  const rootTabs = $derived(tabs.filter(tab => !tab.ownerId));
+  const activePeek = $derived(tabs.find(tab => tab.ownerId === activeId));
+  function peekVisible(tab?: Tab): boolean { return !!tab && !tab.closing && (tab.presentation !== 'side' || !tab.sideHidden); }
+  const visiblePeek = $derived(peekVisible(activePeek) ? activePeek : undefined);
+  const sideVisible = $derived(visiblePeek?.presentation === 'side');
+  const focusedTab = $derived(tabs.find(tab => tab.id === focusedId) ?? activeTab);
+  const guarded = $derived(tabs.some(tab => tab.state.guarded));
+  const protectedState = $derived(tabs.some(tab => tab.state.dirty || tab.state.busy));
+  const blocked = $derived(preparing || guarded);
+  $effect(() => { if (sidebarVisible && sideWide && sideVisible) setSidebarVisible(false); });
+  $effect(() => {
+    const id = activeId;
+    if (id) void tick().then(() => document.getElementById(`tab-${id}`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' }));
+  });
+  let pendingWrite = Promise.resolve();
   $effect(() => { document.documentElement.dataset.theme = theme; });
+  $effect(() => {
+    const pending = protectedState;
+    pendingWrite = pendingWrite.then(() => setPending(pending)).catch(() => { error = "Close protection could not be enabled. Keep this window open while changes are pending."; });
+  });
   function changeTheme(next: Theme) { theme = next; themeError = saveTheme(next, () => localStorage); }
-  let databasePanel = $state<{ savePending: () => Promise<boolean>; discardPending: () => void; refreshPanel: () => Promise<void> }>();
-  const dirty = $derived((draft !== null && status !== 'saved') || collectionPending);
-  const currentLabel = $derived(sections.find(s => s.id === section)!.label);
-
-  $effect(() => { void setPending(dirty).catch(() => { error = 'No se pudo activar la protección de cierre. No cierres la ventana con cambios pendientes.'; }); });
-
-  function report(e: unknown) { return e instanceof Error ? e.message : 'La operación no pudo completarse.'; }
-  async function guarded(action: () => Promise<void>) {
-    if (working || status === 'saving') return;
-    if (dirty) guard = action; else await action();
+  function updateTab(id: string, state: PaneState) {
+    const tab = tabs.find(tab => tab.id === id);
+    if (tab && JSON.stringify(tab.state) !== JSON.stringify(state)) tab.state = state;
   }
-  async function resolveGuard(choice: 'save' | 'discard' | 'cancel') {
-    if (choice === 'cancel') { guard = null; return; }
-    if (choice === 'save' && !(await save())) return;
-    const action = guard;
-    guard = null;
-    if (choice === 'discard') { databasePanel?.discardPending(); draft = null; status = 'saved'; await setPending(false); }
-    await action?.();
+  function makePane(target: NavigationTarget): Tab {
+    const id = crypto.randomUUID();
+    return { id, initialTarget: target, state: { section: target.type === 'section' ? target.section : target.kind, title: targetTitle(target), icon: targetIcon(target), sectionPage: target.type === 'section', dirty: false, busy: false, guarded: false } };
   }
-  function clearSelection() {
-    selected = null; draft = null; status = 'saved'; relationships = []; dashboard = []; dashboardCursor = null; remoteRevision = null; error = ''; recovery = ''; exportMessage = ''; sourceLocator = ''; sourceBlock = undefined; invalidEditor = ''; editorInitial = null; editorEpoch++;
-  }
-  function loadDraft(entity: Entity) {
-    const validPayload = entity.payload !== null && typeof entity.payload === 'object' && !Array.isArray(entity.payload);
-    draft = validPayload && (entity.kind !== 'note' || entity.document_editable) ? { kind: entity.kind, title: entity.title, payload: JSON.parse(JSON.stringify(entity.payload)) as Record<string, unknown>, ...(entity.kind === 'note' ? { document: JSON.parse(JSON.stringify(entity.document)) as Document } : {}) } : null;
-    editorInitial = draft?.document ? JSON.parse(JSON.stringify(draft.document)) as Document : null; editorEpoch++;
+  function addTab(target: NavigationTarget = { type: 'section', section: 'home' }) {
+    const tab = makePane(target); tabs = [...tabs, tab];
+    activeId = tab.id; focusedId = tab.id; sidebarOpen = false;
   }
   async function selectWorkspace(create: boolean) {
-    working = true; clearSelection(); entities = []; workspace = null; listError = '';
+    if (working) return;
+    working = true; error = '';
     try {
       workspace = await operate<WorkspaceInfo>({ operation: create ? 'workspace.create' : 'workspace.open', input: {} }, path.trim() || undefined);
-      path = workspace.path; section = 'home'; await loadList();
-    } catch (e) { error = report(e); }
+      path = workspace.path; tabs = []; addTab();
+    } catch (e) { error = e instanceof Error ? e.message : "Could not open the workspace."; }
     finally { working = false; }
   }
-  async function loadList(cursor?: string) {
-    if (!workspace) return;
-    const workspacePath = workspace.path;
-    const requestedSection = section;
-    const generation = ++listGeneration;
-    loading = true; listError = '';
-    try {
-      if (requestedSection === 'collections' || requestedSection === 'home') { entities = []; nextCursor = null; workflowDate = ''; return; }
-      if (requestedSection === 'search') {
-        if (searchScope !== 'notes') { entities = []; nextCursor = null; workflowDate = ''; return; }
-        if (!cursor) searchHits = [];
-        const page = searchQuery.trim() ? await operate<Contract['search']>({ operation: 'search.query', input: { query: searchQuery.trim(), kind: searchKind ? searchKind as EntityKind : undefined, archived: searchArchived, related_id: searchRelated.trim() || undefined, limit: 30, cursor } }, workspacePath) : { items: [], next_cursor: null };
-        if (generation !== listGeneration || workspace?.path !== workspacePath || section !== requestedSection) return;
-        searchHits = cursor ? [...searchHits, ...page.items] : page.items; entities = []; nextCursor = page.next_cursor ?? null; workflowDate = ''; return;
+  function activateTab(id: string, focus = false) {
+    if (blocked || settingsOpen || !rootTabs.some(tab => tab.id === id)) return;
+    activeId = id;
+    const child = tabs.find(tab => tab.ownerId === id);
+    focusedId = child && peekVisible(child) ? child.id : id;
+    if (child?.presentation === 'side' && peekVisible(child) && sideWide) setSidebarVisible(false);
+    else sidebarOpen = false;
+    if (focus) void tick().then(() => document.getElementById(`tab-${id}`)?.focus());
+  }
+  async function navigate(section: Section) {
+    if (blocked || settingsOpen) return;
+    sidebarOpen = false;
+    if (activePeek && !(await closePeek(activePeek.id, false))) return;
+    focusedId = activeId;
+    await paneRefs[activeId]?.navigate(section);
+  }
+  function openSearch(mode: 'current' | 'new') {
+    if (workspace && !blocked && !settingsOpen && (mode === 'new' || !focusedTab?.state.busy)) { searchMode = mode; sidebarOpen = false; }
+  }
+  function openSettings() {
+    if (workspace && !blocked && !searchMode) settingsOpen = true;
+  }
+  async function chooseTarget(target: NavigationTarget, newTab: boolean) {
+    searchMode = null;
+    await tick();
+    if (newTab) addTab(target);
+    else if (target.type === 'section') await navigate(target.section);
+    else await openDetail(activeId, target);
+  }
+  async function openDetail(ownerId: string, target: NavigationTarget) {
+    if (blocked || settingsOpen || resizing || !workspace || ownerId !== activeId) return;
+    const existing = tabs.find(tab => tab.ownerId === ownerId);
+    if (existing && target.type === 'entity' && existing.state.entityId === target.id && (existing.sideHidden || !target.hit?.block_id)) { await revealPeek(existing); return; }
+    if (defaultPeekMode === 'tab') { addTab(target); return; }
+    if (existing) {
+      if (!(await revealPeek(existing))) return;
+      // Reuse the pane: its own guard resolves before replacing the buffer.
+      if (await paneRefs[existing.id]?.openTarget(target)) {
+        const changed = existing.presentation !== defaultPeekMode;
+        existing.presentation = defaultPeekMode;
+        if (changed && defaultPeekMode === 'side') existing.sideHidden = true;
+        await revealPeek(existing);
       }
-      const workflow = ['inbox', 'my_day', 'pending', 'overdue', 'active_projects'].includes(requestedSection);
-      const page = workflow
-        ? await operate<Contract['workflow']>({ operation: 'workflow.query', input: { view: requestedSection as WorkflowView, cursor, limit: 50 } }, workspacePath)
-        : await operate<PageEntity>({ operation: 'entity.list', input: { archived: requestedSection === 'archive', ...(requestedSection !== 'archive' ? { kind: requestedSection === 'areas' || requestedSection === 'resources' ? 'tag' : requestedSection as EntityKind } : {}), ...(requestedSection === 'areas' || requestedSection === 'resources' ? { classification: requestedSection === 'areas' ? 'area' : 'resource' } : {}), cursor, limit: 50 } }, workspacePath);
-      if (generation !== listGeneration || workspace?.path !== workspacePath || section !== requestedSection) return;
-      entities = cursor ? [...entities, ...page.items] : page.items; nextCursor = page.next_cursor ?? null;
-      workflowDate = 'date' in page ? page.date as string : '';
-    } catch (e) { if (generation === listGeneration && workspace?.path === workspacePath && section === requestedSection) listError = report(e); }
-    finally { if (generation === listGeneration) loading = false; }
+      return;
+    }
+    const tab = makePane(target);
+    tab.ownerId = ownerId; tab.presentation = defaultPeekMode;
+    tab.sideHidden = defaultPeekMode === 'side';
+    tab.returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : undefined;
+    tabs = [...tabs, tab]; sidebarOpen = false;
+    await revealPeek(tabs.find(item => item.id === tab.id)!);
   }
-  async function navigate(to: Section) { await guarded(async () => { section = to; clearSelection(); await loadList(); }); }
-  function changeSearchScope(scope: 'notes' | 'attachments' | 'combined') {
-    listGeneration++; loading = false; listError = ''; nextCursor = null; searchHits = []; searchMessage = '';
-    searchScope = scope;
-    void loadList();
+  function hideSide(tab: Tab) {
+    tab.sideEpoch = (tab.sideEpoch ?? 0) + 1; tab.sideHidden = true;
+    if (focusedId === tab.id) focusedId = tab.ownerId!;
   }
-  async function openSearch(hit: SearchHit) {
-    await guarded(async () => {
-      if (!workspace) return;
-      try {
-        const entity = await operate<Entity>({ operation: 'entity.get', input: { id: hit.entity_id } }, workspace.path);
-        await openEntity(entity);
-        if (selected?.id !== hit.entity_id) return;
-        sourceLocator = `Origen: ${hit.entity_id} · bloque ${hit.block_id ?? 'título'} · resultado r${hit.revision}${selected.revision !== hit.revision ? ` · fuente actual r${selected.revision}; buscá otra vez` : ''}`;
-        sourceBlock = hit.block_id && selected.revision === hit.revision ? hit.block_id : undefined;
-      } catch (e) { error = report(e); }
-    });
+  async function revealPeek(tab: Tab, animate = true): Promise<boolean> {
+    const epoch = (tab.sideEpoch ?? 0) + 1; tab.sideEpoch = epoch;
+    if (tab.presentation === 'side') {
+      if (sideWide) setSidebarVisible(false);
+      if (animate && tab.sideHidden) {
+        await tick();
+        await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      }
+      if (tab.sideEpoch !== epoch || !tabs.some(item => item.id === tab.id) || tab.presentation !== 'side' || tab.ownerId !== activeId) return false;
+    }
+    tab.sideHidden = false; focusedId = tab.id;
+    await tick();
+    document.querySelector<HTMLElement>(`#pane-${tab.id} .editor`)?.focus({ preventScroll: true });
+    return true;
   }
-  async function rebuildSearch() {
-    if (!workspace || working) return;
-    const workspacePath = workspace.path;
-    working = true; searchMessage = '';
-    try {
-      const index = await operate<Contract['search_index']>({ operation: 'search.rebuild', input: {} }, workspacePath);
-      if (workspace?.path !== workspacePath) return;
-      searchMessage = `Índice reconstruido: ${index.entities} entidades, ${index.chunks} fuentes. Originales sin cambios.`;
-      await loadList();
-    } catch (e) { listError = report(e); }
-    finally { working = false; }
-  }
-  async function loadRelations(entity: Entity) {
-    if (!workspace) return;
-    const workspacePath = workspace.path;
-    const all: Relation[] = [];
-    let cursor: string | null | undefined;
-    do {
-      const page = await operate<PageRelation>({ operation: 'relation.list', input: { entity_id: entity.id, cursor, limit: 200 } }, workspacePath);
-      all.push(...page.items); cursor = page.next_cursor;
-    } while (cursor);
-    const resolved = await Promise.all(all.map(async relation => ({ relation, other: await operate<Entity>({ operation: 'entity.get', input: { id: relation.source_id === entity.id ? relation.target_id : relation.source_id } }, workspacePath) })));
-    if (workspace?.path === workspacePath && selected?.id === entity.id) relationships = resolved;
-  }
-  async function loadDashboard(entity: Entity, cursor?: string) {
-    if (!workspace || !['project', 'tag', 'person'].includes(entity.kind)) return;
-    const workspacePath = workspace.path;
-    const page = await operate<Contract['workflow']>({ operation: 'workflow.query', input: { view: 'context', related_id: entity.id, limit: 50, cursor } }, workspacePath);
-    if (selected?.id === entity.id && workspace?.path === workspacePath) { dashboard = cursor ? [...dashboard, ...page.items] : page.items; dashboardCursor = page.next_cursor ?? null; }
-  }
-  async function openEntity(entity: Entity) {
-    await guarded(() => openOriginal(entity.id));
-  }
-  async function openOriginal(id: string) {
-      if (!workspace) return;
-      working = true;
-      try {
-        const fresh = await operate<Entity>({ operation: 'entity.get', input: { id } }, workspace.path);
-        clearSelection(); selected = fresh;
-        loadDraft(fresh);
-        await loadRelations(fresh);
-        await loadDashboard(fresh);
-      } catch (e) { error = report(e); }
-      finally { working = false; }
-  }
-  async function newNote() {
-    if (section === 'home') await createHome('note'); else await newEntity('note');
-  }
-  async function openHome(id: string) {
-    await guarded(async () => {
-      if (!workspace) return;
-      const path = workspace.path;
-      working = true;
-      try {
-        const entity = await operate<Entity>({ operation: 'entity.get', input: { id } }, path);
-        if (workspace?.path !== path) return;
-        section = entity.kind; await loadList(); await openOriginal(entity.id);
-        await tick(); titleInput?.focus();
-      } catch (e) { error = report(e); }
-      finally { working = false; }
-    });
-  }
-  async function createHome(kind: EntityKind, context?: ContextLink, seed?: Record<string, unknown>) {
-    await guarded(async () => {
-      if (!workspace) return;
-      working = true;
-      try { section = kind; await loadList(); }
-      finally { working = false; }
-      await startDraft(kind, context, seed);
-    });
-  }
-  async function newEntity(kind: EntityKind, context?: ContextLink, seed?: Record<string, unknown>) {
-    if (!workspace) return;
-    await guarded(() => startDraft(kind, context, seed));
-  }
-  async function startDraft(kind: EntityKind, context?: ContextLink, seed?: Record<string, unknown>) {
-      clearSelection(); draft = { kind, title: '', payload: kind === 'tag' ? { classification: section === 'areas' ? 'area' : section === 'resources' ? 'resource' : 'topic' } : kind === 'task' && section === 'my_day' && workflowDate ? { planned_date: workflowDate } : {}, context, ...(kind === 'note' ? { document: { schema_version: 2, blocks: [{ id: crypto.randomUUID(), type: 'paragraph', content: [] }] } } : {}) }; editorInitial = draft.document ? JSON.parse(JSON.stringify(draft.document)) as Document : null;
-      if (seed) draft.payload = { ...draft.payload, ...seed };
-      status = 'dirty'; await tick(); titleInput?.focus();
-  }
-  function edited() { status = remoteRevision ? 'conflict' : 'dirty'; }
-  async function save(): Promise<boolean> {
-    if (collectionPending) return databasePanel ? await databasePanel.savePending() : false;
-    if (!workspace || !draft || status === 'saving') return false;
-    if (invalidEditor) { error = 'El editor devolvió un formato inválido. Corregí o copiá el buffer antes de salir; no se guardó una versión anterior.'; status = 'error'; return false; }
-    status = 'saving'; error = '';
-    try {
-      const document = draft.document ? JSON.parse(JSON.stringify(draft.document)) as Document : undefined;
-      const payload = JSON.parse(JSON.stringify(draft.payload)) as Record<string, unknown>;
-      const payloadChanged = JSON.stringify(payload) !== JSON.stringify(selected?.payload);
-      const entity = selected
-        ? await operate<Entity>({ operation: 'entity.update', input: { id: selected.id, expected_revision: selected.revision, title: draft.title, document, ...(payloadChanged ? { payload } : {}) } }, workspace.path)
-        : await operate<Entity>({ operation: 'entity.create', input: { kind: draft.kind, title: draft.title, document, payload, context: draft.context } }, workspace.path);
-      selected = entity; draft = { ...draft, title: entity.title, payload: JSON.parse(JSON.stringify(entity.payload)) as Record<string, unknown>, ...(entity.document ? { document: structuredClone(entity.document) as Document } : {}) };
-      status = 'saved'; remoteRevision = null;
-      await setPending(false); await loadList();
-      try { await loadRelations(entity); await loadDashboard(entity); } catch (e) { error = `Guardado confirmado; no se pudieron actualizar las relaciones: ${report(e)}`; }
-      return true;
-    } catch (e) {
-      if (e instanceof OperationError && e.detail.code === 'revision_conflict') {
-        status = 'conflict'; remoteRevision = Number((e.detail.details as { current_revision: number }).current_revision);
-      } else status = 'error';
-      error = report(e); return false;
+  function presentPane(id: string, mode: PeekMode) {
+    const tab = tabs.find(tab => tab.id === id);
+    if (!tab || blocked || settingsOpen) return;
+    if (mode === 'tab') {
+      tab.sideEpoch = (tab.sideEpoch ?? 0) + 1;
+      delete tab.ownerId; delete tab.presentation; delete tab.returnFocus;
+      delete tab.sideHidden;
+      activeId = id; focusedId = id;
+    } else {
+      if (!tab.ownerId && mode !== 'full') {
+        const source = makePane({ type: 'section', section: tab.state.section });
+        tab.ownerId = source.id;
+        tab.returnFocus = undefined;
+        tabs = [...tabs, source]; activeId = source.id;
+      }
+      if (tab.ownerId) {
+        const changed = tab.presentation !== mode; tab.presentation = mode;
+        if (mode === 'side' && changed) tab.sideHidden = true;
+        void revealPeek(tab);
+      }
+      focusedId = id;
     }
   }
-  async function refresh() {
-    if (!workspace || working || status === 'saving') return;
-    const workspacePath = workspace.path;
-    const entityId = selected?.id;
-    if (section === 'search' && searchScope === 'attachments') await attachmentPanel?.refreshPanel();
-    else if (section === 'search' && searchScope === 'combined') await groupedPanel?.refreshPanel();
-    else await loadList();
-    if (section === 'collections' && databasePanel) await databasePanel.refreshPanel();
-    if (section === 'home' && homePanel) await homePanel.refreshPanel();
-    if (!selected || selected.id !== entityId || workspace?.path !== workspacePath) return;
+  async function closePeek(id: string, restoreFocus = true): Promise<boolean> {
+    const tab = tabs.find(tab => tab.id === id && tab.ownerId);
+    if (!tab || blocked || searchMode || settingsOpen) return false;
+    preparing = true; error = '';
+    let allowed = false;
     try {
-      const fresh = await operate<Entity>({ operation: 'entity.get', input: { id: selected.id } }, workspacePath);
-      if (!selected || selected.id !== entityId || workspace?.path !== workspacePath || (status as Status) === 'saving') return;
-      if (dirty) {
-        if (fresh.revision !== selected.revision) { remoteRevision = fresh.revision; status = 'conflict'; error = 'Hay una revisión externa. Tu contenido pendiente sigue acá.'; }
-      } else {
-        if (fresh.revision !== selected.revision) { selected = fresh; loadDraft(fresh); }
+      if (!(await prepareTabs([id]))) return false;
+      if (tab.presentation === 'side' && !tab.sideHidden) {
+        tab.closing = true; hideSide(tab); await tick();
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) await new Promise(resolve => setTimeout(resolve, PANEL_MOTION_MS));
       }
-      await loadRelations(fresh);
-      await loadDashboard(fresh);
-    } catch (e) { error = report(e); }
+      tabs = tabs.filter(item => item.id !== id); delete paneRefs[id];
+      focusedId = tab.ownerId!; allowed = true;
+    } finally { preparing = false; }
+    if (allowed && restoreFocus) {
+      await tick();
+      const previous = tab.returnFocus;
+      if (previous?.isConnected && !previous.closest('[inert]')) previous.focus({ preventScroll: true });
+      else document.querySelector<HTMLElement>(`#pane-${tab.ownerId} main`)?.focus({ preventScroll: true });
+    }
+    return allowed;
   }
-  async function reload() {
-    const entity = selected;
-    if (entity) await guarded(async () => { clearSelection(); await openEntity(entity); });
+  async function prepareTabs(ids: string[]): Promise<boolean> {
+    for (const id of ids) {
+      const tab = tabs.find(tab => tab.id === id);
+      if (!tab) continue;
+      if (tab.state.busy) { error = "Wait for the operation to finish before closing."; return false; }
+      activeId = tab.ownerId ?? id; focusedId = id;
+      if (tab.ownerId && tab.presentation === 'side' && tab.sideHidden && tab.state.dirty) await revealPeek(tab, false);
+      await tick();
+      const pane = paneRefs[id];
+      if (!pane || !(await pane.prepareToLeave())) return false;
+    }
+    return true;
   }
-  async function archive() {
-    if (!selected || !workspace) return;
-    await guarded(async () => {
-      const entity = selected;
-      if (!entity) return;
-      working = true;
-      try {
-        await operate<Entity>({ operation: entity.archived_at ? 'entity.restore' : 'entity.archive', input: { id: entity.id, expected_revision: entity.revision } }, workspace!.path);
-        clearSelection(); await loadList();
-      } catch (e) { error = report(e); }
-      finally { working = false; }
-    });
+  async function closeTab(id: string) {
+    if (blocked || searchMode || settingsOpen) return;
+    preparing = true; error = '';
+    const previous = activeId;
+    try {
+      const children = tabs.filter(tab => tab.ownerId === id).map(tab => tab.id);
+      if (!(await prepareTabs([...children, id]))) return;
+      const index = rootTabs.findIndex(tab => tab.id === id);
+      const closing = new Set([...children, id]);
+      tabs = tabs.filter(tab => !closing.has(tab.id));
+      for (const paneId of closing) delete paneRefs[paneId];
+      if (!rootTabs.length) addTab();
+      else { activeId = previous !== id && rootTabs.some(tab => tab.id === previous) ? previous : rootTabs[Math.min(index, rootTabs.length - 1)].id; const child = tabs.find(tab => tab.ownerId === activeId); focusedId = child && peekVisible(child) ? child.id : activeId; }
+      await tick(); document.getElementById(`tab-${activeId}`)?.focus();
+    } finally { preparing = false; }
   }
-  async function copyPending() {
-    recovery = invalidEditor || (draft?.document ? pendingJson(draft.title, draft.document) : JSON.stringify(draft ?? selected?.document, null, 2));
-    try { await navigator.clipboard.writeText(recovery); } catch { error = 'El contenido está en el campo de recuperación: seleccioná y copiá el texto.'; }
+  async function leaveWorkspace(closeHost = false) {
+    if (blocked || searchMode) return;
+    preparing = true; error = ''; settingsOpen = false;
+    try {
+      await tick();
+      // Every mounted pane participates, including buffers in inactive tabs.
+      const ordered = [...tabs.filter(tab => tab.id === activeId), ...tabs.filter(tab => tab.id !== activeId)];
+      if (!(await prepareTabs(ordered.map(tab => tab.id)))) return;
+      if (closeHost) { await pendingWrite; await closeConfirmed(); }
+      else { workspace = null; tabs = []; activeId = ''; focusedId = ''; paneRefs = {}; }
+    } catch (e) { error = e instanceof Error ? e.message : "Could not finish closing."; }
+    finally {
+      preparing = false;
+    }
   }
-  async function addRelation() {
-    if (!workspace || !selected || dirty || !relationTarget.trim()) return;
-    working = true;
-    try { const r = await operate<Contract['relation_result']>({ operation: 'relation.add', input: { source_id: selected.id, target_id: relationTarget.trim(), kind: relationKind, expected_revision: selected.revision } }, workspace.path); selected = r.entity; relationTarget = ''; await loadRelations(r.entity); await loadDashboard(r.entity); }
-    catch (e) { error = report(e); }
-    finally { working = false; }
+  function keydown(event: KeyboardEvent) {
+    if (!workspace || event.defaultPrevented || event.isComposing || blocked) return;
+    if (resizing) { if (event.metaKey || event.ctrlKey) event.preventDefault(); return; }
+    if (settingsOpen) {
+      if (((event.metaKey || event.ctrlKey) && ['k','t','w'].includes(event.key.toLowerCase())) || (event.ctrlKey && event.key === 'Tab')) event.preventDefault();
+      return;
+    }
+    if (event.key === 'Escape' && compactSidebar && sidebarOpen && !searchMode) {
+      event.preventDefault(); sidebarOpen = false;
+      document.querySelector<HTMLButtonElement>('.sidebar-toggle')?.focus();
+      return;
+    }
+    const command = event.metaKey || event.ctrlKey;
+    if (event.key === 'Escape' && visiblePeek && !searchMode && !document.querySelector('dialog[open], .peek-mode-menu, .page-tool-panel:not([hidden])')) {
+      // Let editor menus consume Escape before closing their containing peek.
+      const id = visiblePeek.id; queueMicrotask(() => { if (!event.defaultPrevented && !event.isComposing) void closePeek(id); });
+      return;
+    }
+    if (event.key === 'Tab' && !command && activePeek?.presentation === 'center' && !searchMode && !document.querySelector('dialog[open]')) {
+      const panel = document.getElementById(`pane-${activePeek.id}`);
+      const focusable = [...(panel?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href], [tabindex="0"], [contenteditable="true"]') ?? [])].filter(node => node.getClientRects().length && !node.closest('[hidden], [inert]'));
+      const index = focusable.indexOf(document.activeElement as HTMLElement);
+      if (index < 0 || (event.shiftKey && index === 0) || (!event.shiftKey && index === focusable.length - 1)) { event.preventDefault(); focusable[event.shiftKey ? focusable.length - 1 : 0]?.focus(); }
+    }
+    if (command && ['k', 't'].includes(event.key.toLowerCase())) {
+      event.preventDefault(); if (!searchMode) openSearch(event.key.toLowerCase() === 't' ? 'new' : 'current');
+    } else if (command && event.key.toLowerCase() === 'w' && !searchMode) {
+      event.preventDefault(); if (visiblePeek && focusedId === visiblePeek.id) void closePeek(visiblePeek.id); else void closeTab(activeId);
+    } else if (event.ctrlKey && event.key === 'Tab' && !searchMode) {
+      event.preventDefault(); const index = rootTabs.findIndex(tab => tab.id === activeId);
+      activateTab(rootTabs[(index + (event.shiftKey ? -1 : 1) + rootTabs.length) % rootTabs.length].id, true);
+    }
   }
-  async function removeRelation(relation: Relation) {
-    if (!workspace || !selected || dirty) return;
-    working = true;
-    try { const source = await operate<Entity>({ operation: 'entity.get', input: { id: relation.source_id } }, workspace.path);
-      const r = await operate<Contract['relation_result']>({ operation: 'relation.remove', input: { id: relation.id, expected_revision: source.id === selected.id ? selected.revision : source.revision } }, workspace.path);
-      if (selected.id === r.entity.id) selected = r.entity; await loadRelations(selected); await loadDashboard(selected); }
-    catch (e) { error = report(e); }
-    finally { working = false; }
+  function tabKey(event: KeyboardEvent, id: string) {
+    if (event.metaKey || event.ctrlKey || !['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+    event.preventDefault(); const index = rootTabs.findIndex(tab => tab.id === id);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? rootTabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + rootTabs.length) % rootTabs.length;
+    activateTab(rootTabs[next].id, true);
   }
-  function downloadJson() {
-    const url = URL.createObjectURL(new Blob([JSON.stringify(selected?.document, null, 2)], { type: 'application/json' }));
-    const a = document.createElement('a'); a.href = url; a.download = `noteka-${selected?.id}.json`; a.click(); URL.revokeObjectURL(url);
-  }
-  async function exportNote(format: 'json' | 'markdown') {
-    if (!workspace || !selected || dirty || !exportPath.trim()) return;
-    try { const result = await operate<Contract['export']>({ operation: 'document.export', input: { id: selected.id, destination: exportPath.trim(), format } }, workspace.path); exportMessage = `Exportado a ${result.path}. ${result.warnings.join(' ')}`; }
-    catch (e) { error = report(e); }
-  }
-  function keydown(e: KeyboardEvent) {
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); if (dirty) void save(); }
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') { e.preventDefault(); void newNote(); }
-    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'a') { e.preventDefault(); void archive(); }
-    if (e.key === 'Escape' && guard) { e.preventDefault(); guard = null; }
-  }
-  function beforeUnload(e: BeforeUnloadEvent) { if (dirty) { e.preventDefault(); e.returnValue = ''; } }
-  function modal(node: HTMLDialogElement) {
-    const previous = document.activeElement as HTMLElement;
-    node.showModal(); node.querySelector<HTMLButtonElement>('[data-cancel]')?.focus();
-    return { destroy() { previous?.focus(); } };
-  }
+  function beforeUnload(event: BeforeUnloadEvent) { if (protectedState) { event.preventDefault(); event.returnValue = ''; } }
   onMount(() => {
-    let dispose: (() => void) | undefined;
-    let disposed = false;
-    if (isTauri()) void listen('noteka-close-requested', () => { void guarded(closeConfirmed); }).then(fn => { if (disposed) fn(); else dispose = fn; });
-    return () => { disposed = true; dispose?.(); };
+    const media = window.matchMedia('(max-width: 760px)');
+    const resizeSidebar = () => { compactSidebar = media.matches; sidebarOpen = false; };
+    media.addEventListener('change', resizeSidebar);
+    const resized = () => { viewportWidth = window.innerWidth; };
+    window.addEventListener('resize', resized);
+    let disposed = false; let unlisten: (() => void) | undefined;
+    if (isTauri()) void listen('noteka-close-requested', () => { void leaveWorkspace(true); }).then(fn => { if (disposed) fn(); else unlisten = fn; });
+    return () => { disposed = true; unlisten?.(); media.removeEventListener('change', resizeSidebar); window.removeEventListener('resize', resized); };
   });
 </script>
 
-<svelte:window onkeydown={keydown} onbeforeunload={beforeUnload} onfocus={() => void refresh()} />
+<svelte:window onkeydown={keydown} onbeforeunload={beforeUnload} />
+
+<div class="app-window" class:resizing-panels={resizing !== null} style:--sidebar-width={`${sidebarWidth}px`} style:--side-peek-width={`${sidePeekWidth}px`}>
+<WindowTitlebar workspaceOpen={workspace !== null} {sidebarVisible} blocked={blocked || resizing !== null || searchMode !== null || settingsOpen || activePeek?.presentation === 'center'} ontoggle={toggleSidebar} onclose={() => leaveWorkspace(true)} onerror={(message) => { error = message; }}>
+    <div class="workspace-tabs" role="tablist" aria-label="Open tabs">{#each rootTabs as tab (tab.id)}<div class="workspace-tab" class:active={tab.id === activeId}><button role="tab" id={`tab-${tab.id}`} aria-selected={tab.id === activeId} aria-controls={`pane-${tab.id}`} tabindex={tab.id === activeId ? 0 : -1} disabled={blocked || activePeek?.presentation === 'center'} onclick={() => activateTab(tab.id)} onkeydown={(event) => tabKey(event, tab.id)} title={tab.state.title}>{#if tab.state.sectionPage}<SectionIcon section={tab.state.section} size={15} />{:else}<AppIcon name={tab.state.icon} color={tab.state.color} size={15} />{/if}<span class="tab-title">{tab.state.title}</span>{#if tab.state.dirty || tabs.some(child => child.ownerId === tab.id && child.state.dirty)}<span class="tab-dirty" aria-label="Unsaved changes">●</span>{/if}</button><button class="tab-close" aria-label={`Close tab ${tab.state.title}`} title="Close tab" disabled={blocked || activePeek?.presentation === 'center'} onclick={() => void closeTab(tab.id)}><AppIcon name="close" size={14} /></button></div>{/each}</div><button class="icon-button new-tab" aria-label="New tab" title="New tab (⌘/Ctrl T)" disabled={blocked || activePeek?.presentation === 'center'} onclick={() => openSearch('new')}><AppIcon name="plus" size={17} /></button>
+  </WindowTitlebar>
 
 {#if !workspace}
   <main class="welcome">
-    <div class="brandmark">n<span>.</span></div>
-    <p class="eyebrow">TU ESPACIO, EN TU EQUIPO</p>
-    <h1>Noteka</h1>
-    <p>Un lugar para tus notas y lo que viene después.<br />Sin cuentas. Sin modelos. Tus datos, locales.</p>
-    <form onsubmit={(e) => { e.preventDefault(); void selectWorkspace(false); }}>
-      <label for="workspace-path">Ruta del workspace</label>
-      <input id="workspace-path" bind:value={path} placeholder="Dejá vacío para usar el directorio de datos de Noteka" disabled={working} />
-      <div class="actions"><button class="primary" type="button" disabled={working} onclick={() => void selectWorkspace(true)}>Crear workspace</button><button disabled={working}>Abrir workspace</button></div>
+    <div class="brandmark">n<span>.</span></div><p class="eyebrow">YOUR SPACE</p><h1>Noteka</h1>
+    <p>A place for your notes and what comes next.<br />No accounts. No models. Your data stays local.</p>
+    <form onsubmit={(event) => { event.preventDefault(); void selectWorkspace(false); }}>
+      <label for="workspace-path">Workspace path</label><input id="workspace-path" bind:value={path} placeholder="Leave blank to use the Noteka data directory" disabled={working} />
+      <div class="actions"><button class="primary" type="button" disabled={working} onclick={() => void selectWorkspace(true)}>Create workspace</button><button disabled={working}>Open workspace</button></div>
     </form>
-    {#if error}<p class="error" role="alert">{error}</p>{/if}
-    <small>Editor local · Sin servicios externos</small>
+    {#if error}<p class="error" role="alert">{error}</p>{/if}<small>Local editor · No external services</small>
   </main>
 {:else}
-  <div class="shell" class:home-shell={section === 'home'}>
-    <aside>
-      <div class="workspace-brand"><span class="tiny-mark">n.</span><strong>Noteka</strong><span class="local-dot" title="Almacenamiento local"></span></div>
-      <p class="sidebar-caption">WORKSPACE LOCAL</p>
-      <nav aria-label="Secciones">
-        {#each sections as item}
-          <button class:active={section === item.id} onclick={() => void navigate(item.id)} disabled={working || status === 'saving'}><span aria-hidden="true">{item.icon}</span>{item.label}</button>
-        {/each}
-      </nav>
-      <div class="sidebar-bottom"><label>Tema<select aria-label="Tema" value={theme} onchange={(e) => changeTheme(e.currentTarget.value as Theme)}><option value="dark">Oscuro</option><option value="light">Claro</option></select></label>{#if themeError}<p role="status">{themeError}</p>{/if}<small title={workspace.path}>{workspace.path}</small><button onclick={() => void guarded(async () => { clearSelection(); workspace = null; entities = []; })}>Cambiar workspace</button><span>Sin servicios externos</span></div>
+  <div class="desktop-shell" class:sidebar-open={sidebarOpen} class:sidebar-collapsed={sidebarCollapsed}>
+    {#if compactSidebar}<button class="sidebar-backdrop" class:visible={sidebarOpen} aria-label="Close sidebar" aria-hidden={!sidebarOpen} inert={!sidebarOpen} tabindex="-1" onclick={() => { sidebarOpen = false; }}></button>{/if}
+    <aside class="desktop-sidebar" class:sidebar-narrow={sidebarWidth < 230} id="workspace-sidebar" aria-label="Workspace" aria-hidden={!sidebarVisible} inert={!sidebarVisible || activePeek?.presentation === 'center'}>
+      <div class="workspace-brand"><span class="tiny-mark">n.</span><strong>Noteka</strong></div>
+      <div class="sidebar-tools"><button use:sidebarIconMotion class="sidebar-search" aria-label="Search" title="Search (⌘/Ctrl K)" disabled={blocked || activeTab?.state.busy} onclick={() => openSearch('current')}><AppIcon name="search" size={15} /><span>Search</span><kbd>⌘ K</kbd></button><button use:sidebarIconMotion class="icon-button collections-shortcut" aria-label="Collections" title="Collections" disabled={blocked || activeTab?.state.busy} onclick={() => void navigate('collections')}><AppIcon name="collections" size={18} /></button></div>
+      <p class="sidebar-caption">WORKSPACE</p>
+      <nav aria-label="Sections">{#each PRIMARY_SECTIONS as section}<button use:sidebarIconMotion class:active={activeTab?.state.section === section.id} aria-current={activeTab?.state.section === section.id ? 'page' : undefined} title={section.label} disabled={blocked || activeTab?.state.busy} onclick={() => void navigate(section.id)}><span class="nav-icon" aria-hidden="true"><SectionIcon section={section.id} size={18} /></span><span class="sidebar-nav-label">{section.label}</span></button>{/each}</nav>
+      <div class="sidebar-bottom"><button class="sidebar-settings" aria-haspopup="dialog" aria-controls={settingsOpen ? 'settings-dialog' : undefined} aria-expanded={settingsOpen} disabled={blocked} onclick={openSettings}><AppIcon name="settings" size={18} /><span>Settings</span></button></div>
+      <PanelResizeHandle label="Resize sidebar" controls="workspace-sidebar" edge="right" width={sidebarWidth} min={sidebarLimits.min} max={sidebarLimits.max} disabled={!sidebarVisible || blocked || searchMode !== null || settingsOpen} onstart={() => beginResize('sidebar')} onresize={width => resizePanel('sidebar', width)} onend={endResize} />
     </aside>
-    {#if section === 'home'}
-      {#key workspace.path}<HomePanel bind:this={homePanel} workspace={workspace.path} {error} onopen={openHome} oncreate={createHome} onnavigate={navigate} />{/key}
-    {:else}
-    <section class="entity-list" aria-label={currentLabel}>
-      <header><h2>{currentLabel}</h2><button title="Actualizar" aria-label="Actualizar" onclick={() => void refresh()} disabled={loading || working}>↻</button></header>
-      {#if section !== 'archive' && section !== 'search' && section !== 'collections'}<button class="new-note" onclick={() => void newEntity(createKind)}>+ {createLabel[createKind]} {#if createKind === 'note'}<kbd>⌘N</kbd>{/if}</button>{/if}
-      {#if section === 'search'}
-        <label>Ámbito de búsqueda<select aria-label="Ámbito de búsqueda" value={searchScope} disabled={working || status === 'saving'} onchange={(e) => changeSearchScope(e.currentTarget.value as 'notes' | 'attachments' | 'combined')}><option value="notes">Notas y entidades</option><option value="attachments">Adjuntos</option><option value="combined">Notas y adjuntos (grupos)</option></select></label>
-        {#if searchScope === 'notes'}<form class="search-form" onsubmit={(e) => { e.preventDefault(); void loadList(); }}><label>Texto local<input aria-label="Texto de búsqueda" bind:value={searchQuery} placeholder="1–16 términos" maxlength="256" /></label><label>Tipo<select aria-label="Tipo de búsqueda" bind:value={searchKind}><option value="">Todos</option>{#each ['note','task','project','tag','person'] as kind}<option value={kind}>{kind}</option>{/each}</select></label><label class="checkbox-label"><input type="checkbox" bind:checked={searchArchived} /> Sólo archivadas</label><label>ID contexto opcional<input aria-label="Contexto de búsqueda" bind:value={searchRelated} /></label><button disabled={loading || working || !searchQuery.trim()}>Buscar</button><button type="button" disabled={working || loading} onclick={() => void rebuildSearch()}>Reconstruir índice</button><p class="list-message">Títulos y bloques reconocidos. Para fragmentos seleccionados de archivos, elegí Adjuntos. Sin modelos.</p>{#if searchMessage}<p class="list-message" role="status">{searchMessage}</p>{/if}</form>
-        {:else if searchScope === 'attachments'}{#key workspace.path}<AttachmentSearchPanel bind:this={attachmentPanel} workspace={workspace.path} />{/key}{:else}{#key workspace.path}<GroupedSearchPanel bind:this={groupedPanel} workspace={workspace.path} onopen={openSearch} />{/key}{/if}
-      {/if}
-      {#if workflowDate}<p class="list-message">Día civil {workflowDate} · {workspace.timezone}</p>{/if}
-      {#if loading && entities.length === 0}<p class="list-message">Cargando…</p>{/if}
-      {#if listError}<p class="error" role="alert">{listError}</p>{/if}
-      {#if !loading && !listError && entities.length === 0 && section !== 'search'}<p class="list-message">{section === 'collections' ? 'Colecciones y vistas en el panel principal. Cada registro abre su entidad original.' : section === 'archive' ? 'Nada archivado.' : 'Todavía no hay elementos.'}</p>{/if}
-      <div class="list-items">
-        {#if section === 'search' && searchScope === 'notes'}{#each searchHits as hit, i (`${hit.entity_id}:${hit.block_id ?? ''}:${i}`)}<button class="search-hit" onclick={() => void openSearch(hit)}><span class="entity-title">{hit.title}</span><small>{hit.block_id ? `Bloque ${hit.block_id}` : 'Título'} · r{hit.revision}</small><span class="search-excerpt">{hit.excerpt}</span></button>{/each}{#if !loading && searchQuery.trim() && !searchHits.length && !listError}<p class="list-message">Sin resultados.</p>{/if}{/if}
-        {#each entities as entity (entity.id)}
-          <button class:selected={selected?.id === entity.id} onclick={() => void openEntity(entity)} disabled={working || status === 'saving'}><span class="entity-title">{entity.title}</span><small>{entity.kind} · r{entity.revision}</small></button>
+    <section class="desktop-workspace" aria-label="Workspace content">
+
+      {#if error}<div class="shell-error" role="alert">{error}<button aria-label="Dismiss notification" onclick={() => { error = ''; }}><AppIcon name="close" size={14} /></button></div>{/if}
+      {#if panelWidthError}<div class="shell-error" role="status">{panelWidthError}<button aria-label="Dismiss width notification" onclick={() => { panelWidthError = ''; }}><AppIcon name="close" size={14} /></button></div>{/if}
+      <div class="workspace-panels" class:has-side-peek={sideVisible}>
+        {#if activePeek?.presentation === 'center'}<button class="peek-backdrop" aria-label="Close center peek" tabindex="-1" disabled={blocked || searchMode !== null || settingsOpen} onclick={() => { if (activePeek) void closePeek(activePeek.id); }}></button>{/if}
+        {#each tabs as tab (tab.id)}
+          {@const shown = tab.ownerId ? tab.ownerId === activeId : tab.id === activeId}
+          {@const visiblyShown = shown && !(tab.ownerId && tab.presentation === 'side' && (tab.sideHidden || tab.closing))}
+          {@const covered = !tab.ownerId && activePeek?.presentation === 'full'}
+          <div class="workspace-tab-panel" class:active={tab.id === activeId} class:peek={!!tab.ownerId} class:peek-side={!!tab.ownerId && tab.presentation === 'side'} class:peek-center={!!tab.ownerId && tab.presentation === 'center'} class:peek-full={!!tab.ownerId && tab.presentation === 'full'} class:peek-hidden={!!tab.ownerId && tab.presentation === 'side' && !!(tab.sideHidden || tab.closing)} class:peek-narrow={sidePeekWidth < 480} id={`pane-${tab.id}`} role={tab.ownerId ? tab.presentation === 'center' ? 'dialog' : 'region' : 'tabpanel'} aria-modal={tab.ownerId && tab.presentation === 'center' ? true : undefined} aria-label={tab.ownerId ? `Details: ${tab.state.title}` : undefined} aria-labelledby={!tab.ownerId ? `tab-${tab.id}` : undefined} aria-hidden={(!visiblyShown || covered) && !tab.state.guarded ? true : undefined} hidden={!shown} inert={!visiblyShown || (!tab.ownerId && !tab.state.guarded && (covered || activePeek?.presentation === 'center'))} onfocusin={() => { focusedId = tab.id; }} onpointerdown={() => { focusedId = tab.id; }}>
+            <WorkspacePane bind:this={paneRefs[tab.id]} {workspace} paneId={tab.id} active={visiblyShown && focusedId === tab.id} visible={visiblyShown && !covered} sessionActive={shown} blocked={searchMode !== null || preparing || settingsOpen} initialTarget={tab.initialTarget} onstate={updateTab} onrequestdetail={!tab.ownerId ? target => openDetail(tab.id, target) : undefined} onnavigatesection={tab.ownerId ? async section => { await navigate(section); } : undefined} peekMode={tab.presentation ?? 'full'} {defaultPeekMode} {peekPreferenceError} onpresent={mode => presentPane(tab.id, mode)} ondefaultpeek={changeDefaultPeekMode} onclosepeek={tab.ownerId ? () => { void closePeek(tab.id); } : undefined} />
+            {#if tab.ownerId && tab.presentation === 'side'}<PanelResizeHandle label="Resize side peek" controls={`pane-${tab.id}`} edge="left" width={sidePeekWidth} min={sidePeekLimits.min} max={sidePeekLimits.max} disabled={!visiblyShown || blocked || searchMode !== null || settingsOpen} onstart={() => beginResize('sidePeek')} onresize={width => resizePanel('sidePeek', width)} onend={endResize} />{/if}
+          </div>
         {/each}
       </div>
-      {#if nextCursor}<button onclick={() => void loadList(nextCursor!)} disabled={loading}>Cargar más</button>{/if}
     </section>
-    <main class="editor">
-      <header class="editor-bar"><button onclick={() => void navigate('home')}>Volver a Home</button><span>{currentLabel}{selected ? ` / ${selected.title}` : draft ? ` / ${createLabel[draft.kind]}` : ''}</span>
-        <div class="actions">
-          {#if draft}<span class:warning={dirty} class="save-status" role="status">{({ saved: 'Guardado', dirty: 'Cambios pendientes', saving: 'Guardando…', error: 'Error · Sin guardar', conflict: 'Conflicto · Sin guardar' })[status]}</span><button class="primary" onclick={() => void save()} disabled={!dirty || status === 'saving'}>{status === 'error' ? 'Reintentar' : 'Guardar'} <kbd>⌘S</kbd></button>{/if}
-          {#if selected}<button onclick={() => void archive()} disabled={working || status === 'saving'}>{selected.archived_at ? 'Restaurar' : 'Archivar'}</button>{/if}
-        </div>
-      </header>
-      <div class="page">
-        {#if error}<p class="error" role="alert">{error}</p>{/if}
-        {#if sourceLocator}<p class="source-locator" role="status">{sourceLocator}</p>{/if}
-        {#if status === 'conflict'}<div class="conflict"><p>Revisión local: {selected?.revision}. Revisión actual: {remoteRevision}. No hay merge automático.</p><div class="actions"><button onclick={() => void reload()}>Recargar versión guardada</button><button onclick={() => void copyPending()}>Copiar contenido pendiente</button></div></div>{/if}
-        {#if section === 'collections' && !selected && !draft}
-          <DatabasePanel bind:this={databasePanel} workspace={workspace.path} onpending={(pending) => collectionPending = pending} onbusy={(busy) => working = busy} onguard={guarded} onopen={openEntity} onerror={(message) => error = message} />
-        {:else if draft}
-          <p class="eyebrow">{draft.kind}{selected?.archived_at ? ' · ARCHIVADO' : ''}</p>
-          <input class="title-input" aria-label={draft.kind === 'note' ? 'Título de la nota' : 'Título de la entidad'} placeholder="Sin título" bind:this={titleInput} bind:value={draft.title} oninput={edited} disabled={status === 'saving' || working} />
-          {#if selected}<p class="metadata">Revisión {selected.revision} · {new Date(selected.updated_at).toLocaleString('es', { timeZone: workspace.timezone })} · {workspace.timezone} · Local</p>{/if}
-          {#if draft.context}<p class="metadata">Captura vinculada a {draft.context.kind}: {draft.context.target_id}</p>{/if}
-          <EntityFields kind={draft.kind} payload={draft.payload} disabled={status === 'saving' || working} onchange={edited} />
-          {#key editorEpoch}{#if editorInitial}<BlockEditor initial={editorInitial} workspace={workspace.path} focusBlock={sourceBlock} disabled={status === 'saving' || working} onopen={openEntity} onchange={(document) => { if (draft) { invalidEditor = ''; draft.document = document; edited(); } }} onerror={(message) => { error = message; }} oninvalid={(raw, message) => { invalidEditor = raw; error = message; edited(); }} />{/if}{/key}
-        {:else if selected}
-          <p class="eyebrow">{selected.kind}{selected.archived_at ? ' · ARCHIVADO' : ''}</p><h1>{selected.title}</h1><p class="metadata">Revisión {selected.revision} · Local</p>
-          {#if selected.kind === 'note' && !selected.document_editable}
-            <div class="conflict"><h3>Formato no editable</h3><p>Esta versión no reconoce el documento. No vamos a convertirlo ni descartar campos.</p><button onclick={() => { recovery = JSON.stringify(selected?.document, null, 2); }}>Ver JSON original</button> <button onclick={downloadJson}>Descargar JSON</button></div>
-          {:else}<pre class="properties">{JSON.stringify(selected.payload, null, 2)}</pre>{/if}
-        {:else}
-          <div class="editor-empty"><span aria-hidden="true">▤</span><h1>Espacio para pensar.</h1><p>Abrí un elemento de la lista{section === 'note' ? ' o creá tu primera nota.' : '.'}</p>{#if section === 'note'}<button onclick={() => void newNote()}>Crear una nota</button>{/if}</div>
-        {/if}
-        {#if selected && ['project', 'tag', 'person'].includes(selected.kind)}<section class="dashboard"><h3>Entidades relacionadas</h3><div class="actions"><button disabled={dirty || working} onclick={() => void newEntity('note', { target_id: selected!.id, kind: selected!.kind as 'project' | 'tag' | 'person' })}>Capturar nota acá</button><button disabled={dirty || working} onclick={() => void newEntity('task', { target_id: selected!.id, kind: selected!.kind as 'project' | 'tag' | 'person' })}>Capturar tarea acá</button></div>{#each dashboard as item (item.id)}<button class="dashboard-item" onclick={() => void openEntity(item)}>{item.title} · {item.kind} {String((item.payload as Record<string, unknown>)?.state ?? '')}</button>{/each}{#if dashboardCursor}<button onclick={() => void loadDashboard(selected!, dashboardCursor!)}>Más relacionadas</button>{/if}</section>{/if}
-        {#if selected?.document && !dirty}<div class="export-tools"><label>Directorio nuevo para exportar<input aria-label="Destino de exportación" bind:value={exportPath} placeholder="/ruta/a/exportacion" /></label><button disabled={!exportPath.trim()} onclick={() => void exportNote('json')}>Exportar JSON + originales</button><button disabled={!selected.document_editable || !exportPath.trim()} onclick={() => void exportNote('markdown')}>Exportar Markdown</button>{#if exportMessage}<p role="status">{exportMessage}</p>{/if}</div>{/if}
-        {#if selected}<section class="relations"><h3>Relaciones explícitas</h3>{#each relationships as item}<div class="relation-row"><button onclick={() => void openEntity(item.other)}>{item.relation.kind} → {item.other.title}{item.other.archived_at ? ' · Archivado' : ''}</button><button aria-label={`Quitar relación con ${item.other.title}`} disabled={dirty || working} onclick={() => void removeRelation(item.relation)}>Quitar</button></div>{/each}<label>Tipo<select aria-label="Tipo de relación" bind:value={relationKind}><option value="project">Proyecto</option><option value="tag">Tag</option><option value="person">Persona</option></select></label><label>ID destino local<input aria-label="ID de relación" bind:value={relationTarget} placeholder="ID de proyecto, tag o persona" /></label><button disabled={dirty || working || !relationTarget.trim()} onclick={() => void addRelation()}>Relacionar</button><p class="metadata">{selected.id} · Guardá antes de cambiar relaciones.</p></section>{/if}
-        {#if (draft?.kind ?? selected?.kind) === 'note'}{#key `${workspace.path}:${selected?.id ?? 'draft'}:${editorEpoch}`}<AttachmentPreparationPanel workspace={workspace.path} document={draft?.document} /><AttachmentGenerationPanel workspace={workspace.path} />{/key}{/if}
-        {#if recovery}<label for="recovery">Contenido recuperable</label><textarea id="recovery" class="recovery" readonly value={recovery}></textarea>{/if}
-      </div>
-    </main>
-    {/if}
   </div>
+  {#if searchMode}<SearchDialog workspace={workspace.path} mode={searchMode} onclose={() => { searchMode = null; }} onchoose={chooseTarget} />{/if}
+  {#if settingsOpen}<SettingsDialog {primaryColor} {primaryColorError} onprimarycolorchange={changePrimaryColor} workspace={workspace.path} {theme} {themeError} {blocked} onthemechange={changeTheme} onworkspacechange={() => { void leaveWorkspace(); }} onclose={() => { settingsOpen = false; }} />{/if}
 {/if}
-
-{#if guard}
-    <dialog use:modal aria-labelledby="pending-title" class="modal" oncancel={(e) => { e.preventDefault(); guard = null; }}>
-      <h2 id="pending-title">Hay cambios pendientes</h2><p>Elegí qué hacer antes de salir del buffer actual.</p>
-      {#if error}<p class="error" role="alert">{error}</p>{/if}
-       <div class="actions"><button class="primary" onclick={() => void resolveGuard('save')} disabled={working || status === 'saving'}>Guardar y continuar</button><button onclick={() => void resolveGuard('discard')} disabled={working || status === 'saving'}>Descartar</button><button data-cancel disabled={working || status === 'saving'} onclick={() => void resolveGuard('cancel')}>Cancelar</button></div>
-    </dialog>
-{/if}
+</div>

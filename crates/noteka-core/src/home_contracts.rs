@@ -1,4 +1,4 @@
-use crate::contracts::{Classification, EntityKind, ProjectState};
+use crate::contracts::{Classification, EntityKind, PersonFields, ProjectState};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -9,17 +9,45 @@ pub enum HomeView {
     TasksInbox,
     TasksAll,
     TasksDone,
+    TasksWeek,
+    TasksMonth,
+    TasksScheduled,
+    TasksNoDue,
+    TasksActiveProjects,
+    TasksProjectsInProgress,
     NotesAll,
     NotesInbox,
+    NotesLibrary,
+    NotesFavorites,
+    NotesClips,
+    NotesVoice,
+    NotesJournal,
+    NotesMeetings,
     ProjectsActive,
     ProjectsPlanned,
     ProjectsBoard,
+    ProjectsDeadlines,
+    ProjectsCompleted,
+    ProjectsOnHold,
+    ProjectsByTag,
+    ProjectsByPeople,
     TagsRecent,
+    TagsFavorites,
     TagsAlphabetical,
     TagsTypes,
+    GoalsActivity,
+    GoalsDeadline,
+    GoalsByTag,
+    GoalsAchieved,
+    MilestonesCompleted,
+    MilestonesAll,
     PeopleContacts,
     PeopleNew,
     PeopleUpdated,
+    PeopleCheckIns,
+    PeopleBirthdays,
+    PeoplePipeline,
+    PeopleActiveProjects,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
@@ -28,6 +56,8 @@ pub struct HomeQuery {
     pub as_of: Option<String>,
     pub limit: Option<u32>,
     pub cursor: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub goal_id: Option<String>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct EntityRef {
@@ -38,9 +68,30 @@ pub struct EntityRef {
     pub created_at: String,
     pub updated_at: String,
     pub archived_at: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon_color: Option<String>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct HomeMetadata {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub goal: Option<crate::contracts::GoalFields>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub milestone: Option<crate::contracts::MilestoneFields>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub goal_activity_at: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub project_end_date: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub person: Option<PersonFields>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub birthday_occurrence: Option<String>,
+    pub note_type: Option<String>,
+    pub favorite: Option<bool>,
+    pub note_library: Option<bool>,
+    pub source_updated_at: Option<String>,
+    pub source_updated_days_ago: Option<i64>,
     pub state: Option<String>,
     pub inbox: Option<bool>,
     pub priority: Option<String>,
@@ -53,6 +104,12 @@ pub struct HomeMetadata {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum HomeSummary {
+    Goal {
+        available: bool,
+        total: Option<u32>,
+        done: Option<u32>,
+        progress_tenths: Option<u32>,
+    },
     Project {
         available: bool,
         total: Option<u32>,
@@ -60,6 +117,7 @@ pub enum HomeSummary {
         done: Option<u32>,
         overdue: Option<u32>,
         progress_percent: Option<u32>,
+        progress_tenths: Option<u32>,
     },
     Tag {
         available: bool,
@@ -84,6 +142,8 @@ pub struct HomeGroup {
     pub project_archived: bool,
     pub project_state: Option<ProjectState>,
     pub classification: Option<Classification>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub related_entity: Option<EntityRef>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct HomePage {

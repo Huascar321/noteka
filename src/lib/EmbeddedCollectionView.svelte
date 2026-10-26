@@ -39,11 +39,11 @@
   });
 </script>
 
-<section bind:this={element} class="embedded-collection" aria-label="Vista local incrustada" data-view-id={viewId} aria-busy={busy}>
-  <h3>Vista local incrustada</h3><p class="metadata">Colección {collectionId} · vista {viewId} · lectura del original, no snapshot guardado.</p>
-  <button disabled={busy} onclick={() => void load()}>{busy ? 'Consultando vista…' : page ? 'Actualizar vista incrustada' : 'Cargar vista incrustada'}</button>
+<section bind:this={element} class="embedded-collection" aria-label="Embedded local view" data-view-id={viewId} aria-busy={busy}>
+  <h3>Embedded local view</h3><p class="metadata">Collection {collectionId} · vista {viewId} · reads the original, not a saved snapshot.</p>
+  <button disabled={busy} onclick={() => void load()}>{busy ? "Loading view…" : page ? "Refresh embedded view" : "Load embedded view"}</button>
   {#if error}<p class="error" role="alert">{error}</p>{/if}
-  {#if page}<CollectionPresentation {page} {busy} {onopen} />{#if page.records.next_cursor}<button disabled={busy} onclick={() => void load(page?.records.next_cursor ?? undefined)}>Página siguiente incrustada</button>{/if}{#if offset}<button disabled={busy} onclick={() => void load()}>Inicio de vista incrustada</button>{/if}{/if}
+  {#if page}<CollectionPresentation {page} {busy} {onopen} />{#if page.records.next_cursor}<button disabled={busy} onclick={() => void load(page?.records.next_cursor ?? undefined)}>Next embedded page</button>{/if}{#if offset}<button disabled={busy} onclick={() => void load()}>First embedded page</button>{/if}{/if}
 </section>
 
 <style>.embedded-collection { border: 1px solid var(--border); padding: 12px; margin: 12px 0; border-radius: 8px; overflow-wrap: anywhere; } h3 { margin: 0; }</style>

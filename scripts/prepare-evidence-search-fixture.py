@@ -33,7 +33,7 @@ def main():
     assert not root.is_relative_to(REPO) and not root.exists()
     root.mkdir(parents=True)
     ws = root / 'workspace'
-    binary = REPO / 'target' / args.profile / 'noteka'
+    binary = Path(os.environ.get('NOTEKA_CLI', REPO / 'target' / args.profile / 'noteka')).resolve()
     calls = []
 
     def call(operation, payload):
@@ -46,7 +46,7 @@ def main():
         calls.append(operation)
         return response['data']
 
-    assert call('workspace.create', dict(timezone='UTC'))['schema_version'] == 13
+    assert call('workspace.create', dict(timezone='UTC'))['schema_version'] >= 16
     control = call('extraction.control', dict(action='get'))
     call('extraction.control', dict(action='set', paused=False, expected_revision=control['revision']))
     pdf = load('ui_pdf', 'tests/fixtures/pdf/generate.py')

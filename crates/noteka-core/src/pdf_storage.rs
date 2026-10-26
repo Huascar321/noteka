@@ -9,6 +9,16 @@ pub(crate) struct Prepared {
     pub fragments: Vec<PdfFragment>,
 }
 pub(crate) fn prepare(pages: Vec<PageText>) -> Result<Prepared> {
+    prepare_with_parser(pages, PARSER_NAME, PARSER_VERSION)
+}
+pub(crate) fn prepare_with_parser(
+    pages: Vec<PageText>,
+    parser_name: &str,
+    parser_version: &str,
+) -> Result<Prepared> {
+    if parser_name.is_empty() || parser_version.is_empty() {
+        return Err(store::invalid("invalid_pdf_parser"));
+    }
     if pages.is_empty() || pages.len() > 100 {
         return Err(store::invalid("pdf_page_limit"));
     }
@@ -61,8 +71,8 @@ pub(crate) fn prepare(pages: Vec<PageText>) -> Result<Prepared> {
     }
     let manifest = PdfManifest {
         version: 1,
-        parser_name: PARSER_NAME.into(),
-        parser_version: PARSER_VERSION.into(),
+        parser_name: parser_name.into(),
+        parser_version: parser_version.into(),
         scope: PdfTextScope::PageTextObjects,
         limitations: PDF_LIMITATIONS.to_vec(),
         page_count: descriptors.len() as u32,
@@ -126,6 +136,7 @@ pub(crate) fn publish(
     Ok(())
 }
 pub(crate) fn load(conn: &Connection, generation: &str, job: &str, count: u32) -> Result<Prepared> {
+    crate::pdf_ocr_storage::no_owner(conn, generation)?;
     let (pages,fragments,bytes,literal):(u32,u32,u32,u32) = conn.query_row("SELECT (SELECT count(*) FROM extraction_pdf_pages WHERE generation_id=?1),(SELECT count(*) FROM extraction_pdf_fragments WHERE generation_id=?1),(SELECT coalesce(sum(length(CAST(text AS BLOB))),0) FROM extraction_pdf_fragments WHERE generation_id=?1),(SELECT count(*) FROM extraction_fragments WHERE generation_id=?1)",[generation],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?)))?;
     if !(1..=100).contains(&pages)
         || fragments != count
@@ -155,7 +166,7 @@ pub(crate) fn load(conn: &Connection, generation: &str, job: &str, count: u32) -
     })
 }
 pub(crate) fn shape(conn: &Connection) -> Result<()> {
-    let invalid = conn.prepare("SELECT 1 FROM extraction_generations g WHERE (g.extractor='pdf_text') != EXISTS(SELECT 1 FROM extraction_pdf_generations p WHERE p.generation_id=g.id) UNION ALL SELECT 1 FROM extraction_pdf_generations p LEFT JOIN extraction_generations g ON g.id=p.generation_id WHERE g.id IS NULL OR p.job_id!=g.job_id UNION ALL SELECT 1 FROM extraction_pdf_pages p LEFT JOIN extraction_pdf_generations g ON g.generation_id=p.generation_id WHERE g.generation_id IS NULL UNION ALL SELECT 1 FROM extraction_pdf_fragments f LEFT JOIN extraction_pdf_pages p ON p.generation_id=f.generation_id AND p.page_number=f.page_number WHERE p.generation_id IS NULL LIMIT 1")?.exists([])?;
+    let invalid = conn.prepare("SELECT 1 FROM extraction_generations g WHERE (g.extractor IN ('pdf_text','pdfium_text','paddle_ocr')) != EXISTS(SELECT 1 FROM extraction_pdf_generations p WHERE p.generation_id=g.id) UNION ALL SELECT 1 FROM extraction_pdf_generations p LEFT JOIN extraction_generations g ON g.id=p.generation_id WHERE g.id IS NULL OR p.job_id!=g.job_id UNION ALL SELECT 1 FROM extraction_pdf_pages p LEFT JOIN extraction_pdf_generations g ON g.generation_id=p.generation_id WHERE g.generation_id IS NULL UNION ALL SELECT 1 FROM extraction_pdf_fragments f LEFT JOIN extraction_pdf_pages p ON p.generation_id=f.generation_id AND p.page_number=f.page_number WHERE p.generation_id IS NULL LIMIT 1")?.exists([])?;
     if invalid {
         return Err(store::storage("invalid_pdf_integrity"));
     }
@@ -167,7 +178,7 @@ pub(crate) fn shape(conn: &Connection) -> Result<()> {
 }
 pub(crate) fn integrity(conn: &Connection) -> Result<()> {
     shape(conn)?;
-    let ids:Vec<(String,String,u32)>=conn.prepare("SELECT id,job_id,fragment_count FROM extraction_generations WHERE extractor='pdf_text'")?.query_map([],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?)))?.collect::<std::result::Result<_,_>>()?;
+    let ids:Vec<(String,String,u32)>=conn.prepare("SELECT id,job_id,fragment_count FROM extraction_generations WHERE extractor IN ('pdf_text','pdfium_text','paddle_ocr')")?.query_map([],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?)))?.collect::<std::result::Result<_,_>>()?;
     for (id, job, count) in ids {
         load(conn, &id, &job, count)?;
     }
@@ -185,8 +196,10 @@ impl Workspace {
         let g = j
             .generation
             .ok_or_else(|| store::error(ErrorCode::NotFound, "generation_not_found"))?;
-        if g.extractor != "pdf_text"
-            || !store::supported(&g.extractor, g.extractor_version, &g.config)
+        if !matches!(
+            g.extractor.as_str(),
+            "pdf_text" | "pdfium_text" | "paddle_ocr"
+        ) || !store::supported(&g.extractor, g.extractor_version, &g.config)
         {
             return Err(store::invalid("unsupported_generation_config"));
         }
@@ -205,7 +218,7 @@ impl Workspace {
             0
         };
         let a = crate::attachments::metadata(&tx, &g.attachment_id)?;
-        store::eligible_for(&a, "pdf_text")?;
+        store::eligible_for(&a, &g.extractor)?;
         if a.sha256 != g.source_sha256 || a.bytes != u64::from(g.source_bytes) {
             return Err(store::storage("input_stale"));
         }

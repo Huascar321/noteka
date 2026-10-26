@@ -5,7 +5,8 @@ aprobaron verificación aislada y revalidación conjunta de las UIs,
 manteniendo Rust/corpus/contratos de preparación sin cambios. Esto no entrega OCR, PDF/Excel genéricos ni toda 5a.
 
 El lector permite ID de trabajo y tipo explícitos. Usa únicamente
-`extraction.fragments`, `extraction.pdf_fragments` o `extraction.xlsx_cells`,
+`extraction.fragments`, `extraction.pdf_fragments`, `extraction.xlsx_cells`,
+`extraction.ocr_regions` o `extraction.pdfkit_pages`,
 por páginas de veinte, sin consultas al montar/editar/activar ventana y sin
 requerir selección en Search. Pedir siguiente reemplaza, no acumula; inicio
 vuelve a leer sin cursor. Lectores Rust revalidan fuente/derivado completos;
@@ -34,6 +35,10 @@ Prueba de cliente independiente:
 node --experimental-strip-types --test tests/attachment-generation-reader.mjs
 npm run check
 ```
+
+La [integración PDFKit](pdfkit-search-ui.md) conserva páginas físicas sin texto,
+manifest/engine/OS y texto literal; no representa un render ni infiere OCR.
+OCR de imágenes conserva regiones inferidas/decimales y limitaciones propias.
 
 Ese comando prueba el cliente; la [verificación integrada](verification-attachment-reader-ui.md)
 registra por separado las pruebas UI. Ninguna sustituye IPC nativo ni el original administrado.

@@ -205,6 +205,7 @@ impl Workspace {
             return Err(store::storage("input_stale"));
         }
         let bytes = store::source(&self.path, &a, || Ok(()))?;
+        crate::pdf_ocr_storage::no_owner(&tx, &g.id)?;
         let items:Vec<ExtractionFragment>=tx.prepare("SELECT ordinal,text,byte_start,byte_end,line_start,line_end FROM extraction_fragments WHERE generation_id=?1 AND ordinal>=?2 ORDER BY ordinal LIMIT ?3")?
             .query_map(params![g.id,from,limit],|r|Ok(ExtractionFragment {ordinal:r.get(0)?,text:r.get(1)?,byte_start:r.get(2)?,byte_end:r.get(3)?,line_start:r.get(4)?,line_end:r.get(5)?}))?.collect::<std::result::Result<_,_>>()?;
         // No certificar un slice corrupto aunque SQLite supere sus CHECKs.

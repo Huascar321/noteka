@@ -1,7 +1,10 @@
 async (page) => {
   const origin=new URL(page.url()).origin;
+  const pageErrors=[];
+  page.on('pageerror',error=>pageErrors.push(String(error)));
   const external=[];
-  await page.context().route('**/*',async route=>{const u=new URL(route.request().url());if(u.origin===origin)await route.continue();else {external.push(u.origin);await route.abort();}});
+  const externalDetails=[];
+  await page.context().route('**/*',async route=>{const request=route.request(),u=new URL(request.url());if(u.origin===origin)await route.continue();else {external.push(u.origin);let frameOrigin=null;try{frameOrigin=new URL(request.frame().url()).origin;}catch{}externalDetails.push({origin:u.origin,path:u.pathname,type:request.resourceType(),frame_origin:frameOrigin});await route.abort();}});
   await page.exposeFunction('notekaViewport',({width,height})=>page.setViewportSize({width,height}));
   await page.exposeFunction('notekaCapture',async({name})=>{if(typeof name!=='string'||!/^[a-zA-Z0-9-]+$/.test(name))throw new Error('Nombre de captura inválido');const r=await page.request.get(origin+'/__test__/status');const {root}=await r.json();const theme=name.includes('-light-')?'light':'dark';const path=root+'/'+theme+'/'+name+'.png';await page.screenshot({path});return path;});
   await page.addInitScript(() => {
@@ -69,11 +72,11 @@ async (page) => {
     await page.keyboard.press('Meta+n');
     await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Título de la nota');
     await page.keyboard.type('Captura teclado descartable');
-    await page.getByRole('button',{name:'Volver a Home',exact:true}).click();
-    await page.getByRole('button',{name:'Cancelar',exact:true}).click();
+    await page.locator('.workspace-tab-panel.active').getByRole('navigation', { name: "Breadcrumb", exact: true }).getByRole('button', { name: 'Home', exact: true }).click();
+    await page.getByRole('button',{name:"Cancel",exact:true}).click();
     if(await page.locator('.title-input').inputValue()!=='Captura teclado descartable')throw new Error('Cancelar perdió buffer teclado');
-    await page.getByRole('button',{name:'Volver a Home',exact:true}).click();
-    await page.getByRole('button',{name:'Descartar',exact:true}).click();
+    await page.locator('.workspace-tab-panel.active').getByRole('navigation', { name: "Breadcrumb", exact: true }).getByRole('button', { name: 'Home', exact: true }).click();
+    await page.getByRole('button',{name:"Discard",exact:true}).click();
     await page.locator('.home').waitFor();
     checks.push('Meta+n/tecleo real: captura y guardia cancelar/descartar');
     // Retener sólo transporte: la respuesta sigue viniendo de CLI/SQLite reales.
@@ -105,24 +108,25 @@ async (page) => {
     await page.waitForFunction(() => document.querySelector('.title-input')?.disabled === false);
     if (await page.locator('.title-input').inputValue() !== originalTitle) throw new Error('Apertura Home pendiente terminó en otro original');
     checks.push('Apertura Home lenta bloquea captura por atajo y conserva el original');
-    await page.getByRole('button', { name: 'Volver a Home', exact: true }).click();
+    await page.locator('.workspace-tab-panel.active').getByRole('navigation', { name: "Breadcrumb", exact: true }).getByRole('button', { name: 'Home', exact: true }).click();
     await page.locator('.home').waitFor();
     await hold('entity.list');
     try {
-      await page.getByRole('button', { name: 'Crear en Tasks', exact: true }).click();
+      await page.getByRole('button', { name: "Create in Tasks", exact: true }).click();
       await page.waitForFunction(() => window.__notekaHeld);
       await page.keyboard.press('Meta+n');
       if (await page.locator('.title-input').count()) throw new Error('Atajo inició otro buffer durante captura Home pendiente');
     } finally { await release(); }
     await page.waitForFunction(() => document.activeElement?.getAttribute('aria-label') === 'Título de la entidad' && document.querySelector('.title-input')?.disabled === false);
-    if (!await page.getByLabel('Vencimiento', { exact: true }).count()) throw new Error('Captura Home pendiente cambió de tipo');
-    await page.getByRole('button', { name: 'Volver a Home', exact: true }).click();
-    await page.getByRole('button', { name: 'Descartar', exact: true }).click();
+    if (!await page.getByLabel("Due date", { exact: true }).count()) throw new Error('Captura Home pendiente cambió de tipo');
+    await page.locator('.workspace-tab-panel.active').getByRole('navigation', { name: "Breadcrumb", exact: true }).getByRole('button', { name: 'Home', exact: true }).click();
+    await page.getByRole('button', { name: "Discard", exact: true }).click();
     await page.locator('.home').waitFor();
     checks.push('Captura Home lenta bloquea atajo competidor y enfoca el buffer del tipo elegido');
     await page.request.post(origin+'/__test__/control',{data:{step:'keyboard_report',input:{ok:true,theme,checks}}});
   }
-  if(external.length)throw new Error('Requests remotos intentados: '+external.join(','));
+  if(external.length){await page.request.post(origin+'/__test__/control',{data:{step:'network_report',input:{external_origins:external,external_details:externalDetails,passed:false}}});throw new Error('Requests remotos intentados: '+external.join(','));}
+  if(pageErrors.length)throw new Error('Errores del navegador: '+JSON.stringify(pageErrors));
   await page.request.post(origin+'/__test__/control',{data:{step:'network_report',input:{external_origins:external,service_workers:'blocked',browser:'headless',user_agent:await page.evaluate(()=>navigator.userAgent)}}});
   const status=await (await page.request.get(origin+'/__test__/status')).json();
   return {root:status.root,sessions:status.results.map(r=>({theme:r.theme,phase:r.phase,ok:r.ok,checks:r.checks.length})),keyboard_checks:14,external_requests:external.length};

@@ -1,31 +1,34 @@
 /* Generado desde noteka-core. No editar; npm run contracts:generate. */
 
-export type AttachmentIndexResult =
-  | {
-      action: "get";
-      coverage: AttachmentIndexCoverage;
-      items: AttachmentIndexEntry[];
-      next_cursor?: string | null;
-      profile: string;
-      revision: number;
-      version: number;
-    }
-  | {
-      action: "put";
-      changed: boolean;
-      entry: AttachmentIndexEntry;
-      revision: number;
-    }
-  | {
-      action: "reset";
-      removed_fragments: number;
-      removed_generations: number;
-      revision: number;
-    };
-export type IndexValidation = "canonical_text_and_postings";
-export type IndexCoverageScope = "selected_generations";
-export type IndexSourceValidation = "not_checked" | "returned_candidates";
 export type AttachmentTextLocator =
+  | {
+      bbox: OcrBoundingBox;
+      confidence: string;
+      coordinate_space: string;
+      engine: OcrEngine;
+      global_region_ordinal: number;
+      kind: "pdf_ocr_region_text";
+      limitations: string[];
+      page_number: number;
+      profile: string;
+      projection: PdfOcrTextProjection;
+      raster: RasterIdentity;
+      region_bytes: number;
+      region_ordinal: number;
+      text_byte_end: number;
+      text_byte_start: number;
+    }
+  | {
+      engine: Engine;
+      kind: "pdfkit_page_text";
+      limitations: string[];
+      page_bytes: number;
+      page_number: number;
+      profile: string;
+      projection: PdfkitTextProjection;
+      text_byte_end: number;
+      text_byte_start: number;
+    }
   | {
       bbox: OcrBoundingBox;
       confidence: string;
@@ -63,12 +66,41 @@ export type AttachmentTextLocator =
       text_byte_end: number;
       text_byte_start: number;
     };
+export type PdfOcrTextProjection = "pdf_ocr_region_text_v1";
+export type PdfkitTextProjection = "pdfkit_page_text_v1";
 export type OcrTextProjection = "ocr_region_text_v1";
 export type PdfLimitation = "no_ocr" | "no_visual_order" | "no_geometry" | "no_structured_tables";
 export type PdfTextScope = "page_text_objects";
 export type XlsxTextField =
   "cached_text" | "cached_number" | "cached_boolean" | "cached_error" | "cached_date_iso" | "formula_text";
 export type XlsxTextProjection = "xlsx_cell_fields_v1";
+export type AgentRunState = "running" | "succeeded" | "failed" | "cancelled" | "limited";
+export type AgentStepKind = "model" | "tool";
+export type AttachmentIndexResult =
+  | {
+      action: "get";
+      coverage: AttachmentIndexCoverage;
+      items: AttachmentIndexEntry[];
+      next_cursor?: string | null;
+      profile: string;
+      revision: number;
+      version: number;
+    }
+  | {
+      action: "put";
+      changed: boolean;
+      entry: AttachmentIndexEntry;
+      revision: number;
+    }
+  | {
+      action: "reset";
+      removed_fragments: number;
+      removed_generations: number;
+      revision: number;
+    };
+export type IndexValidation = "canonical_text_and_postings";
+export type IndexCoverageScope = "selected_generations";
+export type IndexSourceValidation = "not_checked" | "returned_candidates";
 export type FilterExpression =
   | {
       filter: PropertyFilter;
@@ -184,6 +216,37 @@ export type Expression =
     };
 export type BinaryOp = "add" | "sub" | "mul" | "div" | "eq" | "lt" | "and" | "or";
 export type Aggregate = "count" | "sum" | "avg" | "min" | "max";
+export type EmbeddingIndexResult =
+  | {
+      action: "status";
+      active?: SemanticGenerationInfo | null;
+      building?: SemanticGenerationInfo | null;
+      coverage: SemanticCoverage;
+      retired: SemanticGenerationInfo[];
+      revision: number;
+      version: number;
+    }
+  | {
+      action: "built";
+      duration_ms: number;
+      embedded_chunks: number;
+      generation: SemanticGenerationInfo;
+      previous_generation_id?: string | null;
+      reused: boolean;
+      revision: number;
+      version: number;
+    }
+  | {
+      action: "reset";
+      removed_chunks: number;
+      removed_generations: number;
+      revision: number;
+    };
+export type EmbeddingChunking = "extraction_fragment_v1";
+export type EmbeddingNormalization = "l2";
+export type EmbeddingQuantization = "f32";
+export type EmbeddingTask = "retrieval";
+export type SemanticGenerationState = "building" | "active" | "retired" | "failed";
 export type ErrorCode =
   | "validation_error"
   | "not_found"
@@ -197,9 +260,17 @@ export type ErrorCode =
   | "destination_not_empty";
 export type ExtractionState = "queued" | "running" | "succeeded" | "failed" | "cancelled" | "stale";
 export type ExtractionOutcome = "idle" | "succeeded" | "interrupted";
-export type Classification = "area" | "resource" | "topic";
+export type Classification = "area" | "resource" | "entity" | "topic";
 export type ProjectState = "planned" | "doing" | "done" | "ongoing" | "on_hold";
+export type PersonPipelineStatus = "prospect" | "contacted" | "negotiating" | "rejected" | "closed";
 export type HomeSummary =
+  | {
+      available: boolean;
+      done?: number | null;
+      kind: "goal";
+      progress_tenths?: number | null;
+      total?: number | null;
+    }
   | {
       available: boolean;
       done?: number | null;
@@ -207,6 +278,7 @@ export type HomeSummary =
       overdue?: number | null;
       pending?: number | null;
       progress_percent?: number | null;
+      progress_tenths?: number | null;
       total?: number | null;
     }
   | {
@@ -220,22 +292,73 @@ export type HomeView =
   | "tasks_inbox"
   | "tasks_all"
   | "tasks_done"
+  | "tasks_week"
+  | "tasks_month"
+  | "tasks_scheduled"
+  | "tasks_no_due"
+  | "tasks_active_projects"
+  | "tasks_projects_in_progress"
   | "notes_all"
   | "notes_inbox"
+  | "notes_library"
+  | "notes_favorites"
+  | "notes_clips"
+  | "notes_voice"
+  | "notes_journal"
+  | "notes_meetings"
   | "projects_active"
   | "projects_planned"
   | "projects_board"
+  | "projects_deadlines"
+  | "projects_completed"
+  | "projects_on_hold"
+  | "projects_by_tag"
+  | "projects_by_people"
   | "tags_recent"
+  | "tags_favorites"
   | "tags_alphabetical"
   | "tags_types"
+  | "goals_activity"
+  | "goals_deadline"
+  | "goals_by_tag"
+  | "goals_achieved"
+  | "milestones_completed"
+  | "milestones_all"
   | "people_contacts"
   | "people_new"
-  | "people_updated";
+  | "people_updated"
+  | "people_check_ins"
+  | "people_birthdays"
+  | "people_pipeline"
+  | "people_active_projects";
+export type NoteType =
+  "reference" | "plan" | "web_clip" | "voice" | "journal" | "meeting" | "topic_research" | "idea" | "lecture";
 export type OcrImageFormat = "png" | "jpeg";
 export type PdfLocatorKind = "pdf_page_text";
 export type PdfPageState = "text" | "no_text";
+export type PageStatus = "text" | "no_text";
 export type RelationKind = "project" | "tag" | "person";
 export type Operation =
+  | {
+      input: AgentAskInput;
+      operation: "agent.ask";
+    }
+  | {
+      input: AgentCancelInput;
+      operation: "agent.cancel";
+    }
+  | {
+      input: AgentTraceInput;
+      operation: "agent.trace";
+    }
+  | {
+      input: EmbeddingIndexInput;
+      operation: "embedding.index";
+    }
+  | {
+      input: RetrievalInput;
+      operation: "retrieval.search";
+    }
   | {
       input: AttachmentIndexInput;
       operation: "extraction.index";
@@ -287,6 +410,26 @@ export type Operation =
   | {
       input: ReadOcrRegions;
       operation: "extraction.ocr_regions";
+    }
+  | {
+      input: ReadPdfOcrRegions;
+      operation: "extraction.pdf_ocr_regions";
+    }
+  | {
+      input: ReadPdfOcrTable;
+      operation: "extraction.pdf_ocr_table";
+    }
+  | {
+      input: ReadXlsxRange;
+      operation: "extraction.xlsx_range";
+    }
+  | {
+      input: ReadPdfStructure;
+      operation: "extraction.pdf_structure";
+    }
+  | {
+      input: ReadPdfkitPages;
+      operation: "extraction.pdfkit_pages";
     }
   | {
       input: BatchPlan;
@@ -421,6 +564,18 @@ export type Operation =
       operation: "relation.list";
     }
   | {
+      input: LinkExternalResource;
+      operation: "external.link";
+    }
+  | {
+      input: UnlinkExternalResource;
+      operation: "external.unlink";
+    }
+  | {
+      input: ListExternalResources;
+      operation: "external.list";
+    }
+  | {
       input: ListChanges;
       operation: "changes.list";
     }
@@ -448,6 +603,35 @@ export type Operation =
       input: Empty;
       operation: "search.rebuild";
     };
+export type AgentTraceInput =
+  | {
+      action: "get";
+      id: string;
+    }
+  | {
+      action: "list";
+      cursor?: string | null;
+      limit?: number | null;
+    };
+export type EmbeddingIndexInput =
+  | {
+      action: "status";
+    }
+  | {
+      action: "build";
+      attachment_id?: string | null;
+      endpoint: string;
+      extractor?: IndexedExtractor | null;
+      job_id?: string | null;
+      profile: EmbeddingProfile;
+    }
+  | {
+      action: "reset";
+      expected_revision: number;
+    };
+export type IndexedExtractor =
+  "utf8_text" | "pdf_text" | "pdfium_text" | "paddle_ocr" | "xlsx_cells" | "image_ocr" | "pdfkit_text" | "pdf_ocr";
+export type RetrievalMode = "hybrid" | "semantic" | "lexical";
 export type AttachmentIndexInput =
   | {
       action: "get";
@@ -467,7 +651,6 @@ export type AttachmentIndexInput =
       action: "reset";
       expected_revision: number;
     };
-export type IndexedExtractor = "utf8_text" | "pdf_text" | "xlsx_cells" | "image_ocr";
 export type ExtractionControlInput =
   | {
       action: "get";
@@ -495,6 +678,7 @@ export type BlockKind =
   | "collection_view";
 export type ExportFormat = "json" | "markdown";
 export type WorkflowView = "inbox" | "my_day" | "pending" | "overdue" | "active_projects" | "context";
+export type RetrievalSourceState = "current" | "stale" | "unknown";
 export type CellValue =
   | {
       kind: "number";
@@ -521,6 +705,9 @@ export type XlsxLocatorKind = "xlsx_cell";
 export type Visibility = "visible" | "hidden" | "very_hidden";
 
 export interface Contract {
+  agent_run: AgentRunResult;
+  agent_trace: AgentTrace;
+  agent_traces: AgentTracePage;
   attachment: Attachment;
   attachment_data: AttachmentData;
   attachment_index: AttachmentIndexResult;
@@ -533,10 +720,15 @@ export interface Contract {
   collection_bundle: CollectionBundle;
   collections: Page3;
   database: DatabasePage;
+  embedding_index: EmbeddingIndexResult;
+  embedding_status: EmbeddingStatus;
   enqueued_extraction: EnqueuedExtraction;
   entities: Page4;
   entity: Entity;
   export: ExportResult;
+  external_resource: ExternalResource;
+  external_resource_result: ExternalResourceResult;
+  external_resources: Page9;
   extraction_control: ExtractionControl;
   extraction_fragments: FragmentPage;
   extraction_job: ExtractionJob;
@@ -546,17 +738,26 @@ export interface Contract {
   note_fields: NoteFields;
   ocr_regions: OcrRegionPage;
   pdf_fragments: PdfFragmentPage;
+  pdf_ocr_regions: PdfOcrRegionPage;
+  pdf_ocr_table: PdfOcrTablePage;
+  pdf_structure: PdfStructureResult;
+  pdfkit_pages: PdfkitPagePage;
   project_fields: ProjectFields;
   property: Property;
   read_ocr_regions: ReadOcrRegions;
   read_pdf_fragments: ReadPdfFragments;
+  read_pdf_ocr_regions: ReadPdfOcrRegions;
+  read_pdf_ocr_table: ReadPdfOcrTable;
+  read_pdfkit_pages: ReadPdfkitPages;
   read_xlsx_cells: ReadXlsxCells;
+  read_xlsx_range: ReadXlsxRange;
   record: RecordData;
   records: Page;
   relation_result: RelationResult;
   relations: Page5;
   request: Request;
   response: Response;
+  retrieval: RetrievalPage;
   search: SearchPage;
   search_index: SearchIndexInfo;
   tag_fields: TagFields;
@@ -567,6 +768,95 @@ export interface Contract {
   workflow: WorkflowPage;
   workspace: WorkspaceInfo;
   xlsx_cells: XlsxCellPage;
+  xlsx_range: XlsxRangePage;
+}
+export interface AgentRunResult {
+  citations: AgentCitation[];
+  run: AgentRunSummary;
+  steps: AgentStep[];
+}
+export interface AgentCitation {
+  attachment_id: string;
+  extractor: string;
+  generation_id: string;
+  job_id: string;
+  locator: AttachmentTextLocator;
+  ordinal: number;
+  quote: string;
+  text_sha256: string;
+  verified: boolean;
+}
+export interface OcrBoundingBox {
+  height: string;
+  width: string;
+  x: string;
+  y: string;
+}
+export interface OcrEngine {
+  automatic_language_detection: boolean;
+  language_correction: boolean;
+  languages: string[];
+  os_build: string;
+  os_version: string;
+  recognition_level: string;
+  revision: number;
+}
+export interface RasterIdentity {
+  /**
+   * @minItems 4
+   * @maxItems 4
+   */
+  box_rect: [string, string, string, string];
+  height: number;
+  os_build: string;
+  os_version: string;
+  page_count: number;
+  page_number: number;
+  png_bytes: number;
+  png_sha256: string;
+  rotation: number;
+  total_pixels: number;
+  width: number;
+}
+export interface Engine {
+  api: string;
+  os_build: string;
+  os_version: string;
+}
+export interface AgentRunSummary {
+  answer?: string | null;
+  cancel_requested: boolean;
+  citations: AgentCitation[];
+  endpoint: string;
+  error?: string | null;
+  finished_at?: string | null;
+  id: string;
+  lease_expired: boolean;
+  model: string;
+  provider: string;
+  question: string;
+  started_at: string;
+  state: AgentRunState;
+  step_count: number;
+}
+export interface AgentStep {
+  duration_ms: number;
+  error?: string | null;
+  index: number;
+  input_bytes: number;
+  kind: AgentStepKind;
+  output_bytes: number;
+  status: string;
+  summary?: string | null;
+  tool?: string | null;
+}
+export interface AgentTrace {
+  run: AgentRunSummary;
+  steps: AgentStep[];
+}
+export interface AgentTracePage {
+  items: AgentRunSummary[];
+  next_cursor?: string | null;
 }
 export interface Attachment {
   bytes: number;
@@ -622,12 +912,6 @@ export interface AttachmentSearchHit {
   score: number;
   source: IndexedSource;
   text: string;
-}
-export interface OcrBoundingBox {
-  height: string;
-  width: string;
-  x: string;
-  y: string;
 }
 export interface BackupInfo {
   path: string;
@@ -844,6 +1128,54 @@ export interface Page3 {
   items: Collection[];
   next_cursor?: string | null;
 }
+export interface SemanticGenerationInfo {
+  activated_at?: string | null;
+  chunk_count: number;
+  created_at: string;
+  dimension: number;
+  endpoint: string;
+  error?: string | null;
+  fingerprint: string;
+  generation_id: string;
+  profile: EmbeddingProfile;
+  retired_at?: string | null;
+  source_count: number;
+  source_digest: string;
+  state: SemanticGenerationState;
+  text_bytes: number;
+  updated_at: string;
+}
+export interface EmbeddingProfile {
+  chunking: EmbeddingChunking;
+  dimension: number;
+  document_prefix: string;
+  model: string;
+  normalization: EmbeddingNormalization;
+  provider: string;
+  quantization: EmbeddingQuantization;
+  query_prefix: string;
+  revision: string;
+  runtime: string;
+  task: EmbeddingTask;
+  tokenizer: string;
+  version: number;
+}
+export interface SemanticCoverage {
+  active_chunks: number;
+  active_sources: number;
+  active_text_bytes: number;
+  stale_chunks: number;
+  stale_sources: number;
+  unindexed_supported_generations: number;
+}
+export interface EmbeddingStatus {
+  active?: SemanticGenerationInfo | null;
+  building?: SemanticGenerationInfo | null;
+  coverage: SemanticCoverage;
+  retired: SemanticGenerationInfo[];
+  revision: number;
+  version: number;
+}
 export interface EnqueuedExtraction {
   deduplicated: boolean;
   job: ExtractionJob;
@@ -905,6 +1237,25 @@ export interface ExportResult {
   path: string;
   warnings: string[];
 }
+export interface ExternalResource {
+  account_id: string;
+  created_at: string;
+  id: string;
+  metadata: unknown;
+  provider: string;
+  resource_id: string;
+  resource_type: string;
+  updated_at: string;
+}
+export interface ExternalResourceResult {
+  changed: boolean;
+  entity: Entity;
+  resource: ExternalResource;
+}
+export interface Page9 {
+  items: ExternalResource[];
+  next_cursor?: string | null;
+}
 export interface ExtractionControl {
   paused: boolean;
   revision: number;
@@ -957,6 +1308,18 @@ export interface HomeGroup {
   project_archived: boolean;
   project_id?: string | null;
   project_state?: ProjectState | null;
+  related_entity?: EntityRef | null;
+}
+export interface EntityRef {
+  archived_at?: string | null;
+  created_at: string;
+  icon?: string | null;
+  icon_color?: string | null;
+  id: string;
+  kind: EntityKind;
+  revision: number;
+  title: string;
+  updated_at: string;
 }
 export interface HomeItem {
   context: EntityRef[];
@@ -965,27 +1328,76 @@ export interface HomeItem {
   metadata: HomeMetadata;
   summary?: HomeSummary | null;
 }
-export interface EntityRef {
-  archived_at?: string | null;
-  created_at: string;
-  id: string;
-  kind: EntityKind;
-  revision: number;
-  title: string;
-  updated_at: string;
-}
 export interface HomeMetadata {
+  birthday_occurrence?: string | null;
   classification?: string | null;
   due_date?: string | null;
+  favorite?: boolean | null;
+  goal?: GoalFields | null;
+  goal_activity_at?: string | null;
   inbox?: boolean | null;
   issues: string[];
+  milestone?: MilestoneFields | null;
+  note_library?: boolean | null;
+  note_type?: string | null;
+  person?: PersonFields | null;
   planned_date?: string | null;
   priority?: string | null;
+  project_end_date?: string | null;
+  source_updated_at?: string | null;
+  source_updated_days_ago?: number | null;
   state?: string | null;
   updated_days_ago?: number | null;
 }
+export interface GoalFields {
+  achieved_on?: string | null;
+  activity_snapshot?: GoalActivitySnapshot | null;
+  goal_set?: string | null;
+  state?: "active" | "dream" | "achieved";
+  target_deadline?: string | null;
+}
+export interface GoalActivitySnapshot {
+  at: string;
+  revisions: {
+    [k: string]: number;
+  };
+}
+export interface MilestoneFields {
+  completed_on?: string | null;
+  goal_id?: string | null;
+  target_deadline?: string | null;
+}
+export interface PersonFields {
+  birthday?: string | null;
+  check_in?: string | null;
+  company?: string | null;
+  gallery_order?: number | null;
+  icon?: string | null;
+  icon_color?: string | null;
+  last_check_in?: string | null;
+  photo?: string | null;
+  photo_position?: number | null;
+  pipeline_status?: PersonPipelineStatus | null;
+  relationships?: string[] | null;
+  source?: NoteSource | null;
+}
+export interface NoteSource {
+  archived?: boolean;
+  collection: string;
+  created_at?: string | null;
+  provider: string;
+  record_id?: string | null;
+  updated_at?: string | null;
+}
 export interface NoteFields {
+  favorite?: boolean | null;
+  goal?: GoalFields | null;
+  icon?: string | null;
+  icon_color?: string | null;
   inbox?: boolean;
+  milestone?: MilestoneFields | null;
+  note_type?: NoteType | null;
+  source?: NoteSource | null;
 }
 export interface OcrRegionPage {
   covers_generation: boolean;
@@ -1012,15 +1424,6 @@ export interface OcrManifest {
   representation_bytes: number;
   representation_sha256: string;
   version: number;
-}
-export interface OcrEngine {
-  automatic_language_detection: boolean;
-  language_correction: boolean;
-  languages: string[];
-  os_build: string;
-  os_version: string;
-  recognition_level: string;
-  revision: number;
 }
 export interface OcrImage {
   format: OcrImageFormat;
@@ -1071,9 +1474,142 @@ export interface PdfPageDescriptor {
   text_bytes: number;
   text_sha256: string;
 }
+export interface PdfOcrRegionPage {
+  covers_generation: boolean;
+  generation: ExtractionGeneration;
+  items: PdfOcrRegion[];
+  job_id: string;
+  manifest: PdfOcrManifest;
+  next_cursor?: string | null;
+  result_from_previous_attempt: boolean;
+}
+export interface PdfOcrRegion {
+  bbox: OcrBoundingBox;
+  confidence: string;
+  ordinal: number;
+  page_number: number;
+  region_ordinal: number;
+  text: string;
+}
+export interface PdfOcrManifest {
+  page_count: number;
+  pages: PdfOcrPageDescriptor[];
+  profile: string;
+  raster_profile: string;
+  region_count: number;
+  representation_bytes: number;
+  representation_sha256: string;
+  source_sha256: string;
+  text_bytes: number;
+  version: number;
+}
+export interface PdfOcrPageDescriptor {
+  coordinate_space: string;
+  engine: OcrEngine;
+  limitations: string[];
+  raster: RasterIdentity;
+  region_count: number;
+  text_bytes: number;
+}
+export interface PdfOcrTablePage {
+  cell_count: number;
+  column_count: number;
+  covers_generation: boolean;
+  covers_table: boolean;
+  generation: ExtractionGeneration;
+  header_row?: number | null;
+  items: PdfOcrTableCell[];
+  job_id: string;
+  limitations: string[];
+  manifest: PdfOcrManifest;
+  next_cursor?: string | null;
+  outside: PdfOcrTableOutside[];
+  page: PdfOcrPageDescriptor;
+  profile: string;
+  result_from_previous_attempt: boolean;
+  row_count: number;
+  x_edges: string[];
+  y_max: string;
+  y_min: string;
+}
+export interface PdfOcrTableCell {
+  column: number;
+  ordinal: number;
+  regions: PdfOcrRegion[];
+  row: number;
+}
+export interface PdfOcrTableOutside {
+  ordinal: number;
+  page_number: number;
+  region_ordinal: number;
+}
+export interface PdfStructureResult {
+  generation: ExtractionGeneration;
+  job_id: string;
+  manifest: PdfStructureManifest;
+  result_from_previous_attempt: boolean;
+  structure: PdfStructure;
+}
+export interface PdfStructureManifest {
+  format: string;
+  page_count: number;
+  source_sha256: string;
+  structure_bytes: number;
+  structure_sha256: string;
+  table_count: number;
+  version: number;
+}
+export interface PdfStructure {
+  pages: PdfStructurePage[];
+  version: number;
+}
+export interface PdfStructurePage {
+  page_number: number;
+  tables: PdfTable[];
+}
+export interface PdfTable {
+  cells: PdfTableCell[];
+  columns: number;
+  rows: number;
+}
+export interface PdfTableCell {
+  col_span: number;
+  column: number;
+  row: number;
+  row_span: number;
+  text: string;
+}
+export interface PdfkitPagePage {
+  covers_generation: boolean;
+  generation: ExtractionGeneration;
+  items: Page8[];
+  job_id: string;
+  manifest: PdfkitManifest;
+  next_cursor?: string | null;
+  result_from_previous_attempt: boolean;
+}
+export interface Page8 {
+  number: number;
+  status: PageStatus;
+  text: string;
+}
+export interface PdfkitManifest {
+  engine: Engine;
+  limitations: string[];
+  page_count: number;
+  profile: string;
+  representation_bytes: number;
+  representation_sha256: string;
+  text_bytes: number;
+  version: number;
+}
 export interface ProjectFields {
+  board_order?: number | null;
   end_date?: string | null;
+  icon?: string | null;
+  icon_color?: string | null;
   purpose?: string;
+  source?: NoteSource | null;
   start_date?: string | null;
   state?: "planned" | "doing" | "done" | "ongoing" | "on_hold";
 }
@@ -1087,10 +1623,42 @@ export interface ReadPdfFragments {
   id: string;
   limit?: number | null;
 }
+export interface ReadPdfOcrRegions {
+  cursor?: string | null;
+  id: string;
+  limit?: number | null;
+}
+export interface ReadPdfOcrTable {
+  cursor?: string | null;
+  header_row?: number | null;
+  id: string;
+  limit?: number | null;
+  page_number: number;
+  /**
+   * @minItems 2
+   * @maxItems 33
+   */
+  x_edges: [string, string, ...string[]];
+  y_max: string;
+  y_min: string;
+}
+export interface ReadPdfkitPages {
+  cursor?: string | null;
+  id: string;
+  limit?: number | null;
+}
 export interface ReadXlsxCells {
   cursor?: string | null;
   id: string;
   limit?: number | null;
+}
+export interface ReadXlsxRange {
+  cursor?: string | null;
+  header_row?: number | null;
+  id: string;
+  limit?: number | null;
+  range: string;
+  sheet_id: number;
 }
 export interface RelationResult {
   changed: boolean;
@@ -1110,6 +1678,39 @@ export interface Page5 {
 export interface Request {
   command: Operation;
   workspace?: string | null;
+}
+export interface AgentAskInput {
+  allow_apply?: boolean;
+  limits?: AgentLimits;
+  provider: AgentProviderConfig;
+  question: string;
+}
+export interface AgentLimits {
+  deadline_ms: number;
+  max_context_bytes: number;
+  max_steps: number;
+  max_tool_bytes: number;
+}
+export interface AgentProviderConfig {
+  endpoint: string;
+  max_tokens: number;
+  model: string;
+  runtime: string;
+  temperature: number;
+  timeout_ms: number;
+}
+export interface AgentCancelInput {
+  id: string;
+}
+export interface RetrievalInput {
+  attachment_id?: string | null;
+  budget_bytes?: number | null;
+  extractor?: IndexedExtractor | null;
+  include_stale?: boolean;
+  job_id?: string | null;
+  limit?: number | null;
+  mode?: RetrievalMode | null;
+  query: string;
 }
 export interface AttachmentSearchInput {
   attachment_id?: string | null;
@@ -1149,6 +1750,9 @@ export interface ReadFragments {
   id: string;
   limit?: number | null;
 }
+export interface ReadPdfStructure {
+  id: string;
+}
 export interface ApplyBatch {
   expected: BatchReceipt;
   plan: BatchPlan;
@@ -1156,6 +1760,7 @@ export interface ApplyBatch {
 export interface HomeQuery {
   as_of?: string | null;
   cursor?: string | null;
+  goal_id?: string | null;
   limit?: number | null;
   view: HomeView;
 }
@@ -1335,6 +1940,27 @@ export interface ListRelations {
   entity_id: string;
   limit?: number | null;
 }
+export interface LinkExternalResource {
+  account_id: string;
+  entity_id: string;
+  expected_revision: number;
+  metadata?: {
+    [k: string]: unknown;
+  };
+  provider: string;
+  resource_id: string;
+  resource_type: string;
+}
+export interface UnlinkExternalResource {
+  entity_id: string;
+  expected_revision: number;
+  id: string;
+}
+export interface ListExternalResources {
+  cursor?: string | null;
+  entity_id: string;
+  limit?: number | null;
+}
 export interface ListChanges {
   cursor?: string | null;
   entity_id?: string | null;
@@ -1370,6 +1996,44 @@ export interface Response {
   ok: boolean;
   request_id: string;
 }
+export interface RetrievalPage {
+  budget_bytes: number;
+  budget_exhausted: boolean;
+  coverage: RetrievalCoverage;
+  degraded: string[];
+  items: RetrievalHit[];
+  mode_requested: RetrievalMode;
+  mode_used: RetrievalMode;
+  profile_fingerprint?: string | null;
+  query: string;
+  used_bytes: number;
+  version: number;
+}
+export interface RetrievalCoverage {
+  deduplicated: number;
+  lexical_indexed_generations: number;
+  semantic_chunks: number;
+  semantic_generation?: string | null;
+  semantic_stale_chunks: number;
+  stale_excluded: number;
+}
+export interface RetrievalHit {
+  attachment_id: string;
+  extractor: string;
+  extractor_version: number;
+  fragment_ordinal: number;
+  fused_score: number;
+  generation_id: string;
+  job_id: string;
+  lexical_rank?: number | null;
+  lexical_score?: number | null;
+  locator: AttachmentTextLocator;
+  semantic_rank?: number | null;
+  semantic_score?: number | null;
+  source_state: RetrievalSourceState;
+  text: string;
+  text_sha256: string;
+}
 export interface SearchPage {
   items: SearchHit[];
   next_cursor?: string | null;
@@ -1389,9 +2053,16 @@ export interface SearchIndexInfo {
 }
 export interface TagFields {
   classification: Classification;
+  favorite?: boolean | null;
+  icon?: string | null;
+  icon_color?: string | null;
+  source?: NoteSource | null;
+  source_activity_at?: string | null;
 }
 export interface TaskFields {
   due_date?: string | null;
+  icon?: string | null;
+  icon_color?: string | null;
   inbox?: boolean;
   planned_date?: string | null;
   priority?: "low" | "normal" | "high";
@@ -1480,4 +2151,24 @@ export interface XlsxSheetDescriptor {
 export interface NumberStyle {
   format_code?: string | null;
   num_fmt_id: number;
+}
+export interface XlsxRangePage {
+  covers_generation: boolean;
+  covers_range: boolean;
+  generation: ExtractionGeneration;
+  header_row?: number | null;
+  headers: XlsxRangeHeader[];
+  items: XlsxCellItem[];
+  job_id: string;
+  manifest: XlsxManifest;
+  matching_cell_count: number;
+  next_cursor?: string | null;
+  range: string;
+  result_from_previous_attempt: boolean;
+  sheet: XlsxSheetDescriptor;
+}
+export interface XlsxRangeHeader {
+  column: number;
+  item?: XlsxCellItem | null;
+  reference: string;
 }

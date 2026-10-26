@@ -22,7 +22,7 @@ export function attachmentReferences(document: Document | null | undefined) {
       const attrs = block.attrs && typeof block.attrs === 'object' && !Array.isArray(block.attrs) ? block.attrs as Record<string, unknown> : null;
       if ((block.type === 'file' || block.type === 'image') && typeof attrs?.attachment_id === 'string') {
         const label = block.type === 'file' ? attrs.name : attrs.alt;
-        if (!refs.has(attrs.attachment_id)) refs.set(attrs.attachment_id, typeof label === 'string' ? label : 'Sin rótulo');
+        if (!refs.has(attrs.attachment_id)) refs.set(attrs.attachment_id, typeof label === 'string' ? label : "Untitled label");
       }
       if (block.children) walk(block.children);
     }
@@ -59,7 +59,7 @@ export class AttachmentPreparation {
       if (!this.lifetime.current(token)) return;
       const detail = error instanceof Error && 'detail' in error ? error.detail as { code: string; message: string; details: unknown } : null;
       this.publish({ ...this.state, busy: false, jobs: null, pageNumber: 0, needsConsult: mutation || this.state.needsConsult,
-        error: { code: detail?.code ?? 'transport_error', message: detail?.message ?? (error instanceof Error ? error.message : 'No se pudo completar la operación local.'), details: detail?.details, uncertain: mutation } });
+        error: { code: detail?.code ?? 'transport_error', message: detail?.message ?? (error instanceof Error ? error.message : "Could not complete the local operation."), details: detail?.details, uncertain: mutation } });
     }
   }
   list(next = false) {
@@ -67,7 +67,7 @@ export class AttachmentPreparation {
     if (!attachmentId || (next && !jobs?.next_cursor)) return Promise.resolve();
     return this.execute(async () => {
       const page = await this.call({ operation: 'extraction.list', input: { attachment_id: attachmentId, limit: 20, ...(next ? { cursor: jobs!.next_cursor } : {}) } }) as Contract['extraction_jobs'];
-      if (page.items.length > 20 || page.items.some(job => job.attachment_id !== attachmentId)) throw new Error('Página de trabajos incompatible. Consultá de nuevo.');
+      if (page.items.length > 20 || page.items.some(job => job.attachment_id !== attachmentId)) throw new Error("Incompatible jobs page. Query again.");
       return { jobs: page, pageNumber: next ? pageNumber + 1 : 1, jobId: '', needsConsult: false };
     });
   }
@@ -76,12 +76,12 @@ export class AttachmentPreparation {
     if (!jobId) return Promise.resolve();
     return this.execute(async signal => {
       const job = await this.call({ operation: 'extraction.get', input: { id: jobId } }) as ExtractionJob;
-      if (job.attachment_id !== attachmentId) throw new Error('El trabajo no pertenece al adjunto elegido.');
+      if (job.attachment_id !== attachmentId) throw new Error("The job does not belong to the selected attachment.");
       signal.throwIfAborted();
       const control = await this.call({ operation: 'extraction.control', input: { action: 'get' } }) as ExtractionControl;
       signal.throwIfAborted();
       const index = await this.call({ operation: 'extraction.index', input: { action: 'get', job_id: jobId, limit: 1 } }) as IndexSnapshot;
-      if (index.action !== 'get' || index.items.length > 1 || index.items.some(entry => entry.source.job_id !== jobId)) throw new Error('Selección de índice incompatible. Consultá de nuevo.');
+      if (index.action !== 'get' || index.items.length > 1 || index.items.some(entry => entry.source.job_id !== jobId)) throw new Error("Incompatible index selection. Query again.");
       return { job, control, index, needsConsult: false };
     });
   }

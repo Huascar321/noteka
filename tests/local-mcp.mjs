@@ -83,14 +83,14 @@ async function session(f, mode, flags = [], context) {
   return { client, transport, tools, call, close, inputValidators, outputValidators };
 }
 for (const mode of [{ pin: '2026-07-28' }, 'legacy', 'auto']) {
-  for (const [flags, count] of [[[], 25], [['--allow-write'], 45], [['--allow-write', '--allow-run'], 46]]) {
+  for (const [flags, count] of [[[], 33], [['--allow-write'], 54], [['--allow-write', '--allow-run'], 56]]) {
     test(`independent official SDK ${JSON.stringify(mode)} ${count} tools, contracts and permissions`, { timeout: 30000 }, async t => {
       const f = fixture(), before = manifest(f.workspace), s = await session(f, mode, flags, t); t.after(s.close);
       assert.equal(s.tools.length, count); assert.deepEqual(s.tools.map(t => t.name), s.tools.map(t => t.name).sort());
       assert.equal(new Set(s.tools.map(t => t.name)).size, count); assert.deepEqual(manifest(f.workspace), before);
       const listed = await s.client.listResources(); assert.equal(listed.resources.length, 1); assert.equal(listed.resources[0].uri, 'noteka://catalog');
       const resource = JSON.parse((await s.client.readResource({ uri: 'noteka://catalog' })).contents[0].text);
-      assert.equal(Object.keys(resource.core_catalog.inputs).length, 53); assert.equal(resource.tools.length, count);
+      assert.equal(Object.keys(resource.core_catalog.inputs).length, 63); assert.equal(resource.tools.length, count);
       assert.deepEqual(resource.core_catalog, f.call('operations.describe').data);
       assert(!JSON.stringify(resource).includes(f.workspace));
       await assert.rejects(s.client.readResource({ uri: 'file:///etc/hosts' }));
@@ -218,6 +218,22 @@ for (const mode of [{ pin: '2026-07-28' }, 'legacy']) {
     const reader = await session(f, mode, [], t); t.after(reader.close);
     for (const j of jobs) {
       assert.equal((await reader.call('extraction.xlsx_cells', { id: j.id })).ok, true);
+      const original = f.call('extraction.xlsx_cells', { id: j.id, limit: 64 }).data;
+      const sheet = original.manifest.sheets[0];
+      const rangeInput = { id: j.id, sheet_id: sheet.id, range: 'A1:B10', header_row: 1, limit: 1 };
+      const chosen = original.items.filter(i => i.locator.sheet_id === sheet.id && i.cell.row <= 10 && i.cell.column <= 2);
+      let rangeCursor = null; const rangeItems = [];
+      do {
+        const input = { ...rangeInput, cursor: rangeCursor };
+        const got = await reader.call('extraction.xlsx_range', input); assert.equal(got.ok, true);
+        assert.deepEqual(got.data, f.call('extraction.xlsx_range', input).data);
+        assert.equal(got.data.headers.length, 2); assert.equal(got.data.sheet.visibility, sheet.visibility);
+        assert.deepEqual(got.data.headers[0].item, chosen.find(i => i.cell.row === 1 && i.cell.column === 1) ?? null);
+        rangeItems.push(...got.data.items); rangeCursor = got.data.next_cursor;
+      } while (rangeCursor);
+      assert.deepEqual(rangeItems, chosen);
+      assert.equal((await reader.call('extraction.xlsx_range', { ...rangeInput, range: 'a1' })).error.details.reason, 'invalid_xlsx_range');
+
       const input = { query: '1', job_id: j.id, extractor: 'xlsx_cells', limit: 1 };
       assert.deepEqual((await reader.call('extraction.search', input)).data, f.call('extraction.search', input).data);
     }
@@ -259,6 +275,41 @@ for (const mode of [{ pin: '2026-07-28' }, 'legacy']) {
     await executor.call('extraction.retry',{id:j.id,expected_revision:done.revision});
     assert.equal((await executor.call('extraction.run',{id:j.id})).error.details.reason,'ocr_worker_unavailable');
     const previous=(await reader.call('extraction.ocr_regions',{id:j.id})).data;assert.deepEqual(previous.generation,done.generation);assert.equal(previous.result_from_previous_attempt,true);
+  });
+  test(`SDK PDFKit real pagination and helper-free reading ${JSON.stringify(mode)}`, { timeout: 30000 }, async t => {
+    if (process.platform !== 'darwin') return t.skip('PDFKit real requiere macOS');
+    const f=fixture(), source=join(f.root,'pages.pdf');
+    const generated=spawnSync('python3',['-B','-c',`import runpy,sys;g=runpy.run_path('tests/fixtures/pdf/generate.py');sys.stdout.buffer.write(g['serialize'](g['document']([b'BT /F1 12 Tf (Synthetic PDFKit SDK page) Tj ET']*3)))`]);
+    assert.equal(generated.status,0);writeFileSync(source,generated.stdout);
+    const a=f.call('attachment.import',{source_path:source}).data;
+    const writer=await session(f,mode,['--allow-write','--allow-run'],t);t.after(writer.close);
+    const c=(await writer.call('extraction.control',{action:'get'})).data;
+    await writer.call('extraction.control',{action:'set',paused:false,expected_revision:c.revision});
+    const j=(await writer.call('extraction.enqueue',{attachment_id:a.id,extractor:'pdfkit_text'})).data.job;
+    const done=await writer.call('extraction.run',{id:j.id});assert.equal(done.ok,true);assert.equal(done.data.job.state,'succeeded');
+    const golden=f.call('extraction.pdfkit_pages',{id:j.id,limit:64}).data;assert.equal(golden.items.length,3);
+    f.binary=join(f.root,'noteka-mcp');copyFileSync(binary,f.binary);
+    const reader=await session(f,mode,[],t);t.after(reader.close);let cursor=null;const items=[];
+    do {const input={id:j.id,limit:2,cursor};const response=await reader.call('extraction.pdfkit_pages',input);assert.equal(response.ok,true);assert.deepEqual(response.data,f.call('extraction.pdfkit_pages',input).data);items.push(...response.data.items);cursor=response.data.next_cursor;} while(cursor);
+    assert.deepEqual(items,golden.items);
+    assert.equal((await reader.call('extraction.run',{id:j.id})).error.details.reason,'permission_denied');
+    const writerOnly=await session(f,mode,['--allow-write'],t);t.after(writerOnly.close);
+    assert.equal((await writerOnly.call('extraction.run',{id:j.id})).error.details.reason,'permission_denied');
+    const index=(await writerOnly.call('extraction.index',{action:'get'})).data;
+    const selection={action:'put',job_id:j.id,expected_generation_id:golden.generation.id,expected_revision:index.revision};
+    assert.equal((await reader.call('extraction.index',selection)).error.details.reason,'permission_denied');
+    assert.equal((await writerOnly.call('extraction.index',selection)).ok,true);
+    const query={query:'Synthetic',extractor:'pdfkit_text',job_id:j.id,limit:2};
+    const first=(await reader.call('extraction.search',query)).data;
+    assert.deepEqual(first,f.call('extraction.search',query).data);assert.equal(first.items.length,2);assert(first.next_cursor);
+    for(const hit of first.items){assert.equal(hit.locator.kind,'pdfkit_page_text');assert.deepEqual(hit.locator.engine,golden.manifest.engine);assert.equal(hit.text,golden.items[hit.locator.page_number-1].text);}
+    const last=(await reader.call('extraction.search',{...query,cursor:first.next_cursor})).data;assert.equal(last.items.length,1);assert.equal(last.next_cursor,null);
+    const executor=await session(f,mode,['--allow-write','--allow-run'],t);t.after(executor.close);
+    await executor.call('extraction.retry',{id:j.id,expected_revision:done.data.job.revision});
+    assert.equal((await executor.call('extraction.run',{id:j.id})).error.details.reason,'pdfkit_worker_unavailable');
+    const prior=(await reader.call('extraction.pdfkit_pages',{id:j.id})).data;
+    assert.equal(prior.result_from_previous_attempt,true);assert.deepEqual(prior.items,golden.items);
+    assert((await reader.call('extraction.search',query)).data.items.every(hit=>hit.result_from_previous_attempt));
   });
   test(`SDK missing helper preserves original without fallback ${JSON.stringify(mode)}`, { timeout: 30000 }, async t => {
     const f = fixture(); f.binary = join(f.root, 'noteka-mcp'); copyFileSync(binary, f.binary);
@@ -376,5 +427,45 @@ for (const mode of [{ pin: '2026-07-28' }, 'legacy']) {
     assert.equal((await s.call('extraction.search', { query: 'synthetic' })).data.items.length, 0);
     assert.equal((await s.call('extraction.list', {})).data.items.length, 2);
     assert.equal(readFileSync(source, 'utf8'), text);
+  });
+}
+
+for (const mode of [{ pin: '2026-07-28' }, 'legacy', 'auto']) {
+  test(`SDK PDF OCR real regions and helper-free parity ${JSON.stringify(mode)}`, { timeout: 30000 }, async t => {
+    if (process.platform !== 'darwin') return t.skip('PDF OCR real requiere macOS');
+    const f=fixture(),source=join(f.root,'scanned.pdf');
+    const generated=spawnSync('python3',['-B','-c',`import runpy,sys;g=runpy.run_path('tests/fixtures/pdf/generate.py');sys.stdout.buffer.write(g['serialize'](g['document']([b'BT /F1 24 Tf 30 700 Td (PDF OCR SDK evidence) Tj 0 -40 Td (Local source 2026) Tj ET']*3)))`]);
+    assert.equal(generated.status,0);writeFileSync(source,generated.stdout);
+    const a=f.call('attachment.import',{source_path:source}).data;
+    const writer=await session(f,mode,['--allow-write','--allow-run'],t);t.after(writer.close);
+    const ctl=(await writer.call('extraction.control',{action:'get'})).data;
+    await writer.call('extraction.control',{action:'set',paused:false,expected_revision:ctl.revision});
+    const j=(await writer.call('extraction.enqueue',{attachment_id:a.id,extractor:'pdf_ocr'})).data.job;
+    const result=await writer.call('extraction.run',{id:j.id});assert.equal(result.ok,true,JSON.stringify(result.error));
+    const golden=f.call('extraction.pdf_ocr_regions',{id:j.id,limit:64}).data;
+    assert.equal(golden.manifest.profile,'apple_cgpdf_vision_r3_fast_es_en_v1');assert.equal(golden.manifest.page_count,3);assert(golden.items.length>2);assert.equal(golden.manifest.source_sha256,a.sha256);
+    f.binary=join(f.root,'noteka-mcp');copyFileSync(binary,f.binary);
+    const reader=await session(f,mode,[],t);t.after(reader.close);let cursor=null;const items=[];
+    do {const input={id:j.id,limit:2,cursor};const response=await reader.call('extraction.pdf_ocr_regions',input);assert.equal(response.ok,true);assert.deepEqual(response.data,f.call('extraction.pdf_ocr_regions',input).data);items.push(...response.data.items);cursor=response.data.next_cursor;}while(cursor);
+    const tableInput={id:j.id,page_number:2,x_edges:['0','1'],y_min:'0',y_max:'1',header_row:1,limit:1};
+    const expectedTable=f.call('extraction.pdf_ocr_table',{...tableInput,limit:64}).data;
+    const tableItems=[];let tableCursor=null;
+    do {const input={...tableInput,...(tableCursor?{cursor:tableCursor}:{})};const got=await reader.call('extraction.pdf_ocr_table',input);assert.equal(got.ok,true,JSON.stringify(got.error));assert.deepEqual(got.data,f.call('extraction.pdf_ocr_table',input).data);assert.equal(got.data.covers_generation,false);tableItems.push(...got.data.items);tableCursor=got.data.next_cursor;}while(tableCursor);
+    assert.deepEqual(tableItems,expectedTable.items);assert.equal(expectedTable.covers_table,true);
+    assert.deepEqual(tableItems.flatMap(c=>c.regions),golden.items.filter(r=>r.page_number===2));
+    assert.equal((await reader.call('extraction.pdf_ocr_table',{...tableInput,helper:'/bin/sh'})).ok,false);
+    assert.deepEqual(items,golden.items);assert.equal((await reader.call('extraction.run',{id:j.id})).error.details.reason,'permission_denied');
+    const writeOnly=await session(f,mode,['--allow-write'],t);t.after(writeOnly.close);assert.equal((await writeOnly.call('extraction.run',{id:j.id})).error.details.reason,'permission_denied');
+    const selected=(await writeOnly.call('extraction.index',{action:'get'})).data;
+    const selection={action:'put',job_id:j.id,expected_generation_id:golden.generation.id,expected_revision:selected.revision};
+    assert.equal((await reader.call('extraction.index',selection)).error.details.reason,'permission_denied');assert.equal((await writeOnly.call('extraction.index',selection)).ok,true);
+    const query={query:'PDF',extractor:'pdf_ocr',job_id:j.id,limit:2};const hits=(await reader.call('extraction.search',query)).data;
+    assert.deepEqual(hits,f.call('extraction.search',query).data);assert.equal(hits.items.length,2);assert(hits.next_cursor);
+    for(const hit of hits.items){const loc=hit.locator;assert.equal(loc.kind,'pdf_ocr_region_text');const page=golden.manifest.pages[loc.page_number-1];assert.deepEqual(loc.raster,page.raster);assert.deepEqual(loc.engine,page.engine);const region=golden.items[loc.global_region_ordinal];assert.equal(region.page_number,loc.page_number);assert.equal(region.region_ordinal,loc.region_ordinal);assert.deepEqual(region.bbox,loc.bbox);assert.equal(region.confidence,loc.confidence);}
+    const next=(await reader.call('extraction.search',{...query,cursor:hits.next_cursor})).data;assert.equal(next.items.length,1);assert.equal(next.next_cursor,null);
+    const executor=await session(f,mode,['--allow-write','--allow-run'],t);t.after(executor.close);
+    await executor.call('extraction.retry',{id:j.id,expected_revision:result.data.job.revision});
+    assert.equal((await executor.call('extraction.run',{id:j.id})).error.details.reason,'pdf_ocr_raster_worker_unavailable');
+    const prior=(await reader.call('extraction.pdf_ocr_regions',{id:j.id})).data;assert.equal(prior.result_from_previous_attempt,true);assert.deepEqual(prior.items,golden.items);assert.deepEqual(prior.generation,golden.generation);assert.deepEqual(readFileSync(source),generated.stdout);
   });
 }

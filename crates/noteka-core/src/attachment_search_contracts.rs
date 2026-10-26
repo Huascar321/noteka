@@ -48,16 +48,24 @@ pub struct AttachmentSearchInput {
 pub enum IndexedExtractor {
     Utf8Text,
     PdfText,
+    PdfiumText,
+    PaddleOcr,
     XlsxCells,
     ImageOcr,
+    PdfkitText,
+    PdfOcr,
 }
 impl IndexedExtractor {
     pub(crate) fn as_str(self) -> &'static str {
         match self {
             Self::Utf8Text => "utf8_text",
             Self::PdfText => "pdf_text",
+            Self::PdfiumText => "pdfium_text",
+            Self::PaddleOcr => "paddle_ocr",
             Self::XlsxCells => "xlsx_cells",
             Self::ImageOcr => "image_ocr",
+            Self::PdfkitText => "pdfkit_text",
+            Self::PdfOcr => "pdf_ocr",
         }
     }
 }
@@ -93,6 +101,32 @@ pub struct IndexedSource {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum AttachmentTextLocator {
+    PdfOcrRegionText {
+        projection: PdfOcrTextProjection,
+        profile: String,
+        page_number: u32,
+        region_ordinal: u32,
+        global_region_ordinal: u32,
+        raster: Box<crate::contracts::PdfOcrRaster>,
+        engine: Box<crate::contracts::OcrEngine>,
+        bbox: crate::contracts::OcrBoundingBox,
+        confidence: String,
+        coordinate_space: String,
+        limitations: Vec<String>,
+        region_bytes: u32,
+        text_byte_start: u32,
+        text_byte_end: u32,
+    },
+    PdfkitPageText {
+        projection: PdfkitTextProjection,
+        profile: String,
+        page_number: u32,
+        page_bytes: u32,
+        text_byte_start: u32,
+        text_byte_end: u32,
+        engine: crate::contracts::PdfkitEngine,
+        limitations: Vec<String>,
+    },
     ImageOcrRegionText {
         projection: OcrTextProjection,
         region_ordinal: u32,
@@ -126,6 +160,18 @@ pub enum AttachmentTextLocator {
         text_byte_start: u32,
         text_byte_end: u32,
     },
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum PdfOcrTextProjection {
+    PdfOcrRegionTextV1,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum PdfkitTextProjection {
+    PdfkitPageTextV1,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]

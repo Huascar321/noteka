@@ -17,112 +17,137 @@
   onDestroy(() => reader.dispose());
 
   function locatorTitle(locator: AttachmentTextLocator) {
-    if (locator.kind === 'utf8_bytes') return `UTF-8 · líneas ${locator.line_start}–${locator.line_end}`;
-    if (locator.kind === 'pdf_page_text') return `PDF · página ${locator.page_number}`;
-    if (locator.kind === 'image_ocr_region_text') return `OCR inferido · región ${locator.region_ordinal}`;
+    if (locator.kind === 'utf8_bytes') return `UTF-8 · lines ${locator.line_start}–${locator.line_end}`;
+    if (locator.kind === 'pdf_page_text') return `PDF · page ${locator.page_number}`;
+    if (locator.kind === 'pdfkit_page_text') return `PDFKit · page ${locator.page_number}`;
+    if (locator.kind === 'pdf_ocr_region_text') return `Inferred PDF OCR · page ${locator.page_number} · region ${locator.region_ordinal}`;
+    if (locator.kind === 'image_ocr_region_text') return `Inferred OCR · region ${locator.region_ordinal}`;
     return `XLSX · hoja ID ${locator.sheet_id} · ${locator.reference} · ${locator.field}`;
   }
 </script>
 
-<div class="attachment-search" aria-label="Búsqueda de adjuntos">
+<div class="attachment-search" aria-label="Attachment search">
   <form class="search-form" onsubmit={(event) => { event.preventDefault(); void refreshPanel(); }}>
-    <label>Texto de adjuntos<input aria-label="Texto de adjuntos" bind:value={query} oninput={reset} placeholder="1–16 términos · hasta 256 bytes UTF-8" /></label>
-    <label>Extractor<select aria-label="Extractor de adjuntos" bind:value={extractor} onchange={reset}>
-      <option value="">Todos los extractores</option><option value="utf8_text">Texto UTF-8</option><option value="pdf_text">PDF textual</option><option value="xlsx_cells">Celdas XLSX</option><option value="image_ocr">OCR de imágenes (inferido)</option>
+    <label>Attachment text<input aria-label="Attachment text" bind:value={query} oninput={reset} placeholder="1–16 terms · up to 256 UTF-8 bytes" /></label>
+    <label>Extractor<select aria-label="Attachment extractor" bind:value={extractor} onchange={reset}>
+      <option value="">All extractors</option><option value="utf8_text">UTF-8 text</option><option value="pdfium_text">PDF universal (PDFium)</option><option value="pdf_text">PDF textual</option><option value="xlsx_cells">Celdas XLSX</option><option value="image_ocr">Image OCR (inferred)</option><option value="pdfkit_text">PDFKit (texto seleccionable)</option><option value="paddle_ocr">PDF OCR universal (PaddleOCR)</option><option value="pdf_ocr">PDF OCR (inferido)</option>
     </select></label>
-    <label>ID de trabajo opcional<input aria-label="Trabajo de adjuntos" bind:value={jobId} oninput={reset} /></label>
-    <label>ID de adjunto opcional<input aria-label="ID de adjunto" bind:value={attachmentId} oninput={reset} /></label>
-    <button disabled={view.busy || !query.trim()}>Buscar adjuntos</button>
+    <label>Optional job ID<input aria-label="Attachment job" bind:value={jobId} oninput={reset} /></label>
+    <label>Optional attachment ID<input aria-label="Attachment ID" bind:value={attachmentId} oninput={reset} /></label>
+    <button disabled={view.busy || !query.trim()}>Search attachments</button>
   </form>
-  <p class="attachment-help">Sólo generaciones seleccionadas explícitamente. Importar o extraer no indexa. Prepará la selección desde «Preparar adjuntos locales» en una nota o por CLI/MCP; buscar no ejecuta extracción ni modifica índices.</p>
-  <p class="attachment-help">Términos literales dentro de un fragmento, no subcadenas. Sin filtros de entidad, archivo o contexto ni ranking combinado con notas.</p>
+  <p class="attachment-help">Only explicitly selected generations. Importing or extracting does not index them. Select a generation in “Prepare local attachments” in a note or through CLI/MCP; searching does not extract files or change indexes.</p>
+  <p class="attachment-help">Literal terms within a fragment, not substrings. No entity, file or context filters, or ranking combined with notes.</p>
   {#if view.busy}
-    <p role="status" class="attachment-status">Consultando adjuntos…</p>
+    <p role="status" class="attachment-status">Searching attachments…</p>
   {:else if view.error}
     <div class="error attachment-error" role="alert">
       <p>{view.error.code}{view.error.reason ? ` · ${view.error.reason}` : ''}</p><p>{view.error.message}</p>
-      <p>No hay una página vigente. Buscar de nuevo inicia desde el principio; no repara ni indexa.</p>
-      <button disabled={!query.trim()} onclick={() => void refreshPanel()}>Buscar de nuevo</button>
+      <p>There is no current page. Searching again starts at the beginning; it does not repair or index.</p>
+      <button disabled={!query.trim()} onclick={() => void refreshPanel()}>Search again</button>
     </div>
   {:else if view.page}
-    <section class="attachment-coverage" aria-label="Cobertura de adjuntos">
+    <section class="attachment-coverage" aria-label="Attachment coverage">
       <h3>Cobertura filtrada</h3>
       <dl>
         <dt>Generaciones seleccionadas</dt><dd data-coverage="indexed_generations">{view.page.coverage.indexed_generations}</dd>
-        <dt>Compatibles sin indexar</dt><dd data-coverage="unindexed_supported_generations">{view.page.coverage.unindexed_supported_generations}</dd>
-        <dt>Incompatibles</dt><dd data-coverage="unsupported_generations">{view.page.coverage.unsupported_generations}</dd>
-        <dt>Trabajos sin generación</dt><dd data-coverage="jobs_without_generation">{view.page.coverage.jobs_without_generation}</dd>
+        <dt>Compatible but not indexed</dt><dd data-coverage="unindexed_supported_generations">{view.page.coverage.unindexed_supported_generations}</dd>
+        <dt>Incompatible</dt><dd data-coverage="unsupported_generations">{view.page.coverage.unsupported_generations}</dd>
+        <dt>Jobs without a generation</dt><dd data-coverage="jobs_without_generation">{view.page.coverage.jobs_without_generation}</dd>
         <dt>Fragmentos seleccionados</dt><dd data-coverage="fragments">{view.page.coverage.fragments}</dd>
-        <dt>Bytes de texto seleccionados</dt><dd data-coverage="text_bytes">{view.page.coverage.text_bytes}</dd>
-        <dt>Perfil</dt><dd data-page="profile">{view.page.profile}</dd>
-        <dt>Versión / revisión del índice</dt><dd>{view.page.version} / <span data-page="revision">{view.page.revision}</span></dd>
-        <dt>Alcance</dt><dd>{view.page.coverage.scope}</dd>
-        <dt>Integridad del índice</dt><dd>{view.page.coverage.index_validation}</dd>
-        <dt>Verificación de originales</dt><dd>{view.page.coverage.source_validation}</dd>
+        <dt>Selected text bytes</dt><dd data-coverage="text_bytes">{view.page.coverage.text_bytes}</dd>
+        <dt>Profile</dt><dd data-page="profile">{view.page.profile}</dd>
+        <dt>Index version / revision</dt><dd>{view.page.version} / <span data-page="revision">{view.page.revision}</span></dd>
+        <dt>Scope</dt><dd>{view.page.coverage.scope}</dd>
+        <dt>Index integrity</dt><dd>{view.page.coverage.index_validation}</dd>
+        <dt>Original file verification</dt><dd>{view.page.coverage.source_validation}</dd>
       </dl>
-      <p>Índice canónico y postings verificados. Originales comprobados al consultar sólo para candidatos de página/lookahead, no todos los archivos ni su vigencia posterior.</p>
-      <p>Cero coincidencias no prueba ausencia en toda la base. Selección sin texto no acredita OCR ni libro visualmente vacío; fragmentos no es el total de coincidencias. Compatible no garantiza caber en cuotas.</p>
+      <p>Canonical index and postings verified. Originals are checked at query time for page/lookahead candidates only, not every file or its later validity.</p>
+      <p>Zero matches do not prove absence across the database. A selection with no text does not establish OCR coverage or a visually empty workbook; fragment count is not total matches. Compatibility does not guarantee fitting within quotas.</p>
     </section>
-    <p class="attachment-status" role="status">Página {view.pageNumber} · {view.page.items.length} fragmentos en esta página</p>
-    {#if !view.page.items.length}<p class="attachment-empty">Sin coincidencias en el conjunto seleccionado y filtrado.</p>{/if}
+    <p class="attachment-status" role="status">Page {view.pageNumber} · {view.page.items.length} fragments on this page</p>
+    {#if !view.page.items.length}<p class="attachment-empty">No matches in the selected and filtered set.</p>{/if}
     {#each view.page.items as hit (`${hit.source.job_id}:${hit.source.generation_id}:${hit.ordinal}`)}
       <article class="attachment-hit" data-job={hit.source.job_id} data-generation={hit.source.generation_id} data-ordinal={hit.ordinal}>
         <h3>{locatorTitle(hit.locator)}</h3>
-        {#if hit.result_from_previous_attempt}<p class="attachment-previous">Resultado de un intento anterior.</p>{/if}
+        {#if hit.result_from_previous_attempt}<p class="attachment-previous">Result from an earlier attempt.</p>{/if}
         <pre class="attachment-text">{hit.text}</pre>
         <details>
-          <summary>Procedencia del fragmento {hit.ordinal}</summary>
-          <p>Evidencia verificada al consultar. Inspeccionar este detalle no reabre ni revalida el archivo.</p>
+          <summary>Fragment provenance {hit.ordinal}</summary>
+          <p>Evidence verified at query time. Inspecting this detail does not reopen or revalidate the file.</p>
           <dl>
-            <dt>Trabajo</dt><dd data-source="job_id">{hit.source.job_id}</dd>
-            <dt>Adjunto</dt><dd data-source="attachment_id">{hit.source.attachment_id}</dd>
-            <dt>Generación</dt><dd data-source="generation_id">{hit.source.generation_id}</dd>
-            <dt>SHA-256 del original</dt><dd data-source="source_sha256">{hit.source.source_sha256}</dd>
+            <dt>Job</dt><dd data-source="job_id">{hit.source.job_id}</dd>
+            <dt>Attachment</dt><dd data-source="attachment_id">{hit.source.attachment_id}</dd>
+            <dt>Generation</dt><dd data-source="generation_id">{hit.source.generation_id}</dd>
+            <dt>Original SHA-256</dt><dd data-source="source_sha256">{hit.source.source_sha256}</dd>
             <dt>Extractor</dt><dd data-source="extractor">{hit.source.extractor}</dd>
-            <dt>Versión del extractor</dt><dd data-source="extractor_version">{hit.source.extractor_version}</dd>
-            <dt>Hash de configuración</dt><dd data-source="config_hash">{hit.source.config_hash}</dd>
-            <dt>Ordinal de fragmento (0-based)</dt><dd data-source="ordinal">{hit.ordinal}</dd>
-            <dt>Localizador</dt><dd data-locator="kind">{hit.locator.kind}</dd>
+            <dt>Extractor version</dt><dd data-source="extractor_version">{hit.source.extractor_version}</dd>
+            <dt>Configuration hash</dt><dd data-source="config_hash">{hit.source.config_hash}</dd>
+            <dt>Fragment ordinal (0-based)</dt><dd data-source="ordinal">{hit.ordinal}</dd>
+            <dt>Locator</dt><dd data-locator="kind">{hit.locator.kind}</dd>
             {#if hit.locator.kind === 'utf8_bytes'}
-              <dt>Bytes del original [inicio, fin)</dt><dd><span data-locator="byte_start">{hit.locator.byte_start}</span>–<span data-locator="byte_end">{hit.locator.byte_end}</span></dd>
-              <dt>Líneas del original</dt><dd><span data-locator="line_start">{hit.locator.line_start}</span>–<span data-locator="line_end">{hit.locator.line_end}</span></dd>
+              <dt>Original bytes [start, end)</dt><dd><span data-locator="byte_start">{hit.locator.byte_start}</span>–<span data-locator="byte_end">{hit.locator.byte_end}</span></dd>
+              <dt>Original lines</dt><dd><span data-locator="line_start">{hit.locator.line_start}</span>–<span data-locator="line_end">{hit.locator.line_end}</span></dd>
             {:else if hit.locator.kind === 'pdf_page_text'}
-              <dt>Página (1-based)</dt><dd data-locator="page_number">{hit.locator.page_number}</dd>
-              <dt>Bytes del texto derivado [inicio, fin)</dt><dd><span data-locator="text_byte_start">{hit.locator.text_byte_start}</span>–<span data-locator="text_byte_end">{hit.locator.text_byte_end}</span></dd>
+              <dt>Page (1-based)</dt><dd data-locator="page_number">{hit.locator.page_number}</dd>
+              <dt>Derived text bytes [start, end)</dt><dd><span data-locator="text_byte_start">{hit.locator.text_byte_start}</span>–<span data-locator="text_byte_end">{hit.locator.text_byte_end}</span></dd>
               <dt>Alcance PDF</dt><dd data-locator="scope">{hit.locator.scope}</dd>
               <dt>Limitaciones PDF</dt><dd data-locator="limitations">{hit.locator.limitations.join(', ')}</dd>
+            {:else if hit.locator.kind === 'pdfkit_page_text'}
+              <dt>PDFKit projection</dt><dd data-locator="projection">{hit.locator.projection}</dd>
+              <dt>Perfil PDFKit</dt><dd data-locator="profile">{hit.locator.profile}</dd>
+              <dt>Physical page (1-based)</dt><dd data-locator="page_number">{hit.locator.page_number}</dd>
+              <dt>Derived page bytes</dt><dd data-locator="page_bytes">{hit.locator.page_bytes}</dd>
+              <dt>Derived text bytes [start, end)</dt><dd><span data-locator="text_byte_start">{hit.locator.text_byte_start}</span>–<span data-locator="text_byte_end">{hit.locator.text_byte_end}</span></dd>
+              <dt>Engine and system</dt><dd data-locator="engine">{JSON.stringify(hit.locator.engine)}</dd>
+              <dt>Limitaciones PDFKit</dt><dd data-locator="limitations">{hit.locator.limitations.join(', ')}</dd>
+            {:else if hit.locator.kind === 'pdf_ocr_region_text'}
+              <dt>PDF OCR projection</dt><dd data-locator="projection">{hit.locator.projection}</dd>
+              <dt>Physical page (1-based)</dt><dd data-locator="page_number">{hit.locator.page_number}</dd>
+              <dt>Local / global region (0-based)</dt><dd><span data-locator="region_ordinal">{hit.locator.region_ordinal}</span> / {hit.locator.global_region_ordinal}</dd>
+              <dt>Profile</dt><dd data-locator="profile">{hit.locator.profile}</dd>
+              <dt>Raster derivado completo</dt><dd data-locator="raster">{JSON.stringify(hit.locator.raster)}</dd>
+              <dt>Engine and system</dt><dd data-locator="engine">{JSON.stringify(hit.locator.engine)}</dd>
+              <dt>Normalized raster bounding box</dt><dd data-locator="bbox">{JSON.stringify(hit.locator.bbox)}</dd>
+              <dt>Engine confidence</dt><dd data-locator="confidence">{hit.locator.confidence}</dd>
+              <dt>Coordinate space</dt><dd data-locator="coordinate_space">{hit.locator.coordinate_space}</dd>
+              <dt>Region bytes</dt><dd data-locator="region_bytes">{hit.locator.region_bytes}</dd>
+              <dt>Inferred text bytes [start, end)</dt><dd><span data-locator="text_byte_start">{hit.locator.text_byte_start}</span>–<span data-locator="text_byte_end">{hit.locator.text_byte_end}</span></dd>
             {:else if hit.locator.kind === 'image_ocr_region_text'}
-              <dt>Proyección OCR inferida</dt><dd data-locator="projection">{hit.locator.projection}</dd>
-              <dt>Región (0-based)</dt><dd data-locator="region_ordinal">{hit.locator.region_ordinal}</dd>
-              <dt>Geometría normalizada de imagen orientada</dt><dd data-locator="bbox">{JSON.stringify(hit.locator.bbox)}</dd>
-              <dt>Confianza del motor</dt><dd data-locator="confidence">{hit.locator.confidence}</dd>
-              <dt>Espacio de coordenadas</dt><dd data-locator="coordinate_space">{hit.locator.coordinate_space}</dd>
-              <dt>Bytes de región</dt><dd data-locator="region_bytes">{hit.locator.region_bytes}</dd>
-              <dt>Bytes de texto inferido [inicio, fin)</dt><dd><span data-locator="text_byte_start">{hit.locator.text_byte_start}</span>–<span data-locator="text_byte_end">{hit.locator.text_byte_end}</span></dd>
+              <dt>Inferred OCR projection</dt><dd data-locator="projection">{hit.locator.projection}</dd>
+              <dt>Region (0-based)</dt><dd data-locator="region_ordinal">{hit.locator.region_ordinal}</dd>
+              <dt>Normalized geometry of the oriented image</dt><dd data-locator="bbox">{JSON.stringify(hit.locator.bbox)}</dd>
+              <dt>Engine confidence</dt><dd data-locator="confidence">{hit.locator.confidence}</dd>
+              <dt>Coordinate space</dt><dd data-locator="coordinate_space">{hit.locator.coordinate_space}</dd>
+              <dt>Region bytes</dt><dd data-locator="region_bytes">{hit.locator.region_bytes}</dd>
+              <dt>Inferred text bytes [start, end)</dt><dd><span data-locator="text_byte_start">{hit.locator.text_byte_start}</span>–<span data-locator="text_byte_end">{hit.locator.text_byte_end}</span></dd>
             {:else}
-              <dt>Proyección</dt><dd data-locator="projection">{hit.locator.projection}</dd>
-              <dt>Hoja ID</dt><dd data-locator="sheet_id">{hit.locator.sheet_id}</dd>
-              <dt>Referencia A1</dt><dd data-locator="reference">{hit.locator.reference}</dd>
-              <dt>Ordinal global de celda (0-based)</dt><dd data-locator="cell_ordinal">{hit.locator.cell_ordinal}</dd>
-              <dt>Campo</dt><dd data-locator="field">{hit.locator.field}</dd>
-              <dt>Bytes totales del campo</dt><dd data-locator="field_bytes">{hit.locator.field_bytes}</dd>
-              <dt>Bytes UTF-8 del campo [inicio, fin)</dt><dd><span data-locator="text_byte_start">{hit.locator.text_byte_start}</span>–<span data-locator="text_byte_end">{hit.locator.text_byte_end}</span></dd>
+              <dt>Projection</dt><dd data-locator="projection">{hit.locator.projection}</dd>
+              <dt>Sheet ID</dt><dd data-locator="sheet_id">{hit.locator.sheet_id}</dd>
+              <dt>A1 reference</dt><dd data-locator="reference">{hit.locator.reference}</dd>
+              <dt>Global cell ordinal (0-based)</dt><dd data-locator="cell_ordinal">{hit.locator.cell_ordinal}</dd>
+              <dt>Field</dt><dd data-locator="field">{hit.locator.field}</dd>
+              <dt>Total field bytes</dt><dd data-locator="field_bytes">{hit.locator.field_bytes}</dd>
+              <dt>Field UTF-8 bytes [start, end)</dt><dd><span data-locator="text_byte_start">{hit.locator.text_byte_start}</span>–<span data-locator="text_byte_end">{hit.locator.text_byte_end}</span></dd>
             {/if}
           </dl>
-          {#if hit.locator.kind === 'utf8_bytes'}<p>Rangos del original, final exclusivo; bytes UTF-8, no índices de caracteres.</p>
-          {:else if hit.locator.kind === 'pdf_page_text'}<p>Texto derivado de objetos de página: sin OCR, orden visual, geometría ni tablas estructuradas. No son offsets del PDF ni coordenadas.</p>
-          {:else if hit.locator.kind === 'image_ocr_region_text'}<p>Texto inferido, potencialmente incorrecto o incompleto. Región/bytes del derivado, no offsets originales. Confianza no es probabilidad de exactitud; sin orden visual ni tablas garantizados. Manifest/motor completos disponibles en el lector explícito.</p>
-          {:else}<p>Fórmula y caché son campos separados. No se recalcula ni ejecuta la fórmula; la caché puede estar obsoleta. El rango es del campo decodificado, no del ZIP/JSON.</p>
-            {#if hit.locator.text_byte_start !== 0 || hit.locator.text_byte_end !== hit.locator.field_bytes}<p class="attachment-partial">Porción del campo: no es el campo completo.</p>{/if}
+          {#if hit.locator.kind === 'utf8_bytes'}<p>Original ranges, exclusive end; UTF-8 bytes, not character indexes.</p>
+          {:else if hit.locator.kind === 'pdf_page_text'}<p>Text derived from page objects: no OCR, visual order, geometry or structured tables. These are not PDF offsets or coordinates.</p>
+          {:else if hit.locator.kind === 'pdfkit_page_text'}<p>PDFKit: bytes of text derived from the system parser, not original offsets. OCR, visual order, geometry and tables are not guaranteed; results depend on the OS/build shown.</p>
+            {#if hit.locator.text_byte_start !== 0 || hit.locator.text_byte_end !== hit.locator.page_bytes}<p class="attachment-partial">Page excerpt: not its complete text.</p>{/if}
+          {:else if hit.locator.kind === 'pdf_ocr_region_text'}<p>Inferred PDF OCR may be incorrect or incomplete; visual order and tables are not guaranteed. Bounding boxes use the derived raster, not original PDF coordinates; confidence is not a probability. Full profile, engine, OS/build and raster details are in the locator.</p>
+          {:else if hit.locator.kind === 'image_ocr_region_text'}<p>Inferred text may be incorrect or incomplete. Region/bytes refer to derived text, not original offsets. Confidence is not a probability of accuracy; visual order and tables are not guaranteed. Full manifest/engine details are available in the explicit reader.</p>
+          {:else}<p>Formula and cache are separate fields. Formulas are not recalculated or executed; cached values may be outdated. The range refers to the decoded field, not ZIP/JSON.</p>
+            {#if hit.locator.text_byte_start !== 0 || hit.locator.text_byte_end !== hit.locator.field_bytes}<p class="attachment-partial">Field excerpt: not the complete field.</p>{/if}
           {/if}
         </details>
       </article>
     {/each}
     <div class="attachment-pages">
-      {#if view.page.next_cursor}<button onclick={() => void reader.next()}>Siguiente página de adjuntos</button>{/if}
-      <button onclick={() => void refreshPanel()}>Volver al inicio de adjuntos</button>
+      {#if view.page.next_cursor}<button onclick={() => void reader.next()}>Next attachment page</button>{/if}
+      <button onclick={() => void refreshPanel()}>Back to the first attachment page</button>
     </div>
-  {:else}<p class="attachment-status" role="status">Ingresá texto y buscá adjuntos. Todavía no se consultó el índice.</p>{/if}
+  {:else}<p class="attachment-status" role="status">Enter text and search attachments. The index has not been queried yet.</p>{/if}
 </div>
 
 <style>

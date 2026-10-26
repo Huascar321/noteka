@@ -745,9 +745,11 @@ fn v8_migration_is_additive_transactional_and_does_not_recover_running_jobs() {
     let literal = add(&mut w, "a.txt", b"original", "utf8_text");
     enable(&w);
     run(&w, &literal);
-    w.conn.execute_batch("DROP TABLE extraction_search_entries;DROP TABLE extraction_search_fts;DROP TABLE extraction_search_control;DROP TABLE extraction_pdf_fragments;DROP TABLE extraction_pdf_pages;DROP TABLE extraction_pdf_generations;UPDATE workspace_meta SET schema_version=8;PRAGMA user_version=8").unwrap();
+    w.conn.execute_batch("DROP TABLE extraction_search_entries;DROP TABLE extraction_search_fts;DROP TABLE extraction_search_control;DROP TABLE extraction_pdf_fragments;DROP TABLE extraction_pdf_pages;DROP TABLE extraction_pdf_generations;DROP TABLE IF EXISTS semantic_chunks;DROP TABLE IF EXISTS semantic_control;DROP TABLE IF EXISTS semantic_generations;DROP TABLE IF EXISTS semantic_profiles;DROP TABLE IF EXISTS agent_runs;
+DROP TABLE IF EXISTS extraction_pdf_structures;
+UPDATE workspace_meta SET schema_version=8;PRAGMA user_version=8").unwrap();
     w.conn
-        .execute_batch("DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;DROP TABLE extraction_xlsx_chunks;DROP TABLE extraction_xlsx_generations")
+        .execute_batch("DROP TABLE extraction_pdf_ocr_chunks;DROP TABLE extraction_pdf_ocr_generations;DROP TABLE extraction_pdfkit_chunks;DROP TABLE extraction_pdfkit_generations;DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;DROP TABLE extraction_xlsx_chunks;DROP TABLE extraction_xlsx_generations")
         .unwrap();
     let before = raw(&w.conn);
     let e = w.migrate(true).unwrap_err();
@@ -783,7 +785,9 @@ fn v8_migration_is_additive_transactional_and_does_not_recover_running_jobs() {
             .text,
         "original"
     );
-    w.conn.execute_batch(&format!("UPDATE workspace_meta SET schema_version={0};PRAGMA user_version={0};PRAGMA wal_checkpoint(TRUNCATE)",workspace::SCHEMA_VERSION+1)).unwrap();
+    w.conn.execute_batch(&format!("DROP TABLE IF EXISTS semantic_chunks;DROP TABLE IF EXISTS semantic_control;DROP TABLE IF EXISTS semantic_generations;DROP TABLE IF EXISTS semantic_profiles;DROP TABLE IF EXISTS agent_runs;
+DROP TABLE IF EXISTS extraction_pdf_structures;
+UPDATE workspace_meta SET schema_version={0};PRAGMA user_version={0};PRAGMA wal_checkpoint(TRUNCATE)",workspace::SCHEMA_VERSION+1)).unwrap();
     let path = w.path.clone();
     drop(w);
     let bytes = fs::read(path.join(workspace::DB_NAME)).unwrap();

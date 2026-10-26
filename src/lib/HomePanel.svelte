@@ -1,39 +1,70 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import { operate } from './api';
-  import HomeRow from './HomeItem.svelte';
+  import AsciiShark from './AsciiShark.svelte';
+  import SectionIcon from './SectionIcon.svelte';
+  import AppIcon from './AppIcon.svelte';
+  import ScrollOutline from './ScrollOutline.svelte';
+  import HomeTaskSection from './HomeTaskSection.svelte';
+  import HomeNoteSection from './HomeNoteSection.svelte';
+  import HomeProjectSection from './HomeProjectSection.svelte';
+  import HomeTagSection from './HomeTagSection.svelte';
+  import HomeGoalSection from './HomeGoalSection.svelte';
+  import HomePersonSection from './HomePersonSection.svelte';
   import { HomeReader, type HomeReadState } from './home-reads';
   import { ReadQueue } from './embedded-reads';
+  import { readCover, saveCover, type CoverMode } from './home-cover';
   import type { HomeGroup, HomeView, EntityKind, ContextLink, HomePage } from './contracts.generated';
-  let { workspace, error = '', onopen, oncreate, onnavigate }: {
-    workspace: string; error?: string; onopen: (id: string) => Promise<void>;
+  let { workspace, active = true, visible = active, blocked = false, error = '', onopen, oncreate, onnavigate }: {
+    workspace: string; active?: boolean; visible?: boolean; blocked?: boolean; error?: string; onopen: (id: string) => Promise<void>;
     oncreate: (kind: EntityKind, context?: ContextLink, seed?: Record<string, unknown>) => Promise<void>;
-    onnavigate: (kind: EntityKind) => Promise<void>;
+    onnavigate: (kind: EntityKind | 'goals') => Promise<void>;
   } = $props();
   const sections: { id: EntityKind; title: string; icon: string; views: [HomeView, string][]; pending: string; hint: string }[] = [
-    { id: 'task', title: 'Tasks', icon: '☑', views: [['tasks_today','Today'],['tasks_inbox','Inbox'],['tasks_all','All'],['tasks_done','Done']], pending: 'Week, Month, Scheduled, No Due, Recurring, Active Projects, Active Projects (In Progress), Active Content.', hint: 'Today: pendientes con vencimiento hasta el día civil, incluidas vencidas. No equivale a My Day (planificadas). Crear no asigna fechas.' },
-    { id: 'note', title: 'Notes', icon: '▤', views: [['notes_all','Notes'],['notes_inbox','Inbox']], pending: 'Fav., Clips, Voice, Journal, Meetings, All diferenciada.', hint: 'Notes incluye todas las notas activas; Inbox exige su marca explícita.' },
-    { id: 'project', title: 'Projects', icon: '◈', views: [['projects_active','Active'],['projects_planned','Planned'],['projects_board','Board']], pending: 'Paridad con fórmulas/campos de Notion no inspeccionados.', hint: 'Active: Doing/Ongoing; Active Projects lateral también incluye Planned. Progreso = completas/total de tareas activas relacionadas; sin tareas no es 0%.' },
-    { id: 'tag', title: 'Tags', icon: '#', views: [['tags_recent','Recent'],['tags_alphabetical','A–Z'],['tags_types','Types']], pending: 'Fav., tipo Entity de la referencia; Topic conserva su clasificación.', hint: 'Recent ordena modificación del tag, no última nota. A–Z: orden Unicode sin collation local; resúmenes de todas sus notas activas.' },
-    { id: 'person', title: 'People', icon: '♙', views: [['people_contacts','Contacts'],['people_new','New'],['people_updated','Updated']], pending: 'Fotos, organización, Check-Ins, Birthdays, Pipeline, Active Projects.', hint: 'Contacts ordena por título; New por creación y Updated por modificación. No son filtros de período ni un directorio remoto.' },
+    { id: 'task', title: 'Tasks', icon: 'task', views: [['tasks_projects_in_progress','Active Projects (In Progress)'],['tasks_today','Today'],['tasks_inbox','Inbox'],['tasks_week','Week'],['tasks_month','Month'],['tasks_scheduled','Scheduled'],['tasks_no_due','No Due'],['tasks_active_projects','Active Projects'],['tasks_all','All'],['tasks_done','Done']], pending: "Recurring and Active Content.", hint: "The initial view groups pending tasks by Doing/Ongoing projects. Today uses due dates through the current calendar day; My Day uses planning dates. Creating a task does not assign dates." },
+    { id: 'note', title: 'Notes', icon: 'file-text', views: [['notes_library','Notes'],['notes_inbox','Inbox']], pending: '', hint: "Notes separates the library and categories; All keeps every page accessible." },
+    { id: 'project', title: 'Projects', icon: 'project', views: [['projects_active','Active'],['projects_planned','Planned'],['projects_board','Board']], pending: "Parity with unreviewed Notion formulas/fields.", hint: "Active: Doing/Ongoing; sidebar Active Projects also includes Planned. Progress = completed / total related active tasks; no tasks does not mean 0%." },
+    { id: 'tag', title: 'Tags', icon: 'tag', views: [['tags_recent','Recent'],['tags_alphabetical','A–Z'],['tags_types','Types']], pending: "Fav. and Entity type from the reference; Topic preserves its classification.", hint: "Recent sorts by tag modification, not the latest note. A–Z: Unicode order without local collation; summaries include all active notes." },
+    { id: 'person', title: 'People', icon: 'person', views: [['people_contacts','Contacts'],['people_new','New'],['people_updated','Updated']], pending: '', hint: "Local contacts and views with verified metadata and photos." },
   ];
   let states = $state<Record<string, HomeReadState>>({});
+  let scrollRoot = $state<HTMLElement>();
   const readers = new Map<string, HomeReader>();
   const queue = new ReadQueue(2);
+  let cover = $state<CoverMode>(readCover(() => localStorage));
+  let coverError = $state('');
+  function changeCover(mode: CoverMode) {
+    cover = mode; coverError = saveCover(mode, () => localStorage);
+    window.dispatchEvent(new Event('noteka-cover-change'));
+  }
+  function refreshKeydown(event: KeyboardEvent) {
+    if (!active || event.defaultPrevented) return;
+    const commandR = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'r';
+    const f5 = event.key === 'F5' && !event.metaKey && !event.ctrlKey;
+    if (event.altKey || event.shiftKey || (!commandR && !f5)) return;
+    event.preventDefault();
+    if (blocked || event.isComposing || event.repeat || document.querySelector('dialog[open]')) return;
+    void refreshPanel();
+  }
   onMount(() => {
+    const syncCover = () => { if (!coverError) cover = readCover(() => localStorage); };
+    window.addEventListener('noteka-cover-change', syncCover);
+    window.addEventListener('keydown', refreshKeydown, true);
     for (const section of sections) {
-      const reader = new HomeReader(section.views[0][0], queue, query => operate<HomePage>({ operation: 'home.query', input: query }, workspace), state => { states = { ...states, [section.id]: state }; });
+      const reader = new HomeReader(section.id === 'project' ? 'projects_board' : section.id === 'tag' ? 'tags_types' : section.views[0][0], queue, query => operate<HomePage>({ operation: 'home.query', input: query }, workspace), state => { states = { ...states, [section.id]: state }; }, section.id === 'note' || section.id === 'person' ? 10 : section.id === 'project' ? 100 : 50, true, section.id === 'person' ? { people_new: 100, people_updated: 100, people_check_ins: 100, people_birthdays: 100, people_pipeline: 100, people_active_projects: 100 } : {});
       readers.set(section.id, reader); void reader.load();
     }
-    return () => { for (const reader of readers.values()) reader.dispose(); readers.clear(); };
+    const goals = new HomeReader('goals_activity', queue, query => operate<HomePage>({ operation: 'home.query', input: query }, workspace), state => { states = { ...states, goals: state }; }, 10, true);
+    readers.set('goals', goals); void goals.load();
+    return () => { window.removeEventListener('noteka-cover-change', syncCover); window.removeEventListener('keydown', refreshKeydown, true); for (const reader of readers.values()) reader.dispose(); readers.clear(); };
   });
   export async function refreshPanel() { await Promise.all([...readers.values()].map(r => r.load())); }
-  async function load(id: string, view?: HomeView, next = false, retry = false) {
+  async function load(id: string, view?: HomeView, next = false, retry = false, date?: string) {
     const reader = readers.get(id); if (!reader) return;
     const focused = document.activeElement instanceof HTMLButtonElement ? document.activeElement : null;
     const focusLabel = focused?.textContent;
     const page = reader.state.page;
-    if (retry) await reader.retry(); else await reader.load(view ?? reader.state.view, next ? page?.next_cursor ?? undefined : undefined, next ? page?.date : undefined);
+    if (retry) await reader.retry(); else await reader.load(view ?? reader.state.view, next ? page?.next_cursor ?? undefined : undefined, next ? page?.date : date ?? (view === undefined && reader.state.view === 'people_birthdays' ? page?.date : undefined));
     await tick();
     if (focused && document.activeElement === document.body) {
       if (focused.isConnected && !focused.disabled) focused.focus();
@@ -51,51 +82,31 @@
   }
 </script>
 
-<main class="home" aria-label="Home">
-  <div class="home-cover" aria-hidden="true"></div>
+<main bind:this={scrollRoot} class="home has-scroll-outline" aria-label="Home" aria-keyshortcuts="Meta+R Control+R F5">
+  <div class="home-cover" data-cover={cover}>
+    {#if cover === 'ascii'}<AsciiShark {active} />{:else}<img class="home-cover-photo" src="/images/home-cover.png" alt="" />{/if}
+    <div class="home-cover-controls" role="group" aria-label="Home cover"><button aria-pressed={cover === 'ascii'} onclick={() => changeCover('ascii')}>ASCII</button><button aria-pressed={cover === 'photo'} onclick={() => changeCover('photo')}>Photo</button></div>
+  </div>
   <div class="home-content">
     {#if error}<p class="error" role="alert">{error}</p>{/if}
-    <div class="home-heading"><span aria-hidden="true" class="home-house">⌂</span><h1>Home</h1><button onclick={() => void refreshPanel()}>Actualizar Home</button></div>
-    <details class="home-nav"><summary>Navegación</summary><div>{#each sections.filter(s => s.id !== 'person') as section}<button onclick={() => void onnavigate(section.id)}>{section.title}</button>{/each}<span>Content pendiente</span></div></details>
-    <div class="home-weather" role="note"><span aria-hidden="true">☁</span><div><strong>Clima pendiente</strong><p>Clima no implementado; no se realizan consultas remotas. Localidad, proveedor y siete días requieren una entrega opt-in.</p></div></div>
+    {#if coverError}<p role="status">{coverError}</p>{/if}
+    <div class="home-heading"><span aria-hidden="true" class="home-house"><SectionIcon section="home" size={62} /></span><h1>Home</h1></div>
+    <div class="home-weather" role="note"><span aria-hidden="true"><AppIcon name="cloud" size={35} /></span><div><strong>Weather unavailable</strong><p>Weather is not implemented. No remote queries are made; location, provider and a seven-day forecast require a separate opt-in feature.</p></div></div>
     {#each sections as section}
       {@const state = states[section.id]}
-      <section class="home-section" data-home-section={section.id} aria-label={section.title}>
-        <header><h2><span aria-hidden="true">{section.icon}</span><button onclick={() => void onnavigate(section.id)}>{section.title}</button></h2><button onclick={() => void oncreate(section.id)} aria-label={`Crear en ${section.title}`}>+ New page</button></header>
-        <div class="home-tabs">
-          {#each section.views.filter(v => v[0] !== 'tasks_done') as [view, label]}<button aria-pressed={state?.view === view} class:active={state?.view === view} onclick={() => void load(section.id, view)}>{label}</button>{/each}
-          {#if section.id === 'task'}<details><summary>Más vistas</summary><button aria-pressed={state?.view === 'tasks_done'} onclick={() => void load(section.id, 'tasks_done')}>Done</button></details>{/if}
-          <button disabled={state?.busy} onclick={() => void load(section.id)} aria-label={`Actualizar ${section.title}`}>↻</button>
-        </div>
-        <details class="home-rules"><summary>Reglas y cobertura</summary><p>{section.hint}</p><p>Pendiente: {section.pending}</p></details>
-        {#if state?.busy}<p role="status">Consultando {section.title}…</p>{/if}
-        {#if state?.error}<p class="error" role="alert">Lectura fallida: {state.error}</p><button onclick={() => void load(section.id, undefined, false, true)}>Reintentar {section.title}</button>{/if}
-        {#if state?.page}
-          {@const page = state.page}
-          <p class="home-coverage">{page.items.length} elementos únicos de {page.matching_count} · Página desde {page.items.length ? page.offset + 1 : 0} · Grupos cubren sólo esta página.<br />Consulta {page.date} · {page.timezone} · Snapshot independiente por sección.</p>
-          {#if page.unavailable_count}<p class="home-unavailable">{page.unavailable_count} entidades sin metadatos interpretables para decidir este filtro.</p>{/if}
-          {#if page.groups.length}
-            <div class:home-board={state.view === 'projects_board'} class="home-groups">
-              {#each page.groups as group (group.key)}
-                <details open class="home-group" data-group-key={group.key}>
-                  <summary>{group.label}{group.project_archived ? ' · archivado' : ''} <span>{group.entity_ids.length} apariciones de página</span></summary>
-                  {#each group.entity_ids as id (id)}{@const row = page.items.find(i => i.entity.id === id)}{#if row}<HomeRow item={row} {onopen} />{/if}{/each}
-                  {#if !group.entity_ids.length}<p class="home-empty">Sin registros en esta página.</p>{/if}
-                  {#if group.key !== 'unavailable'}<button class="home-new" onclick={() => void createIn(section.id, group)}>+ New page en {group.label}</button>{/if}
-                </details>
-              {/each}
-            </div>
-          {:else}
-            <div class:home-gallery={section.id === 'person'} class="home-rows">
-              {#each page.items as row (row.entity.id)}<HomeRow item={row} {onopen} />{/each}
-              {#if !page.items.length}<p class="home-empty">Sin {section.title} en esta vista.</p>{/if}
-            </div>
-          {/if}
-          <div class="home-pagination"><button disabled={state.busy || !page.next_cursor} onclick={() => void load(section.id, undefined, true)}>Siguiente {section.title}</button>{#if page.offset}<button disabled={state.busy} onclick={() => void load(section.id)}>Inicio {section.title}</button>{/if}</div>
-        {/if}
-      </section>
-      {#if section.id === 'tag'}<section class="home-section home-pending" aria-label="Goals"><header><h2>◎ Goals</h2></header><p>Goals pendiente: entidad, estados Active/Dream/Achieved, relaciones, fechas/progreso y vistas By Activity/By Deadline/Achieved requieren su propio cambio. No se presentan porcentajes ni objetivos ficticios.</p></section>{/if}
+      {#if section.id === 'task'}
+        <HomeTaskSection readState={state} onview={(view) => load('task', view)} onnext={() => load('task', undefined, true)} onretry={() => load('task', undefined, false, true)} {onopen} oncreate={() => oncreate('task')} ongroupcreate={(group) => createIn('task', group)} onnavigate={() => onnavigate('task')} />
+      {:else if section.id === 'note'}
+        <HomeNoteSection readState={state} onview={(view) => load('note', view)} onnext={() => load('note', undefined, true)} onretry={() => load('note', undefined, false, true)} {onopen} oncreate={(seed) => oncreate('note', undefined, seed)} onnavigate={() => onnavigate('note')} />
+      {:else if section.id === 'project'}
+        <HomeProjectSection {workspace} {active} onmoved={refreshPanel} readState={state} onview={(view) => load('project', view)} onnext={() => load('project', undefined, true)} onretry={() => load('project', undefined, false, true)} {onopen} oncreate={(seed) => oncreate('project', undefined, seed)} onnavigate={() => onnavigate('project')} />
+      {:else if section.id === 'tag'}
+        <HomeTagSection readState={state} onview={(view) => load('tag', view)} onnext={() => load('tag', undefined, true)} onretry={() => load('tag', undefined, false, true)} {onopen} oncreate={(seed) => oncreate('tag', undefined, seed)} onnavigate={() => onnavigate('tag')} />
+      {:else if section.id === 'person'}
+        <HomePersonSection readState={state} onview={(view) => load('person', view)} onmonth={(date) => load('person', 'people_birthdays', false, false, date)} onnext={() => load('person', undefined, true)} onretry={() => load('person', undefined, false, true)} {onopen} oncreate={(seed) => oncreate('person', undefined, seed)} onnavigate={() => onnavigate('person')} />
+      {/if}
+      {#if section.id === 'tag'}<HomeGoalSection readState={states.goals} onview={(view) => load('goals', view)} onnext={() => load('goals', undefined, true)} onretry={() => load('goals', undefined, false, true)} {onopen} oncreate={(context,seed) => oncreate('note',context,seed)} onnavigate={() => onnavigate('goals')} />{/if}
     {/each}
-    <p class="home-footnote">Datos originales locales · Sin LLM · Content y capacidades pendientes no están habilitados. Este primer Home no es paridad total con Ultimate Brain.</p>
   </div>
 </main>
+<ScrollOutline root={scrollRoot} mode="home" active={visible} disabled={blocked} />

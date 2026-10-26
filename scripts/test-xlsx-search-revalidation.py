@@ -138,7 +138,7 @@ def main():
                                    input=b'', capture_output=True, timeout=8)
         assert admission.returncode and b'UnsupportedWorkspaceVersion' in admission.stderr and not admission.stdout
         assert support.files(ws) == physical
-        assert call(ws, 'workspace', 'open', {})['schema_version'] == 13
+        assert call(ws, 'workspace', 'open', {})['schema_version'] == 15
         after = support.snapshot(ws)
         for table, rows in before.items():
             if table != 'workspace_meta':
@@ -157,7 +157,7 @@ def main():
         assert support.snapshot(backups[0]) == before
         restored = directory / f'restored-v{version}'
         result = call(ws, 'workspace', 'restore', dict(backup=str(backups[0]), destination=str(restored)))
-        assert result['schema_version'] == 13  # Restore explícito abre/migra con el cliente actual.
+        assert result['schema_version'] == 15  # Restore explícito abre/migra con el cliente actual.
         assert support.snapshot(restored) == after
         assert support.snapshot(backups[0]) == before  # La fuente histórica no se modifica.
         assert support.files(restored / 'attachments') == originals

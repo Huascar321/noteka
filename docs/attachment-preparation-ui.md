@@ -15,8 +15,8 @@ permiten ID manual sin interpretar bloques desconocidos.
 1. **Consultar trabajos** llama `extraction.list` filtrado por adjunto, hasta 20.
    **Siguiente** reemplaza la página; volver a consultar comienza sin cursor.
    Vacío no demuestra que exista el original. Seleccionar un trabajo no consulta.
-2. **Encolar extracción** usa ID y extractor elegido (`utf8_text`, `pdf_text` o
-   `xlsx_cells`), con defaults Rust. No infiere soporte por nombre ni ejecuta.
+2. **Encolar extracción** usa ID y extractor elegido (`utf8_text`, `pdf_text`, `xlsx_cells`, `image_ocr` o
+   `pdfkit_text`), con defaults Rust. No infiere soporte por nombre ni ejecuta.
    El recibo informa deduplicación, ID y estado.
 3. **Consultar trabajo elegido** hace get job → get control → get index filtrado
    por job. Son snapshots consecutivos independientes, no uno atómico. Muestra
@@ -52,10 +52,12 @@ mantiene guardar/descartar/cancelar y las revisiones capturadas.
 Los límites completos siguen en [extracción](extraction.md),
 [PDF](pdf-extraction.md), [XLSX](xlsx-extraction.md) e
 [índice](attachment-search.md). La UI los explica y Rust los valida; no instala
-modelos, envía contenido, recalcula Excel ni transcribe imágenes. Sin cambios de
-SQLite v12, API v1/52, MCP 24/44/45 o nueve mutaciones batchables.
+modelos, envía contenido ni recalcula Excel. OCR de imágenes y PDFKit son acciones
+explícitas posteriores, con límites propios. El cierre original de esta UI usó
+SQLite v12/API v1/52/MCP24/44/45. La [integración PDFKit](pdfkit-search-ui.md)
+usa SQLite15/API54/MCP26/46/47; nueve mutaciones batchables se conservan.
 
-El hook local de Tauri prepara ambos helpers mediante `extraction:prepare` en el
+El hook local de Tauri prepara los helpers disponibles mediante `extraction:prepare` en el
 perfil/target solicitado; su staging sigue ignorado por Git. El script previo
 `pdf:prepare` permanece disponible. Esto no publica, firma ni certifica un bundle.
 

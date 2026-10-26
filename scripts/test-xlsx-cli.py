@@ -57,7 +57,7 @@ def main():
             assert reply['ok'] and r.returncode == 0, (group, action, reply)
             return reply['data']
 
-        assert call('workspace', 'create', {'timezone': 'UTC'})['schema_version'] == 13
+        assert call('workspace', 'create', {'timezone': 'UTC'})['schema_version'] == 16
         c = call('extraction', 'control', {'action': 'get'})
         assert c['paused']
         call('extraction', 'control', {'action': 'set', 'paused': False, 'expected_revision': c['revision']})

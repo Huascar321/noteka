@@ -1,0 +1,64 @@
+# Página Tasks
+
+El breadcrumb compartido muestra Home → Tasks y mantiene Home navegable.
+Tasks del menú lateral abre una página amplia con icono sobre el título,
+navegación Inbox/Today/Week/Month, New Task y las vistas locales de Home.
+Today es la vista inicial. Las primeras diez tareas se acumulan con Load more,
+sin duplicar IDs; cambiar vista o actualizar reinicia la página. Apertura y
+captura pasan por las guardias de buffers existentes y crear no asigna fechas.
+
+Recurring y Active Content aparecen deshabilitadas como pendientes. No hay
+acciones ficticias de colaboración, backlinks o portada de Notion.
+
+## Projects
+
+Debajo aparece Projects, inicialmente Active con grupos Doing/Ongoing y filas
+compactas. Planned selecciona planificados; Completed selecciona Done. Board
+reutiliza las cinco columnas y el movimiento atómico/CAS existentes. Contexto,
+pendientes, vencidas y progreso se calculan a partir de relaciones locales.
+Los grupos cubren los proyectos cargados y los originales siguen siendo la
+fuente de verdad. Los [Goals](goals.md) referidos conservan sus páginas originales
+y sus subtipos tipados abren la sección Goals.
+
+Deadlines selecciona proyectos no Done con `end_date` y los ordena por su fecha
+civil ascendente. No toma fechas de tareas ni inventa plazos para importados sin
+fecha de fin. El campo se edita mediante la propiedad Fin de proyecto existente.
+`home.query` agrega `projects_deadlines`, `projects_completed` y una proyección
+opcional `project_end_date`; no cambia SQLite, payloads ni la lista de operaciones.
+El archivo local y de origen se excluye antes de paginar. Fechas inválidas se
+informan como metadatos no disponibles; los cursores siguen ligados a su consulta.
+
+## Lectura y teclado
+
+Las dos secciones tienen estado, error/reintento, vista y cursor propios. Se
+comparten dos cupos de lectura y se descartan resultados de consultas abandonadas.
+⌘R en macOS, Ctrl+R en Windows/Linux o F5 refrescan la página Tasks activa sin
+recargar el WebView; diálogos y bloqueos impiden ejecutar el refresco. Se conserva
+la vista elegida. Ambos temas y la ventana estrecha mantienen controles alcanzables.
+
+Home conserva sus vistas iniciales anteriores. Este ajuste no modifica el detalle
+individual de una tarea: las capturas suministradas muestran la página Tasks.
+
+
+Los selectores existentes de regreso a Home en los recorridos históricos se
+adaptaron al breadcrumb, sin agregar escenarios ni ejecutar esos recorridos.
+
+
+## Pies y acciones de fila
+
+Las cinco secciones omiten los contadores y fechas de consulta de sus pies;
+la cobertura queda en Opciones de vista. El aviso técnico final de Home se retiró.
+Load more aparece sólo cuando hay otra página y acumula IDs únicos. Todo el ancho
+de esa fila activa el mismo botón. También ocupan todo su contenedor las filas
+New page/New task sin borde; las capturas y tarjetas con borde conservan su estilo.
+No se guarda un borrador al crearlo. Home usa la misma acumulación para sus cinco
+lectores, con límites, cursores y guardias anteriores.
+
+
+## Contenido del detalle
+
+Abrir una Task muestra su cuerpo enriquecido propio bajo Status/Project/Due.
+Enter desde el título permite comenzar, `/` agrega bloques y Guardar/⌘/Ctrl+S
+confirma. View details conserva los campos secundarios. Las Tasks sin cuerpo
+siguen sin documento persistido hasta editarlo y guardarlo.
+[Uso, compatibilidad y límites](task-page-content.md).

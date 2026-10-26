@@ -17,7 +17,7 @@ function failure(error: unknown): AttachmentFailure {
       return { code: detail.code, message: detail.message, ...(reason ? { reason } : {}) };
     }
   }
-  return { code: 'transport_error', message: error instanceof Error ? error.message : 'No se pudo consultar evidencia local.' };
+  return { code: 'transport_error', message: error instanceof Error ? error.message : "Could not query local evidence." };
 }
 
 export class AttachmentReader {
@@ -58,7 +58,7 @@ export class AttachmentReader {
       const page = await pool.run(() => this.read(query), signal);
       if (!this.lifetime.current(token)) return;
       if (page.items.length > ATTACHMENT_PAGE_SIZE || (previous && (page.revision !== previous.revision || page.profile !== previous.profile || page.version !== previous.version))) {
-        throw new Error('Página incompatible con la consulta. Buscá de nuevo.');
+        throw new Error("Page does not match the query. Search again.");
       }
       this.publish({ page, pageNumber, busy: false, error: null });
     } catch (error) {

@@ -259,7 +259,14 @@ pub(crate) fn canonical(c: &Connection, job: &str, b: &Budget<'_>) -> Result<Can
     }
     if !matches!(
         g.extractor.as_str(),
-        "utf8_text" | "pdf_text" | "xlsx_cells" | "image_ocr"
+        "utf8_text"
+            | "pdf_text"
+            | "pdfium_text"
+            | "paddle_ocr"
+            | "xlsx_cells"
+            | "image_ocr"
+            | "pdfkit_text"
+            | "pdf_ocr"
     ) {
         return Err(store::invalid("unsupported_index_extractor"));
     }
@@ -282,6 +289,32 @@ pub(crate) fn canonical(c: &Connection, job: &str, b: &Budget<'_>) -> Result<Can
     if ocr_owner != (g.extractor == "image_ocr") {
         return Err(error("invalid_ocr_integrity"));
     }
+    let pdfkit_owner: bool = if crate::workspace::version(c)? >= 14 {
+        c.query_row(
+            "SELECT EXISTS(SELECT 1 FROM extraction_pdfkit_generations WHERE generation_id=?1)",
+            [&g.id],
+            |r| r.get(0),
+        )?
+    } else {
+        false
+    };
+    if pdfkit_owner != (g.extractor == "pdfkit_text") {
+        return Err(error("invalid_pdfkit_integrity"));
+    }
+    let pdf_ocr_owner: bool = if crate::workspace::version(c)? >= 16 {
+        c.query_row(
+            "SELECT EXISTS(SELECT 1 FROM extraction_pdf_ocr_generations WHERE generation_id=?1)",
+            [&g.id],
+            |r| r.get(0),
+        )?
+    } else {
+        false
+    };
+    if pdf_ocr_owner != (g.extractor == "pdf_ocr") {
+        return Err(error("invalid_pdf_ocr_integrity"));
+    }
+    let mut pdf_ocr_manifest = None;
+    let mut pdfkit_manifest = None;
     let mut manifest = None;
     let mut xlsx_manifest = None;
     let mut ocr_manifest = None;
@@ -342,7 +375,10 @@ pub(crate) fn canonical(c: &Connection, job: &str, b: &Budget<'_>) -> Result<Can
             return Err(error("invalid_fragment"));
         }
         out
-    } else if g.extractor == "pdf_text" {
+    } else if matches!(
+        g.extractor.as_str(),
+        "pdf_text" | "pdfium_text" | "paddle_ocr"
+    ) {
         let pdf = pdf_storage::load(c, &g.id, job, g.fragment_count)?;
         manifest = Some(pdf.manifest);
         pdf.fragments
@@ -364,6 +400,16 @@ pub(crate) fn canonical(c: &Connection, job: &str, b: &Budget<'_>) -> Result<Can
         let projected = crate::xlsx_index_projection::project(&prepared.workbook, b)?;
         xlsx_manifest = Some(prepared.manifest);
         projected
+    } else if g.extractor == "pdf_ocr" {
+        let p = crate::pdf_ocr_storage::load(c, &g.id, job, g.fragment_count)?;
+        let projected = crate::pdf_ocr_index_projection::project(&p.document, b)?;
+        pdf_ocr_manifest = Some(p.manifest);
+        projected
+    } else if g.extractor == "pdfkit_text" {
+        let p = crate::pdfkit_storage::load(c, &g.id, job, g.fragment_count)?;
+        let projected = crate::pdfkit_index_projection::project(&p.document, b)?;
+        pdfkit_manifest = Some(p.manifest);
+        projected
     } else if g.extractor == "image_ocr" {
         let prepared = crate::ocr_storage::load(c, &g.id, job, g.fragment_count)?;
         crate::ocr_storage::source_format(&prepared.manifest, &a)?;
@@ -384,7 +430,11 @@ pub(crate) fn canonical(c: &Connection, job: &str, b: &Budget<'_>) -> Result<Can
         extractor_version: g.extractor_version,
         config_hash: g.config_hash.clone(),
     };
-    let hash = if let Some(manifest) = ocr_manifest {
+    let hash = if let Some(manifest) = pdf_ocr_manifest {
+        content_hash_manifest(&source, &g, serde_json::to_value(manifest)?, &fragments)?
+    } else if let Some(manifest) = pdfkit_manifest {
+        content_hash_manifest(&source, &g, serde_json::to_value(manifest)?, &fragments)?
+    } else if let Some(manifest) = ocr_manifest {
         content_hash_manifest(&source, &g, serde_json::to_value(manifest)?, &fragments)?
     } else if let Some(manifest) = xlsx_manifest {
         content_hash_manifest(&source, &g, serde_json::to_value(manifest)?, &fragments)?
@@ -422,7 +472,7 @@ pub(crate) struct Verified<'a> {
 }
 impl Drop for Verified<'_> {
     fn drop(&mut self) {
-        let _ = self.conn.execute_batch("DROP TABLE IF EXISTS temp.attachment_actual_vocab;DROP TABLE IF EXISTS temp.attachment_expected_vocab;DROP TABLE IF EXISTS temp.attachment_expected_fts;");
+        let _ = self.conn.execute_batch("DROP TABLE IF EXISTS temp.attachment_actual_vocab;DROP TABLE IF EXISTS temp.attachment_expected_vocab;DROP TABLE IF EXISTS temp.attachment_expected_fts;DROP TABLE IF EXISTS temp.attachment_repeated_vocab;DROP TABLE IF EXISTS temp.attachment_repeated_fts;");
     }
 }
 
@@ -469,10 +519,22 @@ pub(crate) fn same_postings(c: &Connection, b: &Budget<'_>) -> Result<bool> {
 // Cada fila real se verifica contra ese mapa y marca su (rowid,posición) propio.
 // A ⊆ E, ausencia de duplicados en A y |A|=|E| prueban A=E sin asumir orden.
 // El bitset separa documentos repetidos: un duplicado no tapa un faltante.
+#[cfg(test)]
 pub(crate) fn same_repeated_postings(
     c: &Connection,
     b: &Budget<'_>,
     fragments: &[(u32, &str)],
+) -> Result<Option<bool>> {
+    // El diagnóstico puede ejecutar este helper con un Verified vivo. Su
+    // scratch pertenece a la llamada; reconstruirlo evita compartir la caché.
+    c.execute_batch("DROP TABLE IF EXISTS temp.attachment_repeated_vocab;DROP TABLE IF EXISTS temp.attachment_repeated_fts;")?;
+    repeated_postings(c, b, fragments, false)
+}
+fn repeated_postings(
+    c: &Connection,
+    b: &Budget<'_>,
+    fragments: &[(u32, &str)],
+    retain: bool,
 ) -> Result<Option<bool>> {
     let mut classes = HashMap::new();
     let mut texts = Vec::new();
@@ -497,13 +559,21 @@ pub(crate) fn same_repeated_postings(
     if max_rowid > MAX_INDEX_ENTRIES * 512 || bytes as u64 > MAX_INDEX_TEXT_BYTES {
         return Err(error("invalid_attachment_index"));
     }
-    struct Scratch<'a>(&'a Connection);
+    struct Scratch<'a> {
+        conn: &'a Connection,
+        retained: bool,
+    }
     impl Drop for Scratch<'_> {
         fn drop(&mut self) {
-            let _ = self.0.execute_batch("DROP TABLE IF EXISTS temp.attachment_repeated_vocab;DROP TABLE IF EXISTS temp.attachment_repeated_fts;");
+            if !self.retained {
+                let _ = self.conn.execute_batch("DROP TABLE IF EXISTS temp.attachment_repeated_vocab;DROP TABLE IF EXISTS temp.attachment_repeated_fts;");
+            }
         }
     }
-    let _scratch = Scratch(c);
+    let mut scratch = Scratch {
+        conn: c,
+        retained: false,
+    };
     c.execute_batch("CREATE VIRTUAL TABLE temp.attachment_repeated_fts USING fts5(job_id UNINDEXED,generation_id UNINDEXED,ordinal UNINDEXED,text,tokenize='unicode61',detail=full);CREATE VIRTUAL TABLE temp.attachment_repeated_vocab USING fts5vocab('temp','attachment_repeated_fts','instance');")?;
     let mut insert =
         c.prepare("INSERT INTO temp.attachment_repeated_fts(rowid,text) VALUES(?1,?2)")?;
@@ -569,11 +639,21 @@ pub(crate) fn same_repeated_postings(
         &mut seen,
         expected_count,
     )? {
+        if retain && result {
+            let expected = fragments
+                .iter()
+                .map(|(rowid, text)| (*rowid, counts[classes[text]]))
+                .collect::<Vec<_>>();
+            if !same_statistics(c, b, &expected)? {
+                return Err(error("invalid_attachment_index"));
+            }
+        }
+        scratch.retained = retain && result;
         return Ok(Some(result));
     }
     // Full instance-stream fallback if the auxiliary API is unavailable.
     seen.fill(0);
-    crate::attachment_postings::verify_stream(
+    let result = crate::attachment_postings::verify_stream(
         c,
         b,
         &terms,
@@ -581,9 +661,117 @@ pub(crate) fn same_repeated_postings(
         &documents,
         &mut seen,
         expected_count,
-    )
-    .map(Some)
+    )?;
+    if retain && result {
+        let expected = fragments
+            .iter()
+            .map(|(rowid, text)| (*rowid, counts[classes[text]]))
+            .collect::<Vec<_>>();
+        if !same_statistics(c, b, &expected)? {
+            return Err(error("invalid_attachment_index"));
+        }
+    }
+    scratch.retained = retain && result;
+    Ok(Some(result))
 }
+
+// Esta tabla proviene de todas las clases canónicas del mismo snapshot. Sólo
+// acredita ausencia global; un match exige el contraste completo de ranking.
+pub(crate) fn canonical_has_match(c: &Connection, expression: &str) -> Result<Option<bool>> {
+    if !c
+        .prepare("SELECT 1 FROM temp.sqlite_schema WHERE name='attachment_repeated_fts'")?
+        .exists([])?
+    {
+        return Ok(None);
+    }
+    Ok(Some(c.prepare("SELECT 1 FROM temp.attachment_repeated_fts WHERE attachment_repeated_fts MATCH ?1 LIMIT 1")?.exists([expression])?))
+}
+
+// Formato de contadores FTS5 de SQLite incorporado: varints big-endian. Los
+// contadores admitidos caben en u32 por los caps; nunca se acepta truncamiento.
+fn statistics_values(bytes: &[u8], fields: usize, pad: bool) -> Option<Vec<u32>> {
+    if bytes.len() > fields * 5 {
+        return None;
+    }
+    let mut out = Vec::with_capacity(fields);
+    let mut pos = 0;
+    for _ in 0..fields {
+        if pos == bytes.len() && pad {
+            out.push(0);
+            continue;
+        }
+        let mut value = 0u64;
+        let mut end = false;
+        for _ in 0..5 {
+            let byte = *bytes.get(pos)?;
+            pos += 1;
+            value = value.checked_mul(128)?.checked_add(u64::from(byte & 127))?;
+            if byte & 128 == 0 {
+                end = true;
+                break;
+            }
+        }
+        if !end {
+            return None;
+        }
+        out.push(value.try_into().ok()?);
+    }
+    (pos == bytes.len()).then_some(out)
+}
+fn same_statistics(c: &Connection, b: &Budget<'_>, expected: &[(u32, u32)]) -> Result<bool> {
+    use rusqlite::{OptionalExtension, types::ValueRef};
+    let mut expected = expected.to_vec();
+    expected.sort_unstable_by_key(|r| r.0);
+    let mut total = 0u32;
+    let mut stmt = c.prepare("SELECT id,CASE WHEN typeof(sz)='blob' AND length(sz)<=20 THEN sz END FROM main.extraction_search_fts_docsize ORDER BY id")?;
+    let mut rows = stmt.query([])?;
+    for (rowid, count) in &expected {
+        b.check()?;
+        let Some(row) = rows.next()? else {
+            return Ok(false);
+        };
+        let ValueRef::Blob(bytes) = row.get_ref(1)? else {
+            return Ok(false);
+        };
+        if row.get_ref(0)? != ValueRef::Integer(i64::from(*rowid))
+            || statistics_values(bytes, 4, false).as_deref() != Some(&[0, 0, 0, *count])
+        {
+            return Ok(false);
+        }
+        total = total
+            .checked_add(*count)
+            .ok_or_else(|| error("invalid_attachment_index"))?;
+    }
+    if rows.next()?.is_some() {
+        return Ok(false);
+    }
+    let actual = c.query_row("SELECT CASE WHEN typeof(block)='blob' AND length(block)<=25 THEN block END FROM main.extraction_search_fts_data WHERE id=1", [], |r| {
+        Ok(match r.get_ref(0)? { ValueRef::Blob(bytes) => statistics_values(bytes,5,true), _ => None })
+    }).optional()?.flatten();
+    b.check()?;
+    Ok(actual.as_deref() == Some(&[expected.len() as u32, 0, 0, 0, total]))
+}
+fn same_expected_statistics(c: &Connection, b: &Budget<'_>) -> Result<bool> {
+    use rusqlite::types::ValueRef;
+    let mut expected = Vec::new();
+    let mut stmt =
+        c.prepare("SELECT id,sz FROM temp.attachment_expected_fts_docsize ORDER BY id")?;
+    let mut rows = stmt.query([])?;
+    while let Some(row) = rows.next()? {
+        b.check()?;
+        let ValueRef::Blob(bytes) = row.get_ref(1)? else {
+            return Ok(false);
+        };
+        let counts =
+            statistics_values(bytes, 4, false).ok_or_else(|| error("invalid_attachment_index"))?;
+        if counts[..3] != [0, 0, 0] {
+            return Ok(false);
+        }
+        expected.push((row.get::<_, u32>(0)?, counts[3]));
+    }
+    same_statistics(c, b, &expected)
+}
+#[cfg(test)]
 pub(crate) fn same_copies(c: &Connection, b: &Budget<'_>) -> Result<bool> {
     // rowid es único en cada FTS. ORDER BY explícito permite comparar todas las
     // filas/celdas (incluidos sus tipos) sin construir dos árboles EXCEPT de texto.
@@ -610,6 +798,81 @@ pub(crate) fn same_copies(c: &Connection, b: &Budget<'_>) -> Result<bool> {
         }
     }
 }
+#[cfg(test)]
+include!("attachment_verify_reference.rs");
+
+fn same_canonical_copies(c: &Connection, b: &Budget<'_>, entries: &[Selected]) -> Result<bool> {
+    use rusqlite::types::ValueRef;
+    let mut expected = Vec::new();
+    for selected in entries {
+        for fragment in &selected.data.fragments {
+            b.check()?;
+            expected.push((
+                (selected.slot - 1) * 512 + fragment.ordinal + 1,
+                selected.data.source.job_id.as_bytes(),
+                selected.data.generation.id.as_bytes(),
+                fragment.ordinal,
+                fragment.text.as_bytes(),
+            ));
+        }
+    }
+    expected.sort_unstable_by_key(|row| row.0);
+    if expected.windows(2).any(|rows| rows[0].0 == rows[1].0) {
+        return Ok(false);
+    }
+    b.check()?;
+    let mut stmt = c.prepare("SELECT rowid,job_id,generation_id,ordinal,text FROM main.extraction_search_fts ORDER BY rowid")?;
+    let mut rows = stmt.query([])?;
+    for (n, (rowid, job, generation, ordinal, text)) in expected.into_iter().enumerate() {
+        let Some(row) = rows.next()? else {
+            return Ok(false);
+        };
+        for (column, expected) in [
+            ValueRef::Integer(i64::from(rowid)),
+            ValueRef::Text(job),
+            ValueRef::Text(generation),
+            ValueRef::Integer(i64::from(ordinal)),
+            ValueRef::Text(text),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            if row.get_ref(column)? != expected {
+                return Ok(false);
+            }
+        }
+        if n.is_multiple_of(32) {
+            b.check()?;
+        }
+    }
+    let complete = rows.next()?.is_none();
+    b.check()?;
+    Ok(complete)
+}
+
+pub(crate) fn ensure_expected(c: &Connection, b: &Budget<'_>, entries: &[Selected]) -> Result<()> {
+    if c.prepare("SELECT 1 FROM temp.sqlite_schema WHERE name='attachment_expected_fts'")?
+        .exists([])?
+    {
+        return Ok(());
+    }
+    c.execute_batch("CREATE VIRTUAL TABLE temp.attachment_expected_fts USING fts5(job_id UNINDEXED,generation_id UNINDEXED,ordinal UNINDEXED,text,tokenize='unicode61',detail=full);CREATE VIRTUAL TABLE temp.attachment_expected_vocab USING fts5vocab('temp','attachment_expected_fts','instance');")?;
+    let mut insert = c.prepare("INSERT INTO temp.attachment_expected_fts(rowid,job_id,generation_id,ordinal,text) VALUES (?1,?2,?3,?4,?5)")?;
+    for selected in entries {
+        for f in &selected.data.fragments {
+            b.check()?;
+            insert.execute(params![
+                (selected.slot - 1) * 512 + f.ordinal + 1,
+                selected.data.source.job_id,
+                selected.data.generation.id,
+                f.ordinal,
+                f.text
+            ])?;
+        }
+    }
+    b.check()
+}
+
 pub(crate) fn verify<'a>(c: &'a Connection, b: &Budget<'_>) -> Result<Verified<'a>> {
     let revision = control(c)?.revision;
     structure(c)?;
@@ -627,12 +890,11 @@ pub(crate) fn verify<'a>(c: &'a Connection, b: &Budget<'_>) -> Result<Verified<'
         }
         let raw:Vec<(u32,String,String,u32,u32,String,String)> = c.prepare("SELECT slot,job_id,generation_id,fragment_count,text_bytes,content_hash,indexed_at FROM extraction_search_entries ORDER BY job_id,generation_id,slot")?
             .query_map([],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?,r.get(4)?,r.get(5)?,r.get(6)?)))?.collect::<std::result::Result<_,_>>()?;
-        c.execute_batch("DROP TABLE IF EXISTS temp.attachment_actual_vocab;DROP TABLE IF EXISTS temp.attachment_expected_vocab;DROP TABLE IF EXISTS temp.attachment_expected_fts;CREATE VIRTUAL TABLE temp.attachment_expected_fts USING fts5(job_id UNINDEXED,generation_id UNINDEXED,ordinal UNINDEXED,text,tokenize='unicode61',detail=full);")?;
+        c.execute_batch("DROP TABLE IF EXISTS temp.attachment_actual_vocab;DROP TABLE IF EXISTS temp.attachment_expected_vocab;DROP TABLE IF EXISTS temp.attachment_expected_fts;DROP TABLE IF EXISTS temp.attachment_repeated_vocab;DROP TABLE IF EXISTS temp.attachment_repeated_fts;")?;
         let mut verified = Verified {
             conn: c,
             entries: Vec::with_capacity(raw.len()),
         };
-        let mut insert = c.prepare("INSERT INTO temp.attachment_expected_fts(rowid,job_id,generation_id,ordinal,text) VALUES (?1,?2,?3,?4,?5)")?;
         for (slot, job, generation, count, bytes, hash, at) in raw {
             b.check()?;
             if !(1..=MAX_INDEX_ENTRIES).contains(&slot)
@@ -648,24 +910,13 @@ pub(crate) fn verify<'a>(c: &'a Connection, b: &Budget<'_>) -> Result<Verified<'
             {
                 return Err(error("invalid_attachment_index"));
             }
-            for f in &data.fragments {
-                b.check()?;
-                insert.execute(params![
-                    (slot - 1) * 512 + f.ordinal + 1,
-                    job,
-                    generation,
-                    f.ordinal,
-                    f.text
-                ])?;
-            }
             let entry = data.entry(at);
             verified.entries.push(Selected { slot, data, entry });
         }
-        drop(insert);
-        if !same_copies(c, b)? {
+        if !same_canonical_copies(c, b, &verified.entries)? {
             return Err(error("invalid_attachment_index"));
         }
-        c.execute_batch("CREATE VIRTUAL TABLE temp.attachment_actual_vocab USING fts5vocab('main','extraction_search_fts','instance');CREATE VIRTUAL TABLE temp.attachment_expected_vocab USING fts5vocab('temp','attachment_expected_fts','instance');")?;
+        c.execute_batch("CREATE VIRTUAL TABLE temp.attachment_actual_vocab USING fts5vocab('main','extraction_search_fts','instance');")?;
         let fragments = verified
             .entries
             .iter()
@@ -676,8 +927,11 @@ pub(crate) fn verify<'a>(c: &'a Connection, b: &Budget<'_>) -> Result<Verified<'
                     .map(move |f| ((s.slot - 1) * 512 + f.ordinal + 1, f.text.as_str()))
             })
             .collect::<Vec<_>>();
-        if same_repeated_postings(c, b, &fragments)? != Some(true) && !same_postings(c, b)? {
-            return Err(error("invalid_attachment_index"));
+        if repeated_postings(c, b, &fragments, true)? != Some(true) {
+            ensure_expected(c, b, &verified.entries)?;
+            if !same_postings(c, b)? || !same_expected_statistics(c, b)? {
+                return Err(error("invalid_attachment_index"));
+            }
         }
         b.check()?;
         Ok(verified)
@@ -743,7 +997,14 @@ pub(crate) fn coverage(
             let extractor: String = r.get(2)?;
             if matches!(
                 extractor.as_str(),
-                "utf8_text" | "pdf_text" | "xlsx_cells" | "image_ocr"
+                "utf8_text"
+                    | "pdf_text"
+                    | "pdfium_text"
+                    | "paddle_ocr"
+                    | "xlsx_cells"
+                    | "image_ocr"
+                    | "pdfkit_text"
+                    | "pdf_ocr"
             ) && store::supported(&extractor, r.get(3)?, &serde_json::from_str(&raw)?)
             {
                 out.unindexed_supported_generations += 1;

@@ -200,8 +200,8 @@ El sistema SHALL recorrer v10→v11 con manifiesto/chunks XLSX y v11→v12 con b
 - **THEN** el caso íntegro se restaura, lee y busca sin parsing; el alterado se rechaza sin sobrescribir un destino existente, aun con hash externo de SQLite reparado
 
 #### Scenario: Versiones futuras
-- **WHEN** se abre un workspace v14 o se encuentran jobs/configuraciones futuros o un índice de versión/perfil futuros en v12
-- **THEN** v14 se rechaza sin modificar archivos; los jobs/configuraciones se conservan no ejecutables y un índice futuro no se reinterpreta, migra a perfil conocido ni elimina mediante reset
+- **WHEN** un cliente anterior a v14 abre un workspace v14 o se encuentran jobs/configuraciones futuros o un índice de versión/perfil futuros en v12
+- **THEN** ese cliente rechaza v14 sin modificar archivos; los jobs/configuraciones se conservan no ejecutables y un índice futuro no se reinterpreta, migra a perfil conocido ni elimina mediante reset
 
 ### Requirement: Compatibilidad recuperable del índice XLSX v12
 
@@ -250,3 +250,93 @@ Backup/restore y snapshots SHALL conservar representación, manifiesto, índice/
 #### Scenario: Snapshot lote y cuota
 - **WHEN** se crean previews/applies con OCR y cambios derivados concurrentes o una operación excede snapshot/retención
 - **THEN** el lote conserva todo el esquema/estado OCR y las nueve mutaciones, base.v2 no cambia sólo por derivados y el exceso revierte completo sin aumentar caps ni eliminar datos
+
+### Requirement: Evolución recuperable a páginas PDFKit persistidas
+
+El núcleo SHALL introducir tablas PDFKit mediante migración aditiva014 con backup consistente previo y transacción, sin modificar001–013, originales, datos/configuración desconocidos o selecciones previas. MUST mantener snapshots completos64MiB y base hash v2; clientes13 rechazan14 y el cliente14 rechaza15 sin writes. Migrar no ejecuta helper, trabajos o selección.
+
+#### Scenario: Fixture v13 independiente y recuperación
+- **WHEN** se prepara una fixture real con cliente13 durable antes de DDL y se migra a14
+- **THEN** backup/restaurado conservan filas, SQL previo, hashes, control y ownership; sólo se añaden tablas vacías y versiones, sin procesamiento
+
+#### Scenario: Rollback y versión ajena
+- **WHEN** falla014 antes/después de actualizar versión, se abre14 con cliente13 o el cliente14 encuentra15
+- **THEN** la transacción revierte o la admisión rechaza sin reparar/modificar; el backup13 se restaura en otra ruta con cliente anterior
+
+#### Scenario: Snapshots y retención nativa
+- **WHEN** se realiza preview/apply o backup/restore con generaciones PDFKit y formatos anteriores
+- **THEN** conserva todas las representaciones y cercas, excluye sólo derivados de base hash y verifica cuotas mixtas sin purgar fuentes o resultados ajenos
+
+### Requirement: Compatibilidad recuperable del índice PDFKit v15
+
+El sistema SHALL introducir barrera15 antes de admitir PDFKit en el índice, con backup14 previo consistente y migración transaccional sin cambiar tablas/perfil/revisión/filas anteriores. MUST conservar originales, buffers y formatos desconocidos; migrar no procesa ni selecciona y cliente14 ante15 y cliente15 ante16 se rechazan sin writes.
+
+#### Scenario: Baseline14 y selección posterior
+- **WHEN** se migra una fixture real14 durable con cinco formatos, PDFKit sin seleccionar y selecciones anteriores
+- **THEN** sólo cambian versiones; backup14 es restaurable con cliente14 en otra ruta y los hashes/resultados/cursor existentes se conservan, salvo cobertura que ahora reconoce PDFKit como compatible sin seleccionar
+
+#### Scenario: Rollback y admisión ajena
+- **WHEN** falla015 antes/después de versión, un cliente14 intenta15 o el cliente15 encuentra16
+- **THEN** la transacción revierte íntegramente a14 o el cliente rechaza antes de writes; no hay downgrade, reset o reindexación implícitos
+
+#### Scenario: Snapshot backup y datos futuros
+- **WHEN** se respaldan/restauran selecciones PDFKit, se aplican lotes concurrentes o existen configuraciones desconocidas
+- **THEN** conserva representaciones/huellas/selecciones completas y originales con snapshots64MiB/base.v2/batch9 intactos; corrupción o exceso se rechazan sin purga ni normalización
+
+### Requirement: Migración recuperable PDF OCR v16
+
+El sistema SHALL añadir dos tablas derivadas mediante016 transaccional con backup15 previo consistente y conservar001–015, filas/SQL/selecciones/hashes/originales existentes. MUST mantener snapshots64MiB/base.v2/retención32MiB, preservar documentos/configuraciones futuros y rechazar clientes15 ante16 o cliente16 ante17 antes de writes; migrar no procesa ni selecciona.
+
+#### Scenario: Baseline15 independiente y restore
+- **WHEN** se migra una fixture15 creada antes de016 con cinco formatos seleccionados y se restaura el backup con cliente15 en destino nuevo
+- **THEN** conserva exactamente filas/SQL/hashes/cursores/originales previos; sólo añade tablas vacías/versiones, sin activar helpers o cambiar documentos desconocidos
+
+#### Scenario: Fallo antes después y admisión incompatible
+- **WHEN** falla016 antes/después de versión o un cliente encuentra una versión ajena
+- **THEN** revierte el origen15 íntegro o rechaza sin reparar/modificar; el backup independiente sigue utilizable y no se hace downgrade in-place
+
+#### Scenario: Snapshot completo y corrupción
+- **WHEN** se respalda/restaura o hace preview/apply con seis formatos y se altera representación/posting/original
+- **THEN** conserva todos los derivados/selecciones en el caso íntegro y rechaza corrupción/exceso sin purgar o sustituir contenido del usuario
+
+### Requirement: Evolución recuperable del índice semántico
+
+El sistema MUST versionar el esquema semántico como migración aditiva 017, con backup previo y transacción atómica. SHALL conservar originales, documentos, entidades, revisiones, jobs, FTS y formatos desconocidos e inicializar el índice vacío. Una falla o versión futura MUST conservar el workspace anterior sin reparación ni descarte.
+
+#### Scenario: Migración desde 16 con datos existentes
+- **WHEN** se abre un workspace 16 con entidades, documentos, extracción, FTS y adjuntos
+- **THEN** la migración 017 crea el esquema semántico vacío, conserva todos los datos previos y deja el workspace en 17 con integridad válida
+
+#### Scenario: Fallo y versión futura
+- **WHEN** la migración 017 falla o el archivo declara una versión posterior a 17
+- **THEN** el workspace anterior queda intacto, se informa el backup o la versión y no se borran tablas, originales ni índices
+
+#### Scenario: Backup y restauración semánticos
+- **WHEN** se respalda y restaura un workspace con una generación semántica activa y otra retirada
+- **THEN** la restauración valida manifiesto, integridad y originales, conserva la generación activa y sus fuentes, y no activa generaciones en construcción
+
+### Requirement: Evolución recuperable de trazas del harness
+
+El sistema MUST versionar el esquema de trazas como migración aditiva 018 con backup consistente previo y transacción atómica. La migración SHALL conservar todo el contenido, índices y datos previos e inicializar las trazas vacías sin ejecuciones activas.
+
+Una migración fallida MUST conservar el esquema anterior. Una versión futura MUST rechazarse sin reparación. El backup/restauración SHALL conservar ejecuciones y pasos confirmados y no reactivar reservas de otra ruta.
+
+#### Scenario: Migración desde 17
+- **WHEN** se abre un workspace 17 con entidades, documentos, extracción e índice semántico
+- **THEN** la migración 018 crea las tablas de trazas, conserva los datos previos y deja integridad válida
+
+#### Scenario: Fallo o versión futura
+- **WHEN** la migración 018 falla o el archivo declara una versión posterior
+- **THEN** el workspace anterior queda intacto y no se borran trazas, originales ni índices
+
+### Requirement: Migración recuperable de estructura PDF
+
+El sistema MUST versionar la estructura como migración aditiva 019 con backup previo y transacción atómica. SHALL conservar todas las generaciones previas y dejar la estructura nullable; una falla o versión futura MUST conservar el workspace anterior.
+
+#### Scenario: Migración desde 18
+- **WHEN** se abre un workspace 18 con extracciones existentes
+- **THEN** la migración agrega las columnas, conserva filas/índices y deja integridad válida
+
+#### Scenario: Fallo o versión futura
+- **WHEN** falla la migración o el archivo declara una versión posterior
+- **THEN** no se publica un estado parcial ni se descartan datos

@@ -1,9 +1,14 @@
+mod agent_contracts;
+mod agent_provider;
+mod agent_storage;
 mod attachment_postings;
 mod attachment_search;
 mod attachment_search_contracts;
 mod attachment_search_storage;
 #[cfg(test)]
 mod attachment_search_tests;
+#[cfg(test)]
+mod attachment_verification_tests;
 mod attachments;
 mod batch_bindings;
 mod batch_contracts;
@@ -20,6 +25,9 @@ mod database_filters;
 mod documents;
 mod entities;
 pub mod error;
+mod external;
+#[cfg(test)]
+mod external_tests;
 mod extraction;
 mod extraction_contracts;
 mod extraction_storage;
@@ -28,8 +36,11 @@ mod extraction_tests;
 mod extraction_worker;
 mod formula_contracts;
 mod formulas;
+mod harness;
 mod home;
+mod goals;
 mod home_contracts;
+mod local_http;
 mod mutations;
 mod ocr_contracts;
 mod ocr_index_projection;
@@ -37,22 +48,57 @@ mod ocr_storage;
 mod ocr_supervisor;
 #[cfg(test)]
 mod ocr_tests;
+mod paddle_supervisor;
+#[cfg(test)]
+mod paddle_tests;
 mod pdf_contracts;
 mod pdf_storage;
+mod pdf_structure_storage;
 mod pdf_supervisor;
 #[cfg(test)]
 mod pdf_tests;
+mod pdfium_supervisor;
+#[cfg(test)]
+mod pdfium_tests;
+// PDF OCR remains an active change; acceptance and UI are still pending.
+mod pdf_ocr_compositor;
+mod pdf_ocr_contracts;
+mod pdf_ocr_index_projection;
+mod pdf_ocr_storage;
+#[cfg(test)]
+mod pdf_ocr_storage_tests;
+mod pdf_ocr_table;
+#[cfg(test)]
+mod pdf_ocr_table_tests;
+#[cfg(test)]
+mod pdf_ocr_tests;
+mod pdf_raster_protocol;
+mod pdf_raster_supervisor;
+mod pdfkit_contracts;
+mod pdfkit_index_projection;
+#[cfg(test)]
+mod pdfkit_search_tests;
+mod pdfkit_storage;
+mod pdfkit_supervisor;
+#[cfg(test)]
+mod pdfkit_tests;
 mod productivity;
 pub mod scoped;
 #[cfg(test)]
 mod scoped_tests;
 mod search;
+mod semantic;
+mod semantic_contracts;
+mod semantic_storage;
 mod template_contracts;
 mod templates;
 mod text_extractor;
 pub mod workspace;
 mod xlsx_contracts;
 mod xlsx_index_projection;
+mod xlsx_range;
+#[cfg(test)]
+mod xlsx_range_tests;
 #[cfg(test)]
 mod xlsx_search_tests;
 mod xlsx_storage;
@@ -90,10 +136,23 @@ pub fn describe() -> Value {
         "extraction.enqueue":schemars::schema_for!(EnqueueExtraction),"extraction.get":schemars::schema_for!(IdInput),"extraction.list":schemars::schema_for!(ListExtraction),"extraction.run":schemars::schema_for!(RunExtraction),"extraction.cancel":schemars::schema_for!(ExtractionRevision),"extraction.retry":schemars::schema_for!(ExtractionRevision),"extraction.control":schemars::schema_for!(ExtractionControlInput),"extraction.fragments":schemars::schema_for!(ReadFragments)
     }).as_object().unwrap().clone());
     inputs["extraction.pdf_fragments"] = json!(schemars::schema_for!(ReadPdfFragments));
+    inputs["extraction.pdf_ocr_regions"] = json!(schemars::schema_for!(ReadPdfOcrRegions));
+    inputs["extraction.pdfkit_pages"] = json!(schemars::schema_for!(ReadPdfkitPages));
     inputs["extraction.ocr_regions"] = json!(schemars::schema_for!(ReadOcrRegions));
+    inputs["extraction.pdf_ocr_table"] = json!(schemars::schema_for!(ReadPdfOcrTable));
+    inputs["extraction.xlsx_range"] = json!(schemars::schema_for!(ReadXlsxRange));
+    inputs["extraction.pdf_structure"] = json!(schemars::schema_for!(ReadPdfStructure));
     inputs["extraction.xlsx_cells"] = json!(schemars::schema_for!(ReadXlsxCells));
+    inputs["external.link"] = json!(schemars::schema_for!(LinkExternalResource));
+    inputs["external.unlink"] = json!(schemars::schema_for!(UnlinkExternalResource));
+    inputs["external.list"] = json!(schemars::schema_for!(ListExternalResources));
     inputs["extraction.index"] = json!(schemars::schema_for!(AttachmentIndexInput));
     inputs["extraction.search"] = json!(schemars::schema_for!(AttachmentSearchInput));
+    inputs["embedding.index"] = json!(schemars::schema_for!(EmbeddingIndexInput));
+    inputs["retrieval.search"] = json!(schemars::schema_for!(RetrievalInput));
+    inputs["agent.ask"] = json!(schemars::schema_for!(AgentAskInput));
+    inputs["agent.cancel"] = json!(schemars::schema_for!(AgentCancelInput));
+    inputs["agent.trace"] = json!(schemars::schema_for!(AgentTraceInput));
     let workspace = schemars::schema_for!(WorkspaceInfo);
     let entity = schemars::schema_for!(Entity);
     let relation = schemars::schema_for!(RelationResult);
@@ -109,10 +168,20 @@ pub fn describe() -> Value {
             "extraction.control" => json!(schemars::schema_for!(ExtractionControl)),
             "extraction.fragments" => json!(schemars::schema_for!(FragmentPage)),
             "extraction.pdf_fragments" => json!(schemars::schema_for!(PdfFragmentPage)),
+            "extraction.pdf_ocr_regions" => json!(schemars::schema_for!(PdfOcrRegionPage)),
+            "extraction.pdfkit_pages" => json!(schemars::schema_for!(PdfkitPagePage)),
             "extraction.ocr_regions" => json!(schemars::schema_for!(OcrRegionPage)),
+            "extraction.pdf_ocr_table" => json!(schemars::schema_for!(PdfOcrTablePage)),
+            "extraction.xlsx_range" => json!(schemars::schema_for!(XlsxRangePage)),
+            "extraction.pdf_structure" => json!(schemars::schema_for!(PdfStructureResult)),
             "extraction.xlsx_cells" => json!(schemars::schema_for!(XlsxCellPage)),
             "extraction.index" => json!(schemars::schema_for!(AttachmentIndexResult)),
             "extraction.search" => json!(schemars::schema_for!(AttachmentSearchPage)),
+            "embedding.index" => json!(schemars::schema_for!(EmbeddingIndexResult)),
+            "retrieval.search" => json!(schemars::schema_for!(RetrievalPage)),
+            "agent.ask" => json!(schemars::schema_for!(AgentRunResult)),
+            "agent.cancel" => json!(schemars::schema_for!(AgentCancelResult)),
+            "agent.trace" => json!(schemars::schema_for!(AgentTraceResult)),
             "changes.preview" => json!(schemars::schema_for!(BatchPreview)),
             "changes.apply" => json!(schemars::schema_for!(BatchApplied)),
             "home.query" => json!(schemars::schema_for!(HomePage)),
@@ -134,6 +203,10 @@ pub fn describe() -> Value {
             "workspace.backup" => json!(schemars::schema_for!(BackupInfo)),
             "entity.list" => json!(schemars::schema_for!(Page<Entity>)),
             "relation.list" => json!(schemars::schema_for!(Page<Relation>)),
+            "external.link" | "external.unlink" => {
+                json!(schemars::schema_for!(ExternalResourceResult))
+            }
+            "external.list" => json!(schemars::schema_for!(Page<ExternalResource>)),
             "changes.list" => json!(schemars::schema_for!(Page<Change>)),
             "attachment.import" => json!(schemars::schema_for!(Attachment)),
             "attachment.read" => json!(schemars::schema_for!(AttachmentData)),
@@ -151,14 +224,39 @@ pub fn describe() -> Value {
     let mut catalog = json!({"api_version":1,"inputs":inputs,"outputs":outputs,"error_schema":schemars::schema_for!(CoreError),"contract_schema":contract_schema(),"operation_capabilities":compatibility,"batch":{"version":1,"input_stage":"before_bindings","mutations":mutations,"check":{"operation":"database.query","resolved_input_schema":schemars::schema_for!(DatabaseQuery),"value_slots":batches::query_slots()},"limits":{"steps":batch_plan::MAX_STEPS,"checks":batch_plan::MAX_CHECKS,"bindings":batch_plan::MAX_BINDINGS,"key_chars":64,"pointer_bytes":512,"input_bytes":2_097_152,"output_bytes":batch_plan::MAX_RESPONSE_BYTES,"snapshot_bytes":batch_storage::MAX_SNAPSHOT_BYTES,"execution_ms":5000}},"limits":{"document_bytes":entities::MAX_DOCUMENT_BYTES,"blocks":entities::MAX_BLOCKS,"depth":entities::MAX_DEPTH,"busy_timeout_ms":workspace::BUSY_TIMEOUT_MS}});
     catalog["batch"]["base_hash_namespace"] = json!("noteka.batch.base.v2");
     catalog["extraction"] = json!({"version":1,"extractor":"utf8_text","extractor_version":1,"default_config":ExtractionConfig::default(),"paused_by_default":true,"limits":{"source_bytes":MAX_EXTRACTION_BYTES,"chunk_bytes":EXTRACTION_CHUNK_BYTES,"fragments":MAX_EXTRACTION_FRAGMENTS,"pending_jobs":MAX_EXTRACTION_PENDING,"total_jobs":MAX_EXTRACTION_JOBS,"retained_text_bytes":MAX_DERIVED_BYTES,"jobs_page_default":50,"jobs_page_max":100,"fragments_page_default":32,"fragments_page_max":64,"cursor_bytes":2048,"config_bytes":8192,"error_bytes":4096,"input_bytes":EXTRACTION_RESPONSE_BYTES,"output_bytes":EXTRACTION_RESPONSE_BYTES,"execution_ms":EXTRACTION_EXECUTION_MS,"lease_seconds":EXTRACTION_LEASE_SECONDS,"busy_timeout_ms":workspace::BUSY_TIMEOUT_MS}});
-    catalog["extraction"]["extractors"] =
-        json!(["utf8_text", "pdf_text", "xlsx_cells", "image_ocr"]);
+    catalog["extraction"]["extractors"] = json!([
+        "utf8_text",
+        "pdf_text",
+        "xlsx_cells",
+        "image_ocr",
+        "pdfkit_text",
+        "pdfium_text",
+        "paddle_ocr",
+        "pdf_ocr"
+    ]);
+    catalog["extraction"]["pdf_ocr"] = json!({"version":1,"profile":pdf_ocr_compositor::PROFILE,"raster_profile":pdf_raster_protocol::PROFILE,"platform":"macos_13_or_newer","runtime_availability":"checked_on_explicit_run","max_pages":20,"max_axis":4096,"max_page_pixels":4000000,"max_document_pixels":16000000,"max_png_bytes":1048576,"shared_execution_ms":5000,"inferred":true,"automatic_orientation_detection":false,"preserves_original":true});
+    catalog["extraction"]["pdfkit"] = json!({"version":1,"profile":noteka_pdfkit_protocol::PROFILE,"platform":"macos_13_or_newer","runtime_availability":"checked_on_explicit_run","max_pages":100,"max_representation_bytes":1048576,"limitations":noteka_pdfkit_protocol::LIMITATIONS});
     catalog["attachment_index"] = json!({"version":1,"profile":ATTACHMENT_INDEX_PROFILE,"selected_explicitly":true,"scope":"selected_generations","limits":{"generations":MAX_INDEX_ENTRIES,"fragments":MAX_INDEX_FRAGMENTS,"text_bytes":MAX_INDEX_TEXT_BYTES,"response_bytes":EXTRACTION_RESPONSE_BYTES,"cursor_bytes":2048,"query_bytes":256,"terms":16,"page_max":64,"get_page_default":32,"search_page_default":20,"execution_ms":5000,"busy_timeout_ms":workspace::BUSY_TIMEOUT_MS,"snapshot_bytes":batch_storage::MAX_SNAPSHOT_BYTES}});
-    catalog["attachment_index"]["extractors"] =
-        json!(["utf8_text", "pdf_text", "xlsx_cells", "image_ocr"]);
+    catalog["attachment_index"]["extractors"] = json!([
+        "utf8_text",
+        "pdf_text",
+        "xlsx_cells",
+        "image_ocr",
+        "pdfkit_text",
+        "pdfium_text",
+        "paddle_ocr",
+        "pdf_ocr"
+    ]);
+    catalog["attachment_index"]["pdf_ocr_projection"] = json!({"version":"pdf_ocr_region_text_v1","indexes_metadata":false,"inferred":true,"cross_fragment_matching":false,"coordinate_space":"rendered_page_normalized_bottom_left","original_offsets":false});
+    catalog["attachment_index"]["paddle_projection"] = json!({"version":"pdf_page_text_v1","indexes_metadata":false,"cross_fragment_matching":false,"physical_page_numbers":true,"original_offsets":false});
+    catalog["attachment_index"]["pdfium_projection"] = json!({"version":"pdf_page_text_v1","indexes_metadata":false,"cross_fragment_matching":false,"physical_page_numbers":true,"original_offsets":false});
+    catalog["attachment_index"]["pdfkit_projection"] = json!({"version":"pdfkit_page_text_v1","indexes_metadata":false,"cross_fragment_matching":false,"physical_page_numbers":true,"original_offsets":false});
     catalog["attachment_index"]["xlsx_projection"] = json!({"version":"xlsx_cell_fields_v1","fields":["cached_text","cached_number","cached_boolean","cached_error","cached_date_iso","formula_text"],"chunk_bytes":4096,"fragments_per_generation":512,"text_bytes_per_generation":1048576,"includes_hidden_sheets":true,"cross_fragment_matching":false,"recalculates_formulas":false,"indexes_metadata":false});
     catalog["extraction"]["ocr"] = json!({"version":1,"profile":noteka_ocr_protocol::PROFILE,"platform":"macos_13_or_newer","runtime_availability":"checked_on_explicit_run","wire_version":2,"formats":["png","jpeg"],"coordinate_space":noteka_ocr_protocol::COORDINATE_SPACE,"limitations":noteka_ocr_protocol::LIMITATIONS,"scalar_encoding":"canonical_decimal_string","max_axis":4096,"max_pixels":4000000,"max_regions":512,"max_region_text_bytes":131072,"max_representation_bytes":1048576,"cpu_seconds":4,"rss_observed_bytes":134217728,"rss_poll_ms":5,"hard_rss_limit":false,"private_stdout_bytes":8388608,"private_stderr_bytes":8192});
     catalog["attachment_index"]["ocr_projection"] = json!({"version":"ocr_region_text_v1","indexes_metadata":false,"inferred":true,"cross_fragment_matching":false});
+    catalog["agent"] = json!({"version":1,"runtime":"openai_chat_completions_v1","endpoint":"loopback_only","tools":["retrieval.search","entity.get","database.query","changes.preview","changes.apply"],"apply_requires_preview":true,"limits":{"steps":MAX_AGENT_STEPS,"context_bytes":[MIN_CONTEXT_BYTES,MAX_CONTEXT_BYTES],"tool_bytes":[MIN_TOOL_BYTES,MAX_TOOL_BYTES],"deadline_ms":[MIN_DEADLINE_MS,MAX_DEADLINE_MS],"tokens":4096,"trace_bytes":MAX_TRACE_BYTES,"retention":AGENT_RETENTION,"concurrency":1}});
+    catalog["extraction"]["paddle_ocr"] = json!({"version":1,"parser_name":"paddleocr_ppstructurev3","parser_version":"3.7.0","platform":"universal","python_env":"NOTEKA_PADDLE_PYTHON","worker_env":"NOTEKA_PADDLE_WORKER","models_env":"NOTEKA_PADDLE_MODEL_PATHS","device_env":"NOTEKA_PADDLE_DEVICE","runtime_availability":"checked_on_explicit_run","max_pages":20,"max_text_bytes":1048576,"max_source_bytes":1048576,"scope":"page_text","structure_tables_persisted":false,"limitations":["inferred_text_may_be_incorrect","python_runtime_and_models_must_be_installed","tables_not_persisted_in_this_recut"]});
+    catalog["extraction"]["pdfium"] = json!({"version":1,"parser_name":"pdfium","parser_version":"0.9.4/pdfium-7881","platform":"universal","library_env":"NOTEKA_PDFIUM_LIB","runtime_availability":"checked_on_explicit_run","max_pages":100,"max_text_bytes":1048576,"max_source_bytes":1048576,"scope":"page_text","limitations":["text_may_be_missing_or_incorrect","no_layout_tables_or_visual_description","dynamic_library_must_be_installed"]});
     catalog["extraction"]["pdf"] = json!({"version":1,"parser_name":"lopdf","parser_version":"0.45.0","versions":"1.0-1.7","fonts":"standard_latin_type1","encodings":["StandardEncoding","WinAnsiEncoding"],"scope":"page_text_objects","limitations":PDF_LIMITATIONS,"max_pages":100,"max_text_bytes":1_048_576,"page_stream_bytes":4_194_304,"load_stream_bytes":1_048_576,"heap_layout_bytes":134_217_728,"cpu_seconds":4,"private_stdout_bytes":8_388_608,"private_stderr_bytes":8192});
     catalog
 }
@@ -220,6 +318,21 @@ fn dispatch(request: Request, origin: &str, request_id: &str) -> Result<Value> {
         )?);
     }
     match request.command {
+        Operation::AgentAsk(input) => {
+            return Ok(serde_json::to_value(harness::ask(&path, input, None)?)?);
+        }
+        Operation::AgentCancel(input) => {
+            return Ok(serde_json::to_value(harness::cancel(&path, input, None)?)?);
+        }
+        Operation::AgentTrace(input) => {
+            return Ok(serde_json::to_value(harness::trace(&path, input, None)?)?);
+        }
+        Operation::EmbeddingIndex(input) => {
+            return Ok(serde_json::to_value(semantic::index(&path, input, None)?)?);
+        }
+        Operation::RetrievalSearch(input) => {
+            return Ok(serde_json::to_value(semantic::search(&path, input, None)?)?);
+        }
         Operation::ExtractionIndex(input) => {
             return Ok(serde_json::to_value(attachment_search::index(
                 &path, input,
@@ -263,7 +376,18 @@ fn dispatch_on_workspace(
         Operation::ExtractionPdfFragments(i) => {
             serde_json::to_value(w.extraction_pdf_fragments(i)?)?
         }
+        Operation::ExtractionPdfOcrRegions(i) => {
+            serde_json::to_value(w.extraction_pdf_ocr_regions(i)?)?
+        }
+        Operation::ExtractionPdfkitPages(i) => serde_json::to_value(w.extraction_pdfkit_pages(i)?)?,
         Operation::ExtractionOcrRegions(i) => serde_json::to_value(w.extraction_ocr_regions(i)?)?,
+        Operation::ExtractionPdfOcrTable(i) => {
+            serde_json::to_value(w.extraction_pdf_ocr_table(i)?)?
+        }
+        Operation::ExtractionXlsxRange(i) => serde_json::to_value(w.extraction_xlsx_range(i)?)?,
+        Operation::ExtractionPdfStructure(i) => {
+            serde_json::to_value(w.extraction_pdf_structure(i)?)?
+        }
         Operation::ExtractionXlsxCells(i) => serde_json::to_value(w.extraction_xlsx_cells(i)?)?,
         Operation::HomeQuery(i) => serde_json::to_value(w.home_query(i)?)?,
         Operation::TemplateSave(i) => serde_json::to_value(w.template_save(i)?)?,
@@ -311,6 +435,13 @@ fn dispatch_on_workspace(
             serde_json::to_value(w.relation_remove(i, origin, request_id)?)?
         }
         Operation::RelationList(i) => serde_json::to_value(w.relation_list(i)?)?,
+        Operation::ExternalLink(i) => {
+            serde_json::to_value(w.external_link(i, origin, request_id)?)?
+        }
+        Operation::ExternalUnlink(i) => {
+            serde_json::to_value(w.external_unlink(i, origin, request_id)?)?
+        }
+        Operation::ExternalList(i) => serde_json::to_value(w.external_list(i)?)?,
         Operation::ChangesList(i) => serde_json::to_value(w.changes_list(i)?)?,
         Operation::AttachmentImport(i) => serde_json::to_value(w.attachment_import(i)?)?,
         Operation::AttachmentRead(i) => serde_json::to_value(w.attachment_read(i)?)?,
@@ -332,6 +463,31 @@ fn dispatch_scoped(
     let path = scope.root();
     match command {
         Operation::Describe(_) => Ok(describe()),
+        Operation::AgentAsk(input) => Ok(serde_json::to_value(harness::ask(
+            path,
+            input,
+            Some(scope),
+        )?)?),
+        Operation::AgentCancel(input) => Ok(serde_json::to_value(harness::cancel(
+            path,
+            input,
+            Some(scope),
+        )?)?),
+        Operation::AgentTrace(input) => Ok(serde_json::to_value(harness::trace(
+            path,
+            input,
+            Some(scope),
+        )?)?),
+        Operation::EmbeddingIndex(input) => Ok(serde_json::to_value(semantic::index(
+            path,
+            input,
+            Some(scope),
+        )?)?),
+        Operation::RetrievalSearch(input) => Ok(serde_json::to_value(semantic::search(
+            path,
+            input,
+            Some(scope),
+        )?)?),
         Operation::ExtractionIndex(input) => Ok(serde_json::to_value(
             attachment_search::index_scoped(path, input, Some(scope))?,
         )?),

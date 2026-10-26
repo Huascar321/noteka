@@ -554,14 +554,23 @@ fn wal_snapshot_page_size_and_sql_extensions_fail_closed_without_migration() {
             continue;
         }
         let (_t, w) = setup();
-        w.conn.execute_batch(&format!("UPDATE workspace_meta SET schema_version={version};PRAGMA user_version={version};PRAGMA wal_checkpoint(TRUNCATE);")).unwrap();
+        let drops = if version == 19 {
+            ""
+        } else if version < 17 {
+            "DROP TABLE IF EXISTS semantic_chunks;DROP TABLE IF EXISTS semantic_control;DROP TABLE IF EXISTS semantic_generations;DROP TABLE IF EXISTS semantic_profiles;DROP TABLE IF EXISTS agent_runs;DROP TABLE IF EXISTS extraction_pdf_structures;"
+        } else if version == 17 {
+            "DROP TABLE IF EXISTS agent_runs;DROP TABLE IF EXISTS extraction_pdf_structures;"
+        } else {
+            "DROP TABLE IF EXISTS extraction_pdf_structures;"
+        };
+        w.conn.execute_batch(&format!("{drops}
+UPDATE workspace_meta SET schema_version={version};PRAGMA user_version={version};PRAGMA wal_checkpoint(TRUNCATE);")).unwrap();
         let bytes = std::fs::read(w.path.join(DB_NAME)).unwrap();
-        assert!(matches!(
-            batches::preview(&w.path, simple(), "cli", "bad")
-                .unwrap_err()
-                .code,
-            ErrorCode::UnsupportedWorkspaceVersion
-        ));
+        let err = batches::preview(&w.path, simple(), "cli", "bad").unwrap_err();
+        assert!(
+            matches!(err.code, ErrorCode::UnsupportedWorkspaceVersion),
+            "{version}: {err:?}"
+        );
         assert_eq!(std::fs::read(w.path.join(DB_NAME)).unwrap(), bytes);
     }
     let t = tempfile::tempdir().unwrap();
@@ -1021,10 +1030,12 @@ fn checks_cover_51_and_101_rows_without_certifying_skipped_rows() {
 fn explicit_migration_of_v0_remains_batch_compatible() {
     let (_t, w) = setup();
     w.conn
-        .execute_batch("DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;DROP TABLE extraction_xlsx_chunks;DROP TABLE extraction_xlsx_generations")
+        .execute_batch("DROP TABLE extraction_pdf_ocr_chunks;DROP TABLE extraction_pdf_ocr_generations;DROP TABLE extraction_pdfkit_chunks;DROP TABLE extraction_pdfkit_generations;DROP TABLE extraction_ocr_chunks;DROP TABLE extraction_ocr_generations;DROP TABLE extraction_xlsx_chunks;DROP TABLE extraction_xlsx_generations")
         .unwrap();
     w.conn.execute_batch("DROP TABLE extraction_search_entries;DROP TABLE extraction_search_fts;DROP TABLE extraction_search_control;DROP TABLE extraction_pdf_fragments;DROP TABLE extraction_pdf_pages;DROP TABLE extraction_pdf_generations;DROP TABLE extraction_fragments;DROP TABLE extraction_runtime;DROP TABLE extraction_jobs;DROP TABLE extraction_generations;DROP TABLE extraction_control;").unwrap();
-    w.conn.execute_batch("DROP TABLE templates;DROP TABLE calculations;DROP TABLE views;DROP TABLE property_values;DROP TABLE memberships;DROP TABLE properties;DROP TABLE collections;DROP TABLE changes;DROP TABLE attachments;DROP TABLE search_fts;UPDATE workspace_meta SET schema_version=0;PRAGMA user_version=0").unwrap();
+    w.conn.execute_batch("DROP TABLE templates;DROP TABLE calculations;DROP TABLE views;DROP TABLE property_values;DROP TABLE memberships;DROP TABLE properties;DROP TABLE collections;DROP TABLE changes;DROP TABLE attachments;DROP TABLE search_fts;DROP TABLE IF EXISTS semantic_chunks;DROP TABLE IF EXISTS semantic_control;DROP TABLE IF EXISTS semantic_generations;DROP TABLE IF EXISTS semantic_profiles;DROP TABLE IF EXISTS agent_runs;
+DROP TABLE IF EXISTS extraction_pdf_structures;
+UPDATE workspace_meta SET schema_version=0;PRAGMA user_version=0").unwrap();
     let root = w.path.clone();
     drop(w);
     let migrated = Workspace::open(&root).unwrap();

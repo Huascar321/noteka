@@ -4,6 +4,12 @@ Autorización de trabajo autónomo: 12 de octubre de 2026. No se activan llamada
 
 ## Revisiones no bloqueantes
 
+- [ ] Revisar [PDF universal](universal-pdf.md): PDFium para texto y PaddleOCR para OCR por página, prioridad sobre PDFKit/Vision. Aceptación local410 Rust/16 ignoradas por perfil, PDFium/Paddle reales, UI headless; [evidencia](verification-universal-pdf.md) y [ADR0031](decisions/0031-universal-pdf-backend.md). Paddle persiste texto, no tablas/estructura; Windows/Linux no ejecutados. Revisión manual diferida sin autorizar pantalla/proveedores/remotos.
+
+- [ ] Revisar [recuperación semántica](semantic-retrieval.md) y [harness](agent-harness.md): perfiles/huella, backend exacto, fallback FTS, citas verificables, límites/cancelación y trazas. Aceptación técnica local con407 Rust/14 ignoradas y28 SDK por perfil,94 frontend y5.120 headless; [5b](verification-semantic-retrieval.md) y [5c](verification-agent-harness.md). No se instalaron pesos de Jina ni se activó un modelo/proveedor; la calidad real queda pendiente. Revisión manual diferida, sin autorizar pantalla/modelos/remotos.
+
+- [ ] Revisar [lector XLSX por rango](xlsx-range-reader.md): hoja/rango/header explícitos, celdas dispersas y cobertura diferenciada; aceptación técnica documentada en [evidencia](verification-xlsx-range-reader.md). Revisión UX diferida sin bloquear desarrollo local ni autorizar pantalla/modelos/remotos.
+
 - [ ] Revisar [OCR de imágenes](image-ocr.md): texto inferido, regiones/decimales, selección y límites explícitos. Aceptación técnica aprobada con319 Rust por perfil,3442 checks headless y cuatro gates; [evidencia](verification-image-ocr.md). Revisión manual diferida no bloqueante, sin autorizar pantalla, modelos, proveedores u OAuth.
 
 - [ ] Revisar [preparación explícita](attachment-preparation-ui.md), [lector por páginas](attachment-reader-ui.md) y [consulta agrupada](grouped-search.md). Aceptación técnica conjunta aprobada con 3.116 checks headless y cuatro gates, sin certificar host nativo; [evidencia](verification-local-preparation-closure.md). Revisión manual diferida sin bloquear desarrollo local ni autorizar pantalla/modelos/remotos.

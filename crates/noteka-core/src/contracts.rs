@@ -1,3 +1,4 @@
+pub use crate::agent_contracts::*;
 pub use crate::attachment_search_contracts::*;
 pub use crate::batch_contracts::*;
 pub use crate::database_contracts::*;
@@ -7,8 +8,13 @@ pub use crate::formula_contracts::*;
 pub use crate::home_contracts::*;
 pub use crate::ocr_contracts::*;
 pub use crate::pdf_contracts::*;
+pub use crate::pdf_ocr_contracts::*;
+pub use crate::pdf_ocr_table::*;
+pub use crate::pdfkit_contracts::*;
+pub use crate::semantic_contracts::*;
 pub use crate::template_contracts::*;
 pub use crate::xlsx_contracts::*;
+pub use crate::xlsx_range::*;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -128,6 +134,100 @@ fn yes() -> bool {
 pub struct NoteFields {
     #[serde(default = "yes")]
     pub inbox: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon_color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub note_type: Option<NoteType>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub favorite: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<NoteSource>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub goal: Option<GoalFields>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub milestone: Option<MilestoneFields>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum GoalState {
+    Active,
+    #[default]
+    Dream,
+    Achieved,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct GoalActivitySnapshot {
+    pub at: String,
+    pub revisions: std::collections::BTreeMap<String, u32>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(deny_unknown_fields)]
+pub struct GoalFields {
+    #[serde(default)]
+    pub state: GoalState,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub goal_set: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_deadline: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub achieved_on: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activity_snapshot: Option<GoalActivitySnapshot>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(deny_unknown_fields)]
+pub struct MilestoneFields {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub goal_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_deadline: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub completed_on: Option<String>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum NoteType {
+    Reference,
+    Plan,
+    WebClip,
+    Voice,
+    Journal,
+    Meeting,
+    TopicResearch,
+    Idea,
+    Lecture,
+}
+impl NoteType {
+    pub(crate) fn as_str(&self) -> &'static str {
+        match self {
+            Self::Reference => "reference",
+            Self::Plan => "plan",
+            Self::WebClip => "web_clip",
+            Self::Voice => "voice",
+            Self::Journal => "journal",
+            Self::Meeting => "meeting",
+            Self::TopicResearch => "topic_research",
+            Self::Idea => "idea",
+            Self::Lecture => "lecture",
+        }
+    }
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NoteSource {
+    pub provider: String,
+    pub collection: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub record_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub created_at: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub updated_at: Option<String>,
+    #[serde(default)]
+    pub archived: bool,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "snake_case")]
@@ -155,6 +255,10 @@ pub struct TaskFields {
     pub planned_date: Option<String>,
     #[serde(default = "yes")]
     pub inbox: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon_color: Option<String>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "snake_case")]
@@ -175,18 +279,74 @@ pub struct ProjectFields {
     pub purpose: String,
     pub start_date: Option<String>,
     pub end_date: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon_color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<NoteSource>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub board_order: Option<u32>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Classification {
     Area,
     Resource,
+    Entity,
     Topic,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct TagFields {
     pub classification: Classification,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub favorite: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<NoteSource>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_activity_at: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon_color: Option<String>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct PersonFields {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon_color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub relationships: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub company: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub photo: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub photo_position: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub birthday: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub check_in: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_check_in: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pipeline_status: Option<PersonPipelineStatus>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<NoteSource>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gallery_order: Option<u32>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum PersonPipelineStatus {
+    Prospect,
+    Contacted,
+    Negotiating,
+    Rejected,
+    Closed,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -363,6 +523,16 @@ pub struct ExportResult {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "operation", content = "input", deny_unknown_fields)]
 pub enum Operation {
+    #[serde(rename = "agent.ask")]
+    AgentAsk(AgentAskInput),
+    #[serde(rename = "agent.cancel")]
+    AgentCancel(AgentCancelInput),
+    #[serde(rename = "agent.trace")]
+    AgentTrace(AgentTraceInput),
+    #[serde(rename = "embedding.index")]
+    EmbeddingIndex(EmbeddingIndexInput),
+    #[serde(rename = "retrieval.search")]
+    RetrievalSearch(RetrievalInput),
     #[serde(rename = "extraction.index")]
     ExtractionIndex(AttachmentIndexInput),
     #[serde(rename = "extraction.search")]
@@ -389,6 +559,16 @@ pub enum Operation {
     ExtractionXlsxCells(ReadXlsxCells),
     #[serde(rename = "extraction.ocr_regions")]
     ExtractionOcrRegions(ReadOcrRegions),
+    #[serde(rename = "extraction.pdf_ocr_regions")]
+    ExtractionPdfOcrRegions(ReadPdfOcrRegions),
+    #[serde(rename = "extraction.pdf_ocr_table")]
+    ExtractionPdfOcrTable(ReadPdfOcrTable),
+    #[serde(rename = "extraction.xlsx_range")]
+    ExtractionXlsxRange(ReadXlsxRange),
+    #[serde(rename = "extraction.pdf_structure")]
+    ExtractionPdfStructure(ReadPdfStructure),
+    #[serde(rename = "extraction.pdfkit_pages")]
+    ExtractionPdfkitPages(ReadPdfkitPages),
     #[serde(rename = "changes.preview")]
     ChangesPreview(BatchPlan),
     #[serde(rename = "changes.apply")]
@@ -455,6 +635,12 @@ pub enum Operation {
     RelationRemove(RemoveRelation),
     #[serde(rename = "relation.list")]
     RelationList(ListRelations),
+    #[serde(rename = "external.link")]
+    ExternalLink(LinkExternalResource),
+    #[serde(rename = "external.unlink")]
+    ExternalUnlink(UnlinkExternalResource),
+    #[serde(rename = "external.list")]
+    ExternalList(ListExternalResources),
     #[serde(rename = "changes.list")]
     ChangesList(ListChanges),
     #[serde(rename = "attachment.import")]
@@ -512,6 +698,49 @@ pub struct Relation {
     pub source_id: String,
     pub target_id: String,
     pub kind: RelationKind,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ExternalResource {
+    pub id: String,
+    pub provider: String,
+    pub account_id: String,
+    pub resource_type: String,
+    pub resource_id: String,
+    pub metadata: Value,
+    pub created_at: String,
+    pub updated_at: String,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct LinkExternalResource {
+    pub entity_id: String,
+    pub expected_revision: u32,
+    pub provider: String,
+    pub account_id: String,
+    pub resource_type: String,
+    pub resource_id: String,
+    #[serde(default)]
+    pub metadata: Value,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct UnlinkExternalResource {
+    pub entity_id: String,
+    pub expected_revision: u32,
+    pub id: String,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(deny_unknown_fields)]
+pub struct ListExternalResources {
+    pub entity_id: String,
+    pub cursor: Option<String>,
+    pub limit: Option<u32>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ExternalResourceResult {
+    pub resource: ExternalResource,
+    pub entity: Entity,
+    pub changed: bool,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Change {
@@ -593,4 +822,22 @@ pub struct Contract {
     pub read_pdf_fragments: ReadPdfFragments,
     pub attachment_index: AttachmentIndexResult,
     pub attachment_search: AttachmentSearchPage,
+    pub read_pdfkit_pages: ReadPdfkitPages,
+    pub pdfkit_pages: PdfkitPagePage,
+    pub read_pdf_ocr_regions: ReadPdfOcrRegions,
+    pub pdf_ocr_regions: PdfOcrRegionPage,
+    pub read_xlsx_range: ReadXlsxRange,
+    pub xlsx_range: XlsxRangePage,
+    pub read_pdf_ocr_table: ReadPdfOcrTable,
+    pub pdf_ocr_table: PdfOcrTablePage,
+    pub pdf_structure: PdfStructureResult,
+    pub embedding_index: EmbeddingIndexResult,
+    pub embedding_status: EmbeddingStatus,
+    pub retrieval: RetrievalPage,
+    pub agent_run: AgentRunResult,
+    pub agent_trace: AgentTrace,
+    pub agent_traces: AgentTracePage,
+    pub external_resource: ExternalResource,
+    pub external_resources: Page<ExternalResource>,
+    pub external_resource_result: ExternalResourceResult,
 }

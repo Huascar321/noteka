@@ -4,7 +4,7 @@ use crate::{
     error::*,
     extraction::job_error,
     extraction_storage as store, ocr_storage, ocr_supervisor, pdf_storage, pdf_supervisor,
-    text_extractor,
+    pdfkit_storage, pdfkit_supervisor, text_extractor,
     workspace::{self, Workspace},
     xlsx_storage, xlsx_supervisor,
 };
@@ -83,6 +83,8 @@ impl Workspace {
         pdf_storage::shape(&tx)?;
         xlsx_storage::shape(&tx)?;
         ocr_storage::shape(&tx)?;
+        pdfkit_storage::shape(&tx)?;
+        crate::pdf_ocr_storage::shape(&tx)?;
         let ctl = store::control(&tx)?;
         let recovered = store::recover(&tx, &self.path)?;
         if input
@@ -199,8 +201,10 @@ impl Workspace {
         {
             let snapshot = self.conn.unchecked_transaction()?;
             pdf_storage::integrity(&snapshot)?;
+            crate::pdf_structure_storage::integrity(&snapshot)?;
             xlsx_storage::integrity(&snapshot)?;
             ocr_storage::integrity(&snapshot)?;
+            pdfkit_storage::integrity(&snapshot)?;
         }
         #[cfg(test)]
         if let Some(h) = hook.as_mut() {
@@ -215,7 +219,11 @@ impl Workspace {
             Claimed::Recovered(j) => return Err(job_error(j.error.clone().unwrap(), &j)),
             Claimed::Work(c) => c,
         };
-        let duration = Duration::from_millis(EXTRACTION_EXECUTION_MS);
+        let duration = if c.job.extractor == "paddle_ocr" {
+            Duration::from_millis(30_000)
+        } else {
+            Duration::from_millis(EXTRACTION_EXECUTION_MS)
+        };
         #[cfg(test)]
         let duration = test_duration.unwrap_or(duration);
         let result = (|| {
@@ -237,38 +245,107 @@ impl Workspace {
                 if let Some(h) = hook.as_mut() {
                     h("source_read");
                 }
-                let (parts, pdf, xlsx, ocr) = match c.job.extractor.as_str() {
-                    "utf8_text" => (text_extractor::extract(&bytes, check)?, None, None, None),
-                    "pdf_text" => (
-                        Vec::new(),
-                        Some(pdf_storage::prepare(pdf_supervisor::run(
-                            &bytes, &b, check,
-                        )?)?),
-                        None,
-                        None,
-                    ),
-                    "xlsx_cells" => (
-                        Vec::new(),
-                        None,
-                        Some(xlsx_storage::prepare(xlsx_supervisor::run(
-                            &bytes, &b, check,
-                        )?)?),
-                        None,
-                    ),
-                    "image_ocr" => (
-                        Vec::new(),
-                        None,
-                        None,
-                        Some(ocr_storage::prepare(ocr_supervisor::run(
-                            &bytes, &b, check,
-                        )?)?),
-                    ),
-                    _ => return Err(store::invalid("unsupported_extractor_config")),
+                let pdf_ocr = if c.job.extractor == "pdf_ocr" {
+                    Some(crate::pdf_ocr_storage::prepare(
+                        crate::pdf_ocr_compositor::run(&bytes, &b, check)?,
+                    )?)
+                } else {
+                    None
                 };
+                let (parts, pdf, xlsx, ocr, pdfkit, paddle_structure) =
+                    match c.job.extractor.as_str() {
+                        "utf8_text" => (
+                            text_extractor::extract(&bytes, check)?,
+                            None,
+                            None,
+                            None,
+                            None,
+                            None,
+                        ),
+                        "pdf_text" => (
+                            Vec::new(),
+                            Some(pdf_storage::prepare(pdf_supervisor::run(
+                                &bytes, &b, check,
+                            )?)?),
+                            None,
+                            None,
+                            None,
+                            None,
+                        ),
+                        "pdfium_text" => (
+                            Vec::new(),
+                            Some(pdf_storage::prepare_with_parser(
+                                crate::pdfium_supervisor::run(&bytes, &b, check)?
+                                    .into_iter()
+                                    .map(|p| noteka_pdf_protocol::PageText {
+                                        page_number: p.page_number,
+                                        text: p.text,
+                                    })
+                                    .collect(),
+                                noteka_pdfium_protocol::PARSER_NAME,
+                                noteka_pdfium_protocol::PARSER_VERSION,
+                            )?),
+                            None,
+                            None,
+                            None,
+                            None,
+                        ),
+                        "paddle_ocr" => {
+                            let paddle = crate::paddle_supervisor::run(&bytes, &b, check)?;
+                            (
+                                Vec::new(),
+                                Some(pdf_storage::prepare_with_parser(
+                                    paddle.pages,
+                                    "paddleocr_ppstructurev3",
+                                    "3.7.0",
+                                )?),
+                                None,
+                                None,
+                                None,
+                                Some(paddle.structure),
+                            )
+                        }
+                        "xlsx_cells" => (
+                            Vec::new(),
+                            None,
+                            Some(xlsx_storage::prepare(xlsx_supervisor::run(
+                                &bytes, &b, check,
+                            )?)?),
+                            None,
+                            None,
+                            None,
+                        ),
+                        "image_ocr" => (
+                            Vec::new(),
+                            None,
+                            None,
+                            Some(ocr_storage::prepare(ocr_supervisor::run(
+                                &bytes, &b, check,
+                            )?)?),
+                            None,
+                            None,
+                        ),
+                        "pdfkit_text" => (
+                            Vec::new(),
+                            None,
+                            None,
+                            None,
+                            Some(pdfkit_storage::prepare(pdfkit_supervisor::run(
+                                &bytes, &b, check,
+                            )?)?),
+                            None,
+                        ),
+                        "pdf_ocr" => (Vec::new(), None, None, None, None, None),
+                        _ => return Err(store::invalid("unsupported_extractor_config")),
+                    };
                 if let Some(o) = &ocr {
                     ocr_storage::source_format(&o.manifest, &a)?;
                 }
-                let (fragment_count, extracted_bytes) = if let Some(o) = &ocr {
+                let (fragment_count, extracted_bytes) = if let Some(p) = &pdf_ocr {
+                    (p.chunks.len() as u32, p.manifest.representation_bytes)
+                } else if let Some(p) = &pdfkit {
+                    (p.chunks.len() as u32, p.manifest.representation_bytes)
+                } else if let Some(o) = &ocr {
                     (o.chunks.len() as u32, o.manifest.representation_bytes)
                 } else if let Some(x) = &xlsx {
                     (x.chunks.len() as u32, x.manifest.representation_bytes)
@@ -301,7 +378,7 @@ impl Workspace {
                 if !store::supported(&c.job.extractor, c.job.extractor_version, &c.job.config) {
                     return Err(store::invalid("unsupported_extractor_config"));
                 }
-                let retained = ocr_storage::retained(&tx, &c.job.id)?;
+                let retained = crate::pdf_ocr_storage::retained(&tx, &c.job.id)?;
                 if retained
                     .checked_add(u64::from(extracted_bytes))
                     .is_none_or(|n| n > MAX_DERIVED_BYTES)
@@ -322,8 +399,23 @@ impl Workspace {
                 if let Some(pdf) = &pdf {
                     pdf_storage::publish(&tx, &gen_id, &c.job.id, pdf)?;
                 }
+                if let Some(structure) = &paddle_structure {
+                    crate::pdf_structure_storage::publish(
+                        &tx,
+                        &gen_id,
+                        &c.job.id,
+                        &c.job.source_sha256,
+                        structure,
+                    )?;
+                }
                 if let Some(xlsx) = &xlsx {
                     xlsx_storage::publish(&tx, &gen_id, &c.job.id, xlsx)?;
+                }
+                if let Some(p) = &pdf_ocr {
+                    crate::pdf_ocr_storage::publish(&tx, &gen_id, &c.job.id, p)?;
+                }
+                if let Some(p) = &pdfkit {
+                    pdfkit_storage::publish(&tx, &gen_id, &c.job.id, p)?;
                 }
                 if let Some(o) = &ocr {
                     ocr_storage::publish(&tx, &gen_id, &c.job.id, o)?;

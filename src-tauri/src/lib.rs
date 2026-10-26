@@ -33,13 +33,64 @@ fn close_confirmed(app: tauri::AppHandle) {
     app.exit(0);
 }
 
+#[tauri::command]
+async fn google_pick() -> Result<Value, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        noteka_providers::google::pick(&noteka_providers::KeyringStore)
+            .map_err(|error| format!("{}: {}", error.code, error.message))
+    })
+    .await
+    .map_err(|_| "El Picker no pudo completarse.".to_owned())?
+}
+
+#[tauri::command]
+async fn google_preview(file_id: String) -> Result<Value, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        noteka_providers::google::preview(&noteka_providers::KeyringStore, &file_id)
+            .map_err(|error| format!("{}: {}", error.code, error.message))
+    })
+    .await
+    .map_err(|_| "La previsualización no pudo completarse.".to_owned())?
+}
+
+fn external_url_allowed(url: &str) -> bool {
+    [
+        "https://docs.google.com/",
+        "https://drive.google.com/",
+        "https://sheets.google.com/",
+    ]
+    .iter()
+    .any(|prefix| url.starts_with(prefix))
+}
+
+#[tauri::command]
+fn open_external(url: String) -> Result<(), String> {
+    if !external_url_allowed(&url) {
+        return Err("URL externa no permitida.".into());
+    }
+    #[cfg(target_os = "macos")]
+    let (program, args) = ("open", vec![url.as_str()]);
+    #[cfg(target_os = "windows")]
+    let (program, args) = ("cmd", vec!["/C", "start", "", url.as_str()]);
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    let (program, args) = ("xdg-open", vec![url.as_str()]);
+    std::process::Command::new(program)
+        .args(args)
+        .status()
+        .map_err(|error| format!("No se pudo abrir el navegador: {error}"))?;
+    Ok(())
+}
+
 pub fn run() {
     let builder = tauri::Builder::default()
         .manage(Pending(AtomicBool::new(false)))
         .invoke_handler(tauri::generate_handler![
             operate,
             pending_edits,
-            close_confirmed
+            close_confirmed,
+            google_pick,
+            google_preview,
+            open_external
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event
@@ -55,6 +106,9 @@ pub fn run() {
             operate,
             pending_edits,
             close_confirmed,
+            google_pick,
+            google_preview,
+            open_external,
             smoke::smoke_control
         ])
         .on_page_load(|webview, payload| {
@@ -88,4 +142,22 @@ pub fn run() {
             let _ = app.emit("noteka-close-requested", ());
         }
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::external_url_allowed;
+
+    #[test]
+    fn external_urls_are_limited_to_google_drive_hosts() {
+        assert!(external_url_allowed(
+            "https://docs.google.com/spreadsheets/d/x"
+        ));
+        assert!(external_url_allowed("https://drive.google.com/file/d/x"));
+        assert!(external_url_allowed(
+            "https://sheets.google.com/spreadsheets/d/x"
+        ));
+        assert!(!external_url_allowed("https://example.com/"));
+        assert!(!external_url_allowed("http://docs.google.com/"));
+    }
 }
