@@ -290,26 +290,34 @@ export type HomeSummary =
 export type HomeView =
   | "tasks_today"
   | "tasks_inbox"
+  | "tasks_unclassified"
   | "tasks_all"
+  | "tasks_pending"
   | "tasks_done"
   | "tasks_week"
   | "tasks_month"
+  | "tasks_calendar_week"
+  | "tasks_calendar_month"
   | "tasks_scheduled"
   | "tasks_no_due"
   | "tasks_active_projects"
   | "tasks_projects_in_progress"
   | "notes_all"
   | "notes_inbox"
+  | "notes_unclassified"
   | "notes_library"
+  | "notes_general"
   | "notes_favorites"
   | "notes_clips"
   | "notes_voice"
   | "notes_journal"
+  | "notes_diary"
   | "notes_meetings"
   | "projects_active"
   | "projects_planned"
   | "projects_board"
   | "projects_deadlines"
+  | "projects_calendar"
   | "projects_completed"
   | "projects_on_hold"
   | "projects_by_tag"
@@ -332,7 +340,21 @@ export type HomeView =
   | "people_pipeline"
   | "people_active_projects";
 export type NoteType =
-  "reference" | "plan" | "web_clip" | "voice" | "journal" | "meeting" | "topic_research" | "idea" | "lecture";
+  | "reference"
+  | "plan"
+  | "web_clip"
+  | "voice"
+  | "journal"
+  | "daily"
+  | "meeting"
+  | "topic_research"
+  | "outlier_content"
+  | "creator_tips"
+  | "tools"
+  | "book"
+  | "recipe"
+  | "idea"
+  | "lecture";
 export type OcrImageFormat = "png" | "jpeg";
 export type PdfLocatorKind = "pdf_page_text";
 export type PdfPageState = "text" | "no_text";
@@ -1371,15 +1393,24 @@ export interface PersonFields {
   birthday?: string | null;
   check_in?: string | null;
   company?: string | null;
+  email?: string | null;
   gallery_order?: number | null;
   icon?: string | null;
   icon_color?: string | null;
+  instagram?: string | null;
+  interests?: string[] | null;
+  job_title?: string | null;
   last_check_in?: string | null;
+  linkedin?: string | null;
+  location?: string | null;
+  phone?: string | null;
   photo?: string | null;
   photo_position?: number | null;
   pipeline_status?: PersonPipelineStatus | null;
   relationships?: string[] | null;
   source?: NoteSource | null;
+  twitter?: string | null;
+  website?: string | null;
 }
 export interface NoteSource {
   archived?: boolean;

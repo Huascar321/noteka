@@ -22,7 +22,7 @@
   let tags: HomeReader | undefined;
 
   onMount(() => {
-    notes = new HomeReader('notes_library', queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => noteState = state, 10, true);
+    notes = new HomeReader('notes_general', queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => noteState = state, 10, true);
     tags = new HomeReader('tags_recent', queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => tagState = state, 10, true);
     void notes.load(); void tags.load();
     window.addEventListener('keydown', refreshKeydown, true);

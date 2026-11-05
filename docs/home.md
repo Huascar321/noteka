@@ -29,14 +29,18 @@ Todas excluyen principales archivadas y conservan contexto archivado. Todo orden
 | Vista / UI | Selección | Orden previo al ID | Presentación |
 | --- | --- | --- | --- |
 | tasks_today / Today (núcleo) | todo/doing, due_date <= día | due_date asc, created_at asc | Lista |
-| tasks_inbox / Inbox | todo/doing, inbox true | created_at asc | Grupos por proyecto |
-| tasks_all / All | Todas | created_at asc | Grupos por proyecto |
+| tasks_inbox / Inbox | todo/doing sin relación Project local | created_at asc | Grupos por proyecto |
+| tasks_all / consulta histórica | Todas | created_at asc | Grupos por proyecto |
+| tasks_pending / All | todo/doing | created_at asc | Grupos por proyecto |
+| tasks_calendar_week / Week | Semana de Due, sin fecha y fecha inválida; todos los estados | fecha, sin fecha al final | Calendario semanal; páginas cargadas |
+| tasks_calendar_month / Month | Mes de Due, sin fecha y fecha inválida; todos los estados | fecha, sin fecha al final | Calendario mensual; páginas cargadas |
 | tasks_done / Done | done | updated_at desc | Grupos; menú Más vistas |
 | notes_all / Notes | Todas | updated_at desc | Lista |
-| notes_inbox / Inbox | inbox true | created_at asc | Lista |
+| notes_inbox / Inbox | notas activas sin relación Project local | created_at asc | Lista |
 | projects_active / Active | doing/ongoing | doing→ongoing, título | Grupos |
 | projects_planned / Planned | planned | título | Lista |
 | projects_board / Board | Todas | planned→doing→ongoing→done→on_hold, título | Cinco columnas |
+| projects_calendar / Deadlines | No archivados, incluidos Done y sin fecha | fecha de fin, sin fecha al final | Calendario mensual; páginas cargadas |
 | tags_recent / Recent | Tags admisibles | actividad de origen o notas relacionadas desc | Lista |
 | tags_alphabetical / A–Z | Todas | título | Lista |
 | tags_types / Types | Tags admisibles | area→resource→entity→topic, título | Grupos |
@@ -44,16 +48,16 @@ Todas excluyen principales archivadas y conservan contexto archivado. Todo orden
 | people_new / New | Contactos creados desde el último mes civil | orden de galería, título | Galería |
 | people_updated / Updated | Contactos actualizados desde el último mes civil | orden de galería, título | Galería |
 
-Today incluye vencidas, excluye futuras/sin vencimiento/done. **My Day sigue planned_date == día; Overdue sigue due_date < día**. `doing` cuenta como pendiente en Today, Inbox, Week, Month, Scheduled, No Due, proyectos activos y resúmenes; `done` es el único estado completado. Home Active es doing/ongoing; el workflow lateral Active Projects mantiene planned/doing/ongoing. La tab visual **Today** de Tasks usa `tasks_projects_in_progress` (pendientes de proyectos Doing/Ongoing, agrupadas); el núcleo conserva `tasks_today` por vencimiento para CLI/MCP. **Topic no se renombra Entity** y su grupo aparece cuando contiene registros. Tags Recent combina actividad de origen y notas relacionadas. People New/Updated usa fechas de origen cuando existen y fechas locales como fallback; el límite inferior es un mes civil inclusivo. El orden acreditado de galería precede al título y al ID. Son reglas locales, no lógica Notion inferida.
+Today incluye vencidas, excluye futuras/sin vencimiento/done. **My Day sigue planned_date == día; Overdue sigue due_date < día**. `doing` cuenta como pendiente en las consultas históricas Today, Inbox, Week, Month, Scheduled, No Due, proyectos activos y resúmenes; `done` es el único estado completado. Los nuevos calendarios visuales Week/Month incluyen Done. Home Active es doing/ongoing; el workflow lateral Active Projects mantiene planned/doing/ongoing. La tab visual **Today** de Tasks usa `tasks_projects_in_progress` (pendientes de proyectos Doing/Ongoing, agrupadas); el núcleo conserva `tasks_today` por vencimiento para CLI/MCP. **Topic no se renombra Entity** y su grupo aparece cuando contiene registros. Tags Recent combina actividad de origen y notas relacionadas. People New/Updated usa fechas de origen cuando existen y fechas locales como fallback; el límite inferior es un mes civil inclusivo. El orden acreditado de galería precede al título y al ID. Son reglas locales, no lógica Notion inferida.
 
 Grupos referencian IDs de una página de elementos únicos; una tarea con dos proyectos aparece dos veces con el mismo ID. Cantidad del grupo = apariciones de página, no total del workspace. Se incluyen Sin proyecto, dos estados Active, cinco Board y tres Types vacíos. Un grupo vacío puede tener registros en otra página.
 
 ## Metadatos y resúmenes
 
-Lectura conservadora por claves conocidas: campos extras permanecen intactos; estado/default válido sólo por omisión legítima en objeto heredado (Task todo/normal/inbox true, Project planned, Note inbox true). Un null en estado/Inbox no es default; fechas opcionales null sí son ausencia. Payload no objeto y valores presentes incompatibles son no disponibles. All/Board/Types pueden conservar identidad con aviso/grupo No disponible; las filas cuya metadata completa no puede interpretarse se excluyen de esa vista y exponen `unavailable_count`, conservando el original recuperable. Un campo irrelevante no invalida el resto de la fila.
+Lectura conservadora por claves conocidas: campos extras permanecen intactos; estado/default válido sólo por omisión legítima en objeto heredado (Task todo/normal, Project planned, Note). La bandera `inbox` conserva su default `true` al crear, pero ninguna vista la consulta: Inbox se deriva de la ausencia de relación Project ([ADR0059](decisions/0059-derived-inbox.md)). Un null en estado no es default; un null en inbox queda como dato heredado inerte; fechas opcionales null sí son ausencia. Payload no objeto y valores presentes incompatibles son no disponibles. All/Board/Types pueden conservar identidad con aviso/grupo No disponible; las filas cuya metadata completa no puede interpretarse se excluyen de esa vista y exponen `unavailable_count`, conservando el original recuperable. Un campo irrelevante no invalida el resto de la fila.
 
 - Proyecto: todas sus tareas únicas activas directamente relacionadas, no sólo las 50 filas visibles. `pending` (todo/doing), `done`, `overdue` (todo/doing y due_date < día), `total`; progreso entero comprobado `floor(100 * done / total)`. Total cero → porcentaje null/**Sin tareas**. Metadatos requeridos incompatibles → resumen no disponible, no cero. No persiste porcentaje ni cambia estado del proyecto. No es una fórmula atribuida a Notion o Goals.
-- Tag: todas sus notas únicas activas, conteo y última por updated_at desc/ID asc. Sin notas → 0/last null. Timestamp no interpretable → resumen no disponible; Inbox/payload no afectan identidad y fecha de la última nota. No carga documentos.
+- Tag: todas sus notas únicas activas, conteo y última por updated_at desc/ID asc. Sin notas → 0/last null. Timestamp no interpretable → resumen no disponible; la bandera heredada inbox y el payload no afectan identidad y fecha de la última nota. No carga documentos.
 - Nota: antigüedad civil firmada desde timestamp y zona/día de consulta en Rust; fecha futura e inválida se distinguen, no se clampa a cero.
 
 ## Operación y navegación
@@ -73,7 +77,7 @@ Portada CSS propia azul/verde, casa, navegación y orden **Tasks → Notes → P
 | Portada/nav | Jerarquía, enlaces locales, dos temas | Personalizar portada; Content |
 | Clima | Franja/aviso sin llamadas | Localidad/proveedor, opt-in/caché, siete días |
 | Tasks | Today (pendientes de proyectos Doing/Ongoing)/Inbox/All/Done | Week/Month/Scheduled/No Due/Recurring, All Active Projects/Active Content |
-| Notes | Notes/Inbox | Fav./Clips/Voice/Journal/Meetings/All diferenciada |
+| Notes | Notes/Inbox | Fav./Clips/Voice/Journal/Meetings/All diferenciada; Unclassified (biblioteca sin Tag/Project/People) |
 | Projects | Active/Planned/Board y resumen Noteka | Paridad con campos/fórmulas de referencia no inspeccionados |
 | Tags | Recent/A–Z/Types; Topic conservado | Fav.; tipo Entity requiere decisión/modelo propio |
 | Goals | Páginas tipadas, Active/Dream/Achieved, relaciones/fechas/progreso por hitos y By Activity/By Deadline/By Tag/Achieved | Sincronización o fórmula universal de actividad |

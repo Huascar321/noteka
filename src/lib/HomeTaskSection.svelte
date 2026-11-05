@@ -5,26 +5,27 @@
   import { visualIconName } from './visual-icon';
   import { homeGroupLabel, type HomeReadState } from './home-reads';
   import HomeReadStatus from './HomeReadStatus.svelte';
+  import TaskCalendar from './TaskCalendar.svelte';
   import { operate } from './api';
   import type { HomeView, HomeGroup, EntityRef, HomeItem, Entity } from './contracts.generated';
   import { slidingTabs } from './sliding-tabs';
 
-  let { workspace, readState, onview, onnext, onretry, onopen, oncreate, ongroupcreate, onnavigate, onchanged, pageMode = false }: {
+  let { workspace, readState, onview, ondate, onnext, onretry, onopen, oncreate, ongroupcreate, onnavigate, onchanged, pageMode = false }: {
     workspace: string;
     pageMode?: boolean;
-    readState?: HomeReadState; onview: (view?: HomeView) => Promise<void>; onnext: () => Promise<void>;
-    onretry: () => Promise<void>; onopen: (id: string) => Promise<void>; oncreate: () => Promise<void>;
+    readState?: HomeReadState; onview: (view?: HomeView) => Promise<void>; ondate: (view: HomeView, date?: string) => Promise<void>; onnext: () => Promise<void>;
+    onretry: () => Promise<void>; onopen: (id: string) => Promise<void>; oncreate: (seed?: Record<string, unknown>) => Promise<void>;
     ongroupcreate: (group: HomeGroup) => Promise<void>; onnavigate: () => Promise<void>; onchanged?: () => Promise<void>;
   } = $props();
   const views: { id: HomeView; label: string; icon: string }[] = [
     { id: 'tasks_projects_in_progress', label: 'Today', icon: 'sun' },
     { id: 'tasks_inbox', label: 'Inbox', icon: 'inbox' },
-    { id: 'tasks_week', label: 'Week', icon: 'calendar-week' },
-    { id: 'tasks_month', label: 'Month', icon: 'calendar' },
+    { id: 'tasks_calendar_week', label: 'Week', icon: 'calendar-week' },
+    { id: 'tasks_calendar_month', label: 'Month', icon: 'calendar' },
     { id: 'tasks_scheduled', label: 'Scheduled', icon: 'calendar-clock' },
     { id: 'tasks_no_due', label: 'No Due', icon: 'circle-dot' },
     { id: 'tasks_active_projects', label: 'All Active Projects', icon: 'hammer' },
-    { id: 'tasks_all', label: 'All', icon: 'list-checks' },
+    { id: 'tasks_pending', label: 'All', icon: 'list-checks' },
   ];
   const page = $derived(readState?.page);
   const displayedViews = $derived(pageMode ? [...views, { id: 'tasks_done' as HomeView, label: 'Done', icon: 'circle-check' }] : views);
@@ -59,13 +60,13 @@
 <section class="home-section home-tasks" class:tasks-page-section={pageMode} data-home-section="task" aria-label="Tasks" aria-busy={readState?.busy ?? true} bind:this={root}>
   {#if pageMode}
     <header class="tasks-page-heading"><span class="tasks-page-emblem" aria-hidden="true"><SectionIcon section="task" size={68} /></span><h1>Tasks</h1></header>
-    <nav class="tasks-page-nav" aria-label="Tasks quick navigation"><details><summary>Nav</summary><button onclick={() => void onview('tasks_all')}>All tasks</button><button onclick={() => void onview('tasks_done')}>Done</button></details>{#each displayedViews.slice(0, 4).sort((a,b) => Number(a.id !== 'tasks_inbox') - Number(b.id !== 'tasks_inbox')) as view}<span aria-hidden="true">|</span><button onclick={() => void onview(view.id)}>{view.label}</button>{/each}</nav>
+    <nav class="tasks-page-nav" aria-label="Tasks quick navigation"><details><summary>Nav</summary><button onclick={() => void onview('tasks_pending')}>All tasks</button><button onclick={() => void onview('tasks_done')}>Done</button></details>{#each displayedViews.slice(0, 4).sort((a,b) => Number(a.id !== 'tasks_inbox') - Number(b.id !== 'tasks_inbox')) as view}<span aria-hidden="true">|</span><button onclick={() => void onview(view.id)}>{view.label}</button>{/each}</nav>
   {:else}<header><h2><span class="task-heading-icon" aria-hidden="true"><SectionIcon section="task" size={29} /></span><button onclick={() => void onnavigate()}>Tasks</button></h2></header>{/if}
   <div class="task-view-toolbar">
     <div class="home-tabs task-view-tabs" use:slidingTabs role="group" aria-label="Tasks views">
       {#each displayedViews as view}
         {#if pageMode && view.id === 'tasks_active_projects'}<button disabled class="task-pending-view" title="Recurring: coming later"><AppIcon name="refresh" size={16} /><span>Recurring</span></button>{/if}
-        {#if pageMode && view.id === 'tasks_all'}<button disabled class="task-pending-view" title="Active Content: coming later"><AppIcon name="file-text" size={16} /><span>Active Content</span></button>{/if}
+        {#if pageMode && view.id === 'tasks_pending'}<button disabled class="task-pending-view" title="Active Content: coming later"><AppIcon name="file-text" size={16} /><span>Active Content</span></button>{/if}
         <button class:active={readState?.view === view.id} aria-pressed={readState?.view === view.id} title={view.label} onclick={() => void onview(view.id)}><AppIcon name={view.icon} size={16} /><span>{view.label}</span></button>
       {/each}
       {#if !pageMode}<button class="task-more-views" aria-label="More Tasks views" aria-expanded={moreOpen} onclick={() => moreOpen = !moreOpen} bind:this={moreButton}>1 more…</button>{/if}
@@ -78,14 +79,17 @@
     </div>
   </div>
   {#if moreOpen}<div class="task-more-menu glass-menu"><button aria-pressed={readState?.view === 'tasks_done'} onclick={() => { closeMore(); void onview('tasks_done'); }}><AppIcon name="circle-check" size={15} />Done</button><p>Recurring and Active Content are not yet implemented.</p><button onclick={closeMore}>Close</button></div>{/if}
-  {#if optionsOpen}<div class="task-view-options"><p>Today: pending tasks in unarchived Doing/Ongoing projects, grouped by project. All Active Projects also includes Planned. Week/Month: ISO week and calendar month of the due date. Scheduled: assigned due date; No Due: no due date.</p><p>Only pending tasks in unarchived projects appear in project views. Creating a task does not assign dates.</p><p>Groups cover this page; a task may appear in several projects. Recurring and Active Content require features that are not yet implemented.</p>{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}
+  {#if optionsOpen}<div class="task-view-options"><p>Today: pending tasks in unarchived Doing/Ongoing projects, grouped by project. All Active Projects also includes Planned. Week/Month: calendars by due date, including completed and undated tasks. Scheduled: assigned due date; No Due: no due date. Inbox shows pending tasks without a Project relation; All shows pending tasks; Done shows completed tasks.</p><p>Only pending tasks in unarchived projects appear in project views. New from a calendar day prepares that due date; ordinary New does not assign dates.</p><p>Groups cover this page; a task may appear in several projects. Recurring and Active Content require features that are not yet implemented.</p>{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}
   {#if readState?.busy && !page}<p role="status" class="task-read-status">Loading Tasks…</p>{/if}
   {#if readState?.error}<p class="error" role="alert">Read failed: {readState.error}</p><button onclick={() => void onretry()}>Retry Tasks</button>{/if}
   {#if toggleError}<p class="error" role="alert">{toggleError}</p>{/if}
   <HomeReadStatus state={readState} />
+  {#if readState?.view === 'tasks_inbox'}<p class="task-read-status">Pending tasks without a local Project relation. Linking one to a project removes it from this view.</p>{/if}
   {#if page}
     {#if page.unavailable_count}<p class="home-unavailable">{page.unavailable_count} tasks with uninterpretable metadata for this view.</p>{/if}
-    {#if page.groups.length}
+    {#if readState?.view === 'tasks_calendar_week' || readState?.view === 'tasks_calendar_month'}
+      <TaskCalendar items={page.items} date={page.date} mode={readState.view === 'tasks_calendar_week' ? 'week' : 'month'} partial={!!page.next_cursor} busy={!!readState.busy} {onopen} oncreate={(date) => void oncreate({due_date:date})} ondate={(date) => ondate(readState!.view, date)} />
+    {:else if page.groups.length}
       <div class="home-groups task-groups">
         {#each page.groups as group (group.key)}
           {@const project = projectRef(group)}

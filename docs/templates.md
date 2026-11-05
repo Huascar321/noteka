@@ -19,7 +19,8 @@ Reemplazá los placeholders por IDs/revisiones confirmados; `collection get` ofr
 
 Instanciar toma title inicial salvo override explícito no vacío; title null es inválido. Omitir una propiedad conserva su default; null lo limpia. Se validan **todos** los defaults antes de fusionar, incluso los reemplazados. Revisión antigua de plantilla/esquema: revision_conflict (exit 4); validación: exit 2; formato de plantilla desconocido: unsupported_template_format (exit 6), con JSON recuperable por get/list. No se reemplaza una definición futura ni un valor futuro por uno reducido. Original ausente/inseguro no se convierte en copia vacía.
 
-Cada instancia obtiene nueva entidad note, bloques nuevos y `inbox:false`. Adjuntos, relaciones de propiedades y vistas siguen apuntando a IDs originales; editar una instancia no cambia otras/plantilla. Sin placeholders dinámicos ni fechas relativas. Creación, documento, valores, historial e índice son atómicos.
+Cada instancia obtiene nueva entidad note, bloques nuevos y `inbox:false` (dato
+heredado sin efecto en las vistas desde `derive-inbox-from-projects`). Adjuntos, relaciones de propiedades y vistas siguen apuntando a IDs originales; editar una instancia no cambia otras/plantilla. Sin placeholders dinámicos ni fechas relativas. Creación, documento, valores, historial e índice son atómicos.
 
 Ejemplo de defaults: `values: {"ID_MONEDA":"145.69", "ID_TEXTO":"Preparar"}`. Override `values: {"ID_TEXTO":null}` conserva dinero y limpia texto; `{"ID_MONEDA":"48.57"}` cambia sólo el importe. Sustituí IDs por propiedades editables de esa colección. No admiten floats para dinero ni propiedades title/calculadas. Un default inválido no se oculta por un override válido.
 

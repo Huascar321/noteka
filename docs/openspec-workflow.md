@@ -593,3 +593,28 @@ La tarea 2.3 de keys/cuotas reales de OpenAI/Gemini queda **diferida por decisi�
 del usuario** y no bloquea el archivo; las pruebas locales cubren selección
 explícita, ausencia de fallback, timeout, errores estructurados y no exposición de
 tokens. Las specs principales quedan en **17 capabilities/257 requisitos**.
+
+## Apertura automática del workspace (05/11/2026)
+
+`auto-open-workspace` quedó **4/4**, sincronizado y archivado como
+`2026-11-05-auto-open-workspace`. El arranque abre el último workspace guardado
+en `noteka.workspace-path.v1` y, si no existe, el directorio de datos
+predeterminado; la selección queda para el primer uso, los errores y Change
+workspace. Sin autocreación, cambios Rust ni contratos. Tests unitarios 7/7,
+`check` limpio, build y arranque headless 7/7; reinicio real verificado en dos
+arranques. La suite `test:headless` sigue roja por un desajuste previo
+(`.home-coverage` dentro de View options). Ver
+[verificación](verification-auto-open-workspace.md).
+
+## Inbox derivado de relaciones Project (05/11/2026)
+
+`derive-inbox-from-projects` convierte Inbox en un conjunto derivado: notas
+activas y tareas pendientes sin relación Project local; vincular a un proyecto
+las saca y quitar el vínculo las devuelve. Se retira el control manual y la tab
+Unclassified de Tasks; Notes conserva Unclassified. `payload.inbox` queda inerte
+sin migración. Núcleo 23 pruebas focales, check/build y 12 checks headless;
+ventana nativa verificada. Suite lib con 3 hashes de contratos previos rojos y
+`test:headless` histórico rojo por `.home-coverage`. Ver
+[ADR0059](decisions/0059-derived-inbox.md) y
+[verificación](verification-derived-inbox.md). Sincronizado y archivado como
+`2026-11-05-derive-inbox-from-projects`.

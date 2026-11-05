@@ -6,6 +6,9 @@ async (page) => {
   const externalDetails=[];
   await page.context().route('**/*',async route=>{const request=route.request(),u=new URL(request.url());if(u.origin===origin)await route.continue();else {external.push(u.origin);let frameOrigin=null;try{frameOrigin=new URL(request.frame().url()).origin;}catch{}externalDetails.push({origin:u.origin,path:u.pathname,type:request.resourceType(),frame_origin:frameOrigin});await route.abort();}});
   await page.exposeFunction('notekaViewport',({width,height})=>page.setViewportSize({width,height}));
+  // El recorrido usa siempre la pantalla de bienvenida: la preferencia de
+  // arranque automático se neutraliza sólo en este transporte de pruebas.
+  await page.addInitScript(() => { try { localStorage.removeItem('noteka.workspace-path.v1'); } catch {} });
   await page.exposeFunction('notekaCapture',async({name})=>{if(typeof name!=='string'||!/^[a-zA-Z0-9-]+$/.test(name))throw new Error('Nombre de captura inválido');const r=await page.request.get(origin+'/__test__/status');const {root}=await r.json();const theme=name.includes('-light-')?'light':'dark';const path=root+'/'+theme+'/'+name+'.png';await page.screenshot({path});return path;});
   await page.addInitScript(() => {
     let pending=false,next=1;const callbacks=new Map();

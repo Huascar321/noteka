@@ -20,13 +20,13 @@
   let tasks: HomeReader | undefined;
   let projects: HomeReader | undefined;
   onMount(() => {
-    tasks = new HomeReader('tasks_projects_in_progress', queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => taskState = state, 10, true);
+    tasks = new HomeReader('tasks_projects_in_progress', queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => taskState = state, 10, true, { tasks_calendar_week:100, tasks_calendar_month:100 });
     projects = new HomeReader('projects_active', queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => projectState = state, 100, true);
     void tasks.load(); void projects.load();
     window.addEventListener('keydown', refreshKeydown, true);
     return () => { tasks?.dispose(); projects?.dispose(); window.removeEventListener('keydown', refreshKeydown, true); };
   });
-  function load(reader: HomeReader | undefined, view?: HomeView, next = false) { return reader?.load(view, next ? reader.state.page?.next_cursor ?? undefined : undefined) ?? Promise.resolve(); }
+  function load(reader: HomeReader | undefined, view?: HomeView, next = false, date?: string) { return reader?.load(view, next ? reader.state.page?.next_cursor ?? undefined : undefined, next ? reader.state.page?.date : date) ?? Promise.resolve(); }
   export async function refreshPanel() {
     const focused = captureRefreshFocus(root);
     await Promise.all([load(tasks), load(projects)]);
@@ -47,7 +47,7 @@
 <main class="tasks-page" aria-label="Tasks page" aria-keyshortcuts="Meta+R Control+R F5" bind:this={root}>
   <div class="tasks-page-content">
     {#if error}<p class="error" role="alert">{error}</p>{/if}
-    <HomeTaskSection pageMode {workspace} onchanged={refreshPanel} readState={taskState} onview={(view) => load(tasks, view)} onnext={() => load(tasks, undefined, true)} onretry={() => tasks?.retry() ?? Promise.resolve()} {onopen} oncreate={() => oncreate('task')} ongroupcreate={createIn} onnavigate={onhome} />
+    <HomeTaskSection pageMode {workspace} onchanged={refreshPanel} readState={taskState} onview={(view) => load(tasks, view)} ondate={(view, date) => load(tasks, view, false, date)} onnext={() => load(tasks, undefined, true)} onretry={() => tasks?.retry() ?? Promise.resolve()} {onopen} oncreate={(seed) => oncreate('task', undefined, seed)} ongroupcreate={createIn} onnavigate={onhome} />
     <HomeProjectSection pageMode {workspace} {active} readState={projectState} onview={(view) => load(projects, view)} onnext={() => load(projects, undefined, true)} onretry={() => projects?.retry() ?? Promise.resolve()} {onopen} oncreate={(seed) => oncreate('project', undefined, seed)} onnavigate={onprojects} onmoved={refreshPanel} />
   </div>
 </main>

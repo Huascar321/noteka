@@ -1,6 +1,6 @@
 # Colecciones locales: motor inicial (3a)
 
-Una colección contiene membresías de entidades compartidas. `record.create` crea una nota con bloques, fuera de Inbox; `record.attach` incorpora una entidad existente sin copiarla. Una tarea sigue siendo una tarea, con su payload y relaciones. Abrir un registro abre el editor original; editar título/contenido se hace por `entity.update`.
+Una colección contiene membresías de entidades compartidas. `record.create` crea una nota con bloques; sin relación Project aparece en Inbox como cualquier nota suelta; `record.attach` incorpora una entidad existente sin copiarla. Una tarea sigue siendo una tarea, con su payload y relaciones. Abrir un registro abre el editor original; editar título/contenido se hace por `entity.update`.
 
 ## Uso en escritorio
 

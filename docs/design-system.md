@@ -436,6 +436,12 @@ animación perpetua de brillo o renderer para dar sensación de vidrio.
   texto de la primera acción o destino y dejá que las siguientes líneas envuelvan.
   En grupos de acciones con un campo etiquetado, alineá los botones con el
   control, no con el centro del conjunto de etiqueta y campo.
+- Los calendarios de cumpleaños y tareas comparten grilla sólida y navegación
+  anterior/Today/siguiente agrupada. En ventanas angostas desplazan sólo la
+  grilla; los controles y nombres accesibles permanecen disponibles.
+- Los intereses de una persona se presentan como etiquetas individuales con
+  eliminación accesible y un campo corto de alta; las comas forman parte del
+  texto de cada etiqueta y no se usan como separador implícito.
 - Los textos propios de la interfaz se escriben en inglés, según
   `docs/plan-noteka.md`. La documentación y los artefactos OpenSpec van en
   español con sus headings estructurales en inglés.

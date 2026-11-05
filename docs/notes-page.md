@@ -31,7 +31,8 @@ WebView. No inicia consultas si hay diálogo/bloqueo, composición o repetición
 las páginas inactivas no ejecutan ese atajo. Al salir se descartan lecturas tardías.
 
 New/New page preparan un borrador mediante las guardias existentes.
-Crear desde Clips/Voice/Journal/Meetings preselecciona el tipo; Inbox/Fav. su marca.
+Crear desde Clips/Voice/Journal/Meetings preselecciona el tipo; Fav. preselecciona
+su favorito e Inbox ya no es una marca manual.
 No hay escritura hasta guardar. Voice clasifica notas; no graba ni transcribe.
 Abrir una nota, relación o última nota conserva el editor y breadcrumb compartidos.
 El [detalle de Note](note-detail.md) presenta propiedades locales compactas,

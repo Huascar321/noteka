@@ -2,6 +2,7 @@
   import type { HomeItem } from './contracts.generated';
   import AppIcon from './AppIcon.svelte';
   import { visualIconName } from './visual-icon';
+  import { noteTypeLabels as noteLabels } from './note-types';
   let { item, onopen, taskStyle = false, noteStyle = false, ontoggle, toggleDisabled = false }: {
     item: HomeItem; onopen: (id: string) => Promise<void>; taskStyle?: boolean; noteStyle?: boolean;
     ontoggle?: (item: HomeItem) => Promise<void>; toggleDisabled?: boolean;
@@ -25,7 +26,6 @@
     return ({ task: 'task', note: 'file-text', project: 'project', tag: 'tag', person: 'person' })[entity.kind] as never;
   }
   const icon = $derived(visualIconName(item.entity.icon, fallbackIcon(item.entity)));
-  const noteLabels: Record<string, string> = { reference: 'Reference', plan: 'Plan', web_clip: 'Web Clip', voice: 'Voice', journal: 'Journal', meeting: 'Meeting', topic_research: 'Topic Research', idea: 'Idea', lecture: 'Lecture' };
   const noteDays = $derived(item.metadata.source_updated_days_ago ?? item.metadata.updated_days_ago);
   const color = $derived(item.entity.icon_color ?? undefined);
   function dateLabel(value: string): string {

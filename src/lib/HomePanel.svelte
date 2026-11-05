@@ -23,8 +23,8 @@
     onnavigate: (kind: EntityKind | 'goals') => Promise<void>;
   } = $props();
   const sections: { id: EntityKind; title: string; icon: string; views: [HomeView, string][]; pending: string; hint: string }[] = [
-    { id: 'task', title: 'Tasks', icon: 'task', views: [['tasks_projects_in_progress','Today'],['tasks_inbox','Inbox'],['tasks_week','Week'],['tasks_month','Month'],['tasks_scheduled','Scheduled'],['tasks_no_due','No Due'],['tasks_active_projects','All Active Projects'],['tasks_all','All'],['tasks_done','Done']], pending: "Recurring and Active Content.", hint: "The initial Today view groups pending tasks by Doing/Ongoing projects. All Active Projects also includes Planned. My Day uses planning dates. Creating a task does not assign dates." },
-    { id: 'note', title: 'Notes', icon: 'file-text', views: [['notes_library','Notes'],['notes_inbox','Inbox']], pending: '', hint: "Notes separates the library and categories; All keeps every page accessible." },
+    { id: 'task', title: 'Tasks', icon: 'task', views: [['tasks_projects_in_progress','Today'],['tasks_inbox','Inbox'],['tasks_calendar_week','Week'],['tasks_calendar_month','Month'],['tasks_scheduled','Scheduled'],['tasks_no_due','No Due'],['tasks_active_projects','All Active Projects'],['tasks_pending','All'],['tasks_done','Done']], pending: "Recurring and Active Content.", hint: "The initial Today view groups pending tasks by Doing/Ongoing projects. All Active Projects also includes Planned. My Day uses planning dates. Creating from a calendar day prepares its due date." },
+    { id: 'note', title: 'Notes', icon: 'file-text', views: [['notes_general','Notes'],['notes_inbox','Inbox']], pending: '', hint: "Notes separates the library and categories; All keeps every page accessible." },
     { id: 'project', title: 'Projects', icon: 'project', views: [['projects_active','Active'],['projects_planned','Planned'],['projects_board','Board']], pending: "Parity with unreviewed Notion formulas/fields.", hint: "Active: Doing/Ongoing; sidebar Active Projects also includes Planned. Progress = completed / total related active tasks; no tasks does not mean 0%." },
     { id: 'tag', title: 'Tags', icon: 'tag', views: [['tags_recent','Recent'],['tags_alphabetical','A–Z'],['tags_types','Types']], pending: "Fav. and Entity type from the reference; Topic preserves its classification.", hint: "Recent sorts by tag modification, not the latest note. A–Z: Unicode order without local collation; summaries include all active notes." },
     { id: 'person', title: 'People', icon: 'person', views: [['people_contacts','Contacts'],['people_new','New'],['people_updated','Updated']], pending: '', hint: "Local contacts and views with verified metadata and photos." },
@@ -53,7 +53,7 @@
     window.addEventListener('noteka-cover-change', syncCover);
     window.addEventListener('keydown', refreshKeydown, true);
     for (const section of sections) {
-      const reader = new HomeReader(section.id === 'project' ? 'projects_board' : section.id === 'tag' ? 'tags_types' : section.views[0][0], queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => { states = { ...states, [section.id]: state }; }, section.id === 'note' || section.id === 'person' ? 10 : section.id === 'project' ? 100 : 50, true, section.id === 'person' ? { people_new: 100, people_updated: 100, people_check_ins: 100, people_birthdays: 100, people_pipeline: 100, people_active_projects: 100 } : {});
+      const reader = new HomeReader(section.id === 'project' ? 'projects_board' : section.id === 'tag' ? 'tags_types' : section.views[0][0], queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => { states = { ...states, [section.id]: state }; }, section.id === 'note' || section.id === 'person' ? 10 : section.id === 'project' ? 100 : 50, true, section.id === 'person' ? { people_new: 100, people_updated: 100, people_check_ins: 100, people_birthdays: 100, people_pipeline: 100, people_active_projects: 100 } : section.id === 'task' ? { tasks_calendar_week:100, tasks_calendar_month:100 } : {});
       readers.set(section.id, reader); void reader.load();
     }
     const goals = new HomeReader('goals_activity', queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => { states = { ...states, goals: state }; }, 10, true);
@@ -102,7 +102,7 @@
     {#each sections as section}
       {@const state = states[section.id]}
       {#if section.id === 'task'}
-        <HomeTaskSection {workspace} onchanged={refreshPanel} readState={state} onview={(view) => load('task', view)} onnext={() => load('task', undefined, true)} onretry={() => load('task', undefined, false, true)} {onopen} oncreate={() => oncreate('task')} ongroupcreate={(group) => createIn('task', group)} onnavigate={() => onnavigate('task')} />
+        <HomeTaskSection {workspace} onchanged={refreshPanel} readState={state} onview={(view) => load('task', view)} ondate={(view, date) => load('task', view, false, false, date)} onnext={() => load('task', undefined, true)} onretry={() => load('task', undefined, false, true)} {onopen} oncreate={(seed) => oncreate('task', undefined, seed)} ongroupcreate={(group) => createIn('task', group)} onnavigate={() => onnavigate('task')} />
       {:else if section.id === 'note'}
         <HomeNoteSection readState={state} onview={(view) => load('note', view)} onnext={() => load('note', undefined, true)} onretry={() => load('note', undefined, false, true)} {onopen} oncreate={(seed) => oncreate('note', undefined, seed)} onnavigate={() => onnavigate('note')} />
       {:else if section.id === 'project'}

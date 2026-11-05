@@ -249,8 +249,9 @@ fn workflows_inbox_day_pending_overdue_and_archive_are_explicit() {
         json!({"state":"done","planned_date":"2026-10-12","due_date":"2026-10-10"}),
     );
     let inbox = f.query("inbox");
-    assert!(has(&inbox, &note) && has(&inbox, &today));
-    assert!(!has(&inbox, &overdue) && !has(&inbox, &done));
+    // Inbox se deriva de relaciones: la bandera inbox:false no excluye.
+    assert!(has(&inbox, &note) && has(&inbox, &today) && has(&inbox, &overdue));
+    assert!(!has(&inbox, &done));
     let day = f.query("my_day");
     assert!(has(&day, &today));
     assert!(!has(&day, &overdue) && !has(&day, &future) && !has(&day, &done));
@@ -258,9 +259,10 @@ fn workflows_inbox_day_pending_overdue_and_archive_are_explicit() {
     assert!(has(&due, &overdue));
     assert!(!has(&due, &today) && !has(&due, &done));
     assert!(has(&f.query("pending"), &today));
+    let project = f.create("project", "Proyecto", json!({"state":"doing"}));
     f.ok(
-        "entity.update",
-        json!({"id":note["id"],"expected_revision":1,"payload":{"inbox":false}}),
+        "relation.add",
+        json!({"source_id":note["id"],"target_id":project["id"],"kind":"project","expected_revision":1}),
     );
     assert!(!has(&f.query("inbox"), &note));
     f.ok(
@@ -407,4 +409,76 @@ fn contextual_creation_rolls_back_and_legacy_payload_is_not_rewritten() {
         f.ok("entity.get", json!({"id":n["id"]}))["payload"]["future"]["keep"],
         true
     );
+}
+
+#[test]
+fn person_contact_fields_are_local_validated_and_preserve_unknown_data() {
+    let f = Fixture::new("UTC");
+    let schema_before: i64 = f
+        .db()
+        .query_row("PRAGMA user_version", [], |r| r.get(0))
+        .unwrap();
+    let person = f.create(
+        "person",
+        "Synthetic contact",
+        json!({"company":"Example Co","birthday":"1990-02-01"}),
+    );
+    let fields = json!({"job_title":"Engineer","location":"Example City","phone":"+1 555 0100","email":"person@example.test","instagram":"@synthetic","linkedin":"synthetic","twitter":"@synthetic","website":"https://example.test","interests":["Books","Music"]});
+    let updated = f.ok(
+        "entity.update",
+        json!({"id":person["id"],"expected_revision":person["revision"],"payload":fields}),
+    );
+    assert_eq!(updated["payload"]["company"], "Example Co");
+    assert_eq!(updated["payload"]["birthday"], "1990-02-01");
+    assert_eq!(updated["payload"]["job_title"], "Engineer");
+    assert_eq!(updated["payload"]["interests"], json!(["Books", "Music"]));
+    assert_eq!(f.ok("entity.get", json!({"id":person["id"]})), updated);
+    let home = f.ok("home.query", json!({"view":"people_contacts"}));
+    let summary = &home["items"][0]["metadata"]["person"];
+    assert!(
+        summary.get("email").is_none()
+            && summary.get("phone").is_none()
+            && summary.get("interests").is_none()
+    );
+    assert_eq!(summary["company"], "Example Co");
+    error(f.call("entity.update", json!({"id":person["id"],"expected_revision":person["revision"],"payload":{"phone":"obsolete"}})), "revision_conflict");
+    for patch in [
+        json!({"email":"line\nbreak"}),
+        json!({"website":"x".repeat(2049)}),
+        json!({"interests":["Books","Books"]}),
+        json!({"interests":[""]}),
+        json!({"phone":true}),
+    ] {
+        error(
+            f.call(
+                "entity.update",
+                json!({"id":person["id"],"expected_revision":updated["revision"],"payload":patch}),
+            ),
+            "validation_error",
+        );
+        assert_eq!(f.ok("entity.get", json!({"id":person["id"]})), updated);
+    }
+    let cleared = f.ok(
+        "entity.update",
+        json!({"id":person["id"],"expected_revision":updated["revision"],"payload":{"email":null}}),
+    );
+    assert!(cleared["payload"].get("email").is_none());
+    assert_eq!(cleared["payload"]["interests"], json!(["Books", "Music"]));
+    let future = json!({"company":"Example Co","future":{"keep":[1,2,3]}});
+    f.db()
+        .execute(
+            "UPDATE entities SET payload=?2 WHERE id=?1",
+            rusqlite::params![person["id"].as_str().unwrap(), future.to_string()],
+        )
+        .unwrap();
+    error(f.call("entity.update", json!({"id":person["id"],"expected_revision":cleared["revision"],"payload":{"phone":"new"}})), "validation_error");
+    assert_eq!(
+        f.ok("entity.get", json!({"id":person["id"]}))["payload"],
+        future
+    );
+    let schema_after: i64 = f
+        .db()
+        .query_row("PRAGMA user_version", [], |r| r.get(0))
+        .unwrap();
+    assert_eq!(schema_before, schema_after);
 }

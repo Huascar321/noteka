@@ -27,7 +27,8 @@ nativos, nombres y operaciones.
   escenas instrumentadas. El detalle y las omisiones están en la
   [verificación Liquid Glass](verification-complete-liquid-glass-adoption.md).
 - El atlas final se regeneró con 71 escenas por motor y los manifiestos y
-  hashes de capturas, fuentes y build se contrastaron con el checkout final.
+  hashes de capturas, fuentes y build se contrastaron con el commit visual
+  `eed0fbe`; cambios funcionales posteriores pueden actualizar esas fuentes.
 
 El atlas es evidencia de escenas concretas, no prueba de todas las vistas,
 estados, longitudes de contenido o configuraciones de usuario posibles. La ruta

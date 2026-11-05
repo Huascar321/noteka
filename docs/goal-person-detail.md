@@ -39,9 +39,11 @@ La foto local existente, con su recorte, sirve como portada. El lector mantiene
 sus límites de formato/tamaño y un espacio neutro si no puede leerla. No se
 descargan fotos al abrir el detalle. Icono y título conservan sus controles.
 
-View details contiene los campos editables existentes: empresa, etiquetas de
-relación, cumpleaños, próximo/último check-in y pipeline. Procedencia y campos
-desconocidos se conservan. Las otras propiedades privadas de Notion no se copian.
+View details contiene empresa, etiquetas de relación, cumpleaños, próximo/último
+check-in, pipeline, título profesional, ubicación, teléfono, correo, perfiles,
+sitio e intereses. Los intereses se administran individualmente; una coma dentro
+de un interés no lo divide. Procedencia y campos desconocidos se conservan. Los
+valores de Notion no se importan ni se abren enlaces automáticamente.
 
 Notes, Projects y Tasks presentan los originales del contexto local. New note
 y New task conservan captura vinculada y sus guardias. Los proyectos abren su

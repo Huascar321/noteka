@@ -16,8 +16,7 @@ observado en Notion; los valores principales pertenecen al workspace local.
   y selectores locales por nombre. Los vínculos archivados se identifican y
   desvincular no elimina la página relacionada.
 
-View details conserva Inbox, procedencia, revisión y propiedades completas de
-origen. Los valores importados pueden ser anteriores a la edición local; no
+View details conserva procedencia, revisión y propiedades completas de origen. Los valores importados pueden ser anteriores a la edición local; no
 reemplazan los controles principales.
 
 ## Escribir contenido

@@ -2294,3 +2294,22 @@ input[type="checkbox"],input[type="radio"],progress { accent-color:var(--accent)
 :root[data-focus-modality="pointer"] :is(.person-card,.settings-search,.context-search-input,.relation-picker-search,.task-project-value,.goal-tag-value):focus-within { outline:none !important; }
 
 :root[data-focus-modality="keyboard"] .note-detail .title-input:focus-visible { outline:2px solid var(--focus); outline-offset:5px; border-radius:3px; }
+
+.project-calendar-day-heading { display:flex; align-items:center; justify-content:space-between; gap:4px; margin-bottom:4px; }
+.project-calendar-day-heading time { color:var(--muted); font-size:12px; }
+.project-calendar-create { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border:0; border-radius:999px; background:transparent; color:var(--muted); }
+.project-calendar-create:hover:not(:disabled),.project-calendar-create:focus-visible { background:var(--hover); color:var(--text); }
+.project-calendar-task { width:100%; text-align:left; }
+.project-calendar-task>span { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.project-calendar-task small { flex-shrink:0; color:var(--muted); margin-left:auto; white-space:nowrap; }
+.project-calendar-undated { margin-top:10px; color:var(--muted); font-size:12px; }
+.project-calendar-undated summary { cursor:pointer; }
+.project-calendar-unplaced { display:block; margin:5px 0; padding:5px; border:0; border-radius:6px; background:transparent; color:var(--text); text-align:left; }
+.project-calendar-unplaced:hover { background:var(--hover); }
+.person-interests { color:var(--muted); font-size:12px; min-width:180px; max-width:100%; }
+.person-interest-list { display:flex; flex-wrap:wrap; gap:5px; margin-top:7px; }
+.person-interest-chip { display:inline-flex; align-items:center; gap:4px; max-width:100%; padding:3px 6px; border-radius:999px; background:var(--surface); color:var(--text); overflow-wrap:anywhere; }
+.person-interest-chip button { border:0; background:transparent; color:var(--muted); padding:2px; }
+.person-interest-add { display:flex; align-items:center; gap:5px; margin-top:7px; }
+.entity-fields .person-interest-add input { min-width:0; width:170px; margin:0; }
+.person-interest-add button { min-height:28px; padding:4px 10px; }

@@ -68,6 +68,9 @@ async function control(step,input) {
     case 'template_raw':return sql(db=>{db.prepare('UPDATE templates SET definition=? WHERE id=?').run(JSON.stringify(input.definition),input.id);return true;});
     case 'view_raw':return sql(db=>{db.prepare('UPDATE views SET json=? WHERE id=?').run(JSON.stringify(input.view),input.id);return true;});
     case 'entity_raw':return sql(db=>{db.prepare('UPDATE entities SET payload=? WHERE id=?').run(JSON.stringify(input.payload),input.id);return true;});
+    case 'calendar_seed_partial':return sql(db=>{db.exec('BEGIN');try{for(let i=0;i<51;i++){const id=randomUUID();db.prepare("INSERT INTO entities VALUES (?,?,?,1,NULL,'2026-10-01T12:00:00.000000Z','2026-10-01T12:00:00.000000Z',?)").run(id,'task',`Synthetic calendar page ${i}`,JSON.stringify({state:'todo',due_date:'2026-11-10'}));db.prepare('INSERT INTO relations VALUES (?,?,?,?)').run(randomUUID(),id,input.project_id,'project');}db.exec('COMMIT');return true;}catch(e){db.exec('ROLLBACK');throw e;}});
+    case 'deadline_seed_partial':return sql(db=>{db.exec('BEGIN');try{for(let i=0;i<101;i++)db.prepare("INSERT INTO entities VALUES (?,?,?,1,NULL,'2026-10-01T12:00:00.000000Z','2026-10-01T12:00:00.000000Z',?)").run(randomUUID(),'project',`Synthetic deadline page ${i}`,JSON.stringify({state:'planned',end_date:input.date}));db.exec('COMMIT');return true;}catch(e){db.exec('ROLLBACK');throw e;}});
+    case 'task_calendar_seed_partial':return sql(db=>{db.exec('BEGIN');try{for(let i=0;i<101;i++)db.prepare("INSERT INTO entities VALUES (?,?,?,1,NULL,'2026-10-01T12:00:00.000000Z','2026-10-01T12:00:00.000000Z',?)").run(randomUUID(),'task',`Synthetic task calendar page ${i}`,JSON.stringify({state:'todo',due_date:input.date}));db.exec('COMMIT');return true;}catch(e){db.exec('ROLLBACK');throw e;}});
     case 'query_value':return sql(db=>{db.prepare('UPDATE property_values SET json=? WHERE entity_id=? AND property_id=?').run(JSON.stringify(input.value),input.entity_id,input.property_id);return true;});
     case 'unknown': {const note=await data('entity.create',{kind:'note',title:'Formato futuro'});sql(db=>db.prepare('UPDATE documents SET json=? WHERE entity_id=?').run(JSON.stringify({schema_version:7,blocks:[{id:'future',type:'widget',keep:{value:42}}]}),note.id));return note;}
     case 'rich':return data('entity.create',{kind:'note',title:'Bloques enriquecidos',document:JSON.parse(readFileSync('tests/fixtures/rich-document.json','utf8'))});
@@ -113,10 +116,16 @@ const server=createServer(async(req,res)=>{
       let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>3*1024*1024)throw new Error('Input excesivo');}const input=JSON.parse(raw);
       let result;
       if(req.url==='/__test__/operate'){
-        const path=confined(input.workspace);
-        const instrument={...homeRead};
-        if(input.command.operation==='home.query' && input.command.input.view===instrument.view){if(instrument.delay)await new Promise(r=>setTimeout(r,instrument.delay));if(instrument.failure){result={api_version:1,request_id:randomUUID(),ok:false,error:{code:'storage_error',message:'Lectura Home fallida inyectada sólo en transporte headless.',details:{}}};}}
-        result??=await pdfocr.run(path,input.command,()=>pdfkit.run(path,input.command,()=>ocr.run(path,input.command,()=>preparation.run(path,input.command,()=>evidence.run(path,input.command,()=>cli(input.command.operation,input.command.input,path))))));
+        if(input.workspace===undefined){
+          // Arranque sin preferencia: el núcleo real responde not_found y la UI
+          // muestra la bienvenida. No se usa el workspace sintético del test.
+          result={api_version:1,request_id:randomUUID(),ok:false,error:{code:'not_found',message:'La ruta no contiene un workspace Noteka.',details:{}}};
+        } else {
+          const path=confined(input.workspace);
+          const instrument={...homeRead};
+          if(input.command.operation==='home.query' && input.command.input.view===instrument.view){if(instrument.delay)await new Promise(r=>setTimeout(r,instrument.delay));if(instrument.failure){result={api_version:1,request_id:randomUUID(),ok:false,error:{code:'storage_error',message:'Lectura Home fallida inyectada sólo en transporte headless.',details:{}}};}}
+          result??=await pdfocr.run(path,input.command,()=>pdfkit.run(path,input.command,()=>ocr.run(path,input.command,()=>preparation.run(path,input.command,()=>evidence.run(path,input.command,()=>cli(input.command.operation,input.command.input,path))))));
+        }
       }else if(req.url==='/__test__/control'){result=await control(input.step,input.input||{});}else throw new Error('Ruta POST inválida');
       res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify(result));return;
     }

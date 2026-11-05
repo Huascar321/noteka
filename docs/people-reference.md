@@ -37,10 +37,16 @@ locales relacionadas. Los errores se distinguen de las vistas vacías.
 
 ## Propiedades y fotos
 
-El detalle permite editar empresa, relaciones, cumpleaños, próximo/último check-in
-y pipeline. La procedencia y el orden recuperados se conservan al guardar.
+El detalle permite editar empresa, relaciones, cumpleaños, próximo/último check-in,
+pipeline, título, ubicación, teléfono, correo, perfiles, sitio e intereses
+locales. La procedencia y el orden recuperados se conservan al guardar; no se
+importan datos de contacto ni se envían automáticamente a ningún proveedor.
 Relaciones de persona admite hasta 32 etiquetas únicas de 128 bytes; empresa,
 512 bytes. Las fechas son civiles canónicas y los estados tienen validación Rust.
+Los ocho campos de contacto admiten hasta 2.048 bytes UTF-8 cada uno, sin
+caracteres de control; los intereses admiten hasta 32 etiquetas únicas de 128
+bytes. `entity.get` entrega estos datos al abrir el detalle; la proyección
+`home.query` de galería los omite. No se ejecutan los textos como enlaces.
 
 La foto es un UUID de adjunto del workspace, con posición vertical entera 0..100.
 Se leen PNG/JPEG/GIF/WebP de hasta 1 MiB mediante el lector/cache acotado existente.

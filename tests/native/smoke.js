@@ -264,10 +264,11 @@
     await click('Tarea en CRE'); await change("[aria-label=\"Task status\"]", 'done'); await click("Save"); await wait(saved, 'completar');
     const completed = await control('get', { id: task.id }); assert(completed.id === task.id && completed.payload.due_date === due && completed.payload.state === 'done', 'Completar conserva identidad y fechas');
     await click('My Day'); assert(!document.querySelector('.entity-list').textContent.includes('Tarea en CRE'), 'Completada sale de My Day');
-    await click('Inbox'); await click('Nota en CRE'); await change("[aria-label=\"In Inbox\"]", false); await click("Save"); await wait(saved, 'salir inbox'); await click('Inbox');
-    assert(!document.querySelector('.entity-list').textContent.includes('Nota en CRE'), 'Salida de Inbox explícita sin quitar relaciones');
+    await click('Inbox');
+    assert(!document.querySelector('.entity-list').textContent.includes('Nota en CRE'), 'Inbox derivado excluye notas vinculadas a un proyecto');
+    assert(document.querySelector('.entity-list').textContent.includes('Nota integrada'), 'Inbox derivado incluye notas sin proyecto');
     assert((await control('get', { id: contextualNote.id })).document.blocks[0].content[0].text === 'Una única nota compartida', 'Inbox no reemplaza contenido');
-    await click('Projects'); await click('Dashboard CRE'); assert(document.querySelector('.dashboard').textContent.includes('Tarea en CRE') && document.querySelector('.dashboard').textContent.includes('Nota en CRE'), 'Contexto conserva completadas y capturas fuera de Inbox');
+    await click('Projects'); await click('Dashboard CRE'); assert(document.querySelector('.dashboard').textContent.includes('Tarea en CRE') && document.querySelector('.dashboard').textContent.includes('Nota en CRE'), 'Contexto conserva completadas y capturas vinculadas');
     await click('Tarea en CRE'); const beforeConflict = await control('get', { id: task.id }); await change("[aria-label=\"Priority\"]", 'low');
     await control('cli_update', { id: task.id, expected_revision: beforeConflict.revision, title: 'Tarea en CRE CLI' }); key('s'); await wait(() => text().includes('Conflicto · Sin guardar'), 'conflicto tarea');
     assert(document.querySelector("[aria-label=\"Priority\"]").value === 'low' && (await control('get', { id: task.id })).payload.priority === 'high', 'Conflicto de tarea preserva buffer y estado CLI');

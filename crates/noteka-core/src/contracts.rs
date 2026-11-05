@@ -197,8 +197,14 @@ pub enum NoteType {
     WebClip,
     Voice,
     Journal,
+    Daily,
     Meeting,
     TopicResearch,
+    OutlierContent,
+    CreatorTips,
+    Tools,
+    Book,
+    Recipe,
     Idea,
     Lecture,
 }
@@ -210,8 +216,14 @@ impl NoteType {
             Self::WebClip => "web_clip",
             Self::Voice => "voice",
             Self::Journal => "journal",
+            Self::Daily => "daily",
             Self::Meeting => "meeting",
             Self::TopicResearch => "topic_research",
+            Self::OutlierContent => "outlier_content",
+            Self::CreatorTips => "creator_tips",
+            Self::Tools => "tools",
+            Self::Book => "book",
+            Self::Recipe => "recipe",
             Self::Idea => "idea",
             Self::Lecture => "lecture",
         }
@@ -325,6 +337,24 @@ pub struct PersonFields {
     pub relationships: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub company: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub job_title: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub location: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub phone: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instagram: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub linkedin: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub twitter: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub website: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interests: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub photo: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

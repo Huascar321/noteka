@@ -1,5 +1,17 @@
 # Navegación y pestañas de escritorio
 
+## Arranque y workspace
+
+Al iniciar, la aplicación abre sin pedir nada el último workspace usado. Si no
+hay preferencia o esa ruta ya no contiene un workspace, intenta el directorio de
+datos predeterminado de Noteka. La ruta se guarda en la preferencia local
+`noteka.workspace-path.v1` cada vez que se crea o abre un workspace con éxito.
+
+La pantalla de selección aparece sólo si no existe ningún workspace, si la
+apertura falla —con el error visible y sin presentar datos de otro workspace— o
+si se elige **Change workspace** en Settings. El primer arranque no crea datos
+por su cuenta: crear un workspace sigue siendo una acción explícita.
+
 El lateral muestra, en orden, **Home, Tasks, Notes, Projects, Tags, Goals y People**.
 El botón de cuadrícula junto a Search abre Collections. Las vistas Inbox,
 My Day, Pending, Overdue, Active Projects, Areas, Resources y Archive se abren

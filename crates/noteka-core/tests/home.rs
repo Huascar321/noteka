@@ -311,7 +311,6 @@ fn doing_tasks_are_pending_for_views_workflows_and_project_progress() {
     let overdue_id = overdue["id"].as_str().unwrap();
     for view in [
         "tasks_today",
-        "tasks_inbox",
         "tasks_week",
         "tasks_scheduled",
         "tasks_active_projects",
@@ -323,12 +322,15 @@ fn doing_tasks_are_pending_for_views_workflows_and_project_progress() {
             "{view}"
         );
     }
+    let free = f.create("task", "Doing sin proyecto", json!({"state":"doing"}));
+    assert!(ids(&f.query("tasks_inbox")).contains(free["id"].as_str().unwrap()));
+    assert!(!ids(&f.query("tasks_inbox")).iter().any(|row| row.as_str() == id));
     assert!(
         !ids(&f.query("tasks_done"))
             .iter()
             .any(|row| row.as_str() == id)
     );
-    for view in ["inbox", "my_day", "pending"] {
+    for view in ["my_day", "pending"] {
         let page = f.ok(
             "workflow.query",
             json!({"view":view,"limit":50,"as_of":"2026-10-12"}),
@@ -342,6 +344,18 @@ fn doing_tasks_are_pending_for_views_workflows_and_project_progress() {
             "{view}"
         );
     }
+    let inbox_page = f.ok(
+        "workflow.query",
+        json!({"view":"inbox","limit":50,"as_of":"2026-10-12"}),
+    );
+    let inbox_ids = inbox_page["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item["id"].as_str().unwrap())
+        .collect::<Vec<_>>();
+    assert!(inbox_ids.contains(&free["id"].as_str().unwrap()));
+    assert!(!inbox_ids.contains(&id));
     let overdue_page = f.ok(
         "workflow.query",
         json!({"view":"overdue","limit":50,"as_of":"2026-10-12"}),
@@ -541,9 +555,13 @@ fn view_membership_orders_and_partial_metadata_are_explicit() {
             note_out["id"].as_str().unwrap().into()
         ])
     );
+    // Inbox deriva de relaciones: la bandera manual no decide pertenencia.
     assert_eq!(
-        ordered("notes_inbox"),
-        vec![note_in["id"].as_str().unwrap()]
+        ids(&f.query("notes_inbox")),
+        BTreeSet::from([
+            note_in["id"].as_str().unwrap().into(),
+            note_out["id"].as_str().unwrap().into()
+        ])
     );
     let todo = f.create(
         "task",
@@ -552,7 +570,13 @@ fn view_membership_orders_and_partial_metadata_are_explicit() {
     );
     let done = f.create("task", "Completa", json!({"state":"done","inbox":true}));
     let no_due = f.create("task", "Sin fecha", json!({"due_date":null}));
-    assert_eq!(ordered("tasks_inbox"), vec![no_due["id"].as_str().unwrap()]);
+    assert_eq!(
+        ordered("tasks_inbox"),
+        vec![
+            todo["id"].as_str().unwrap(),
+            no_due["id"].as_str().unwrap()
+        ]
+    );
     assert_eq!(ordered("tasks_done"), vec![done["id"].as_str().unwrap()]);
     assert_eq!(ordered("tasks_today"), vec![todo["id"].as_str().unwrap()]);
     let mut projects = vec![];
@@ -580,6 +604,7 @@ fn view_membership_orders_and_partial_metadata_are_explicit() {
     for task in [&todo, &done, &no_due] {
         f.link(task, &projects[0], "project");
     }
+    assert!(ids(&f.query("tasks_inbox")).is_empty());
     let summary = f.query("projects_planned")["items"][0]["summary"].clone();
     assert_eq!(summary["total"], 3);
     assert_eq!(summary["done"], 1);
@@ -626,13 +651,19 @@ fn view_membership_orders_and_partial_metadata_are_explicit() {
             topic["id"].as_str().unwrap()
         ]
     );
-    // Sólo los metadatos que deciden el filtro afectan pertenencia/disponibilidad.
+    // La bandera inbox es dato heredado: no afecta pertenencia ni disponibilidad.
     f.raw(
         &todo,
         json!({"state":"todo","due_date":"2026-10-11","priority":"future","inbox":null}),
     );
     assert_eq!(ordered("tasks_today"), vec![todo["id"].as_str().unwrap()]);
-    assert_eq!(f.query("tasks_inbox")["unavailable_count"], 1);
+    let raw_inbox = f.create("task", "Inbox heredado", json!({}));
+    f.raw(
+        &raw_inbox,
+        json!({"state":"todo","due_date":null,"inbox":null}),
+    );
+    assert!(ids(&f.query("tasks_inbox")).contains(raw_inbox["id"].as_str().unwrap()));
+    assert_eq!(f.query("tasks_inbox")["unavailable_count"], 0);
     assert_eq!(
         item(&f.query("projects_planned"), &projects[0])["summary"]["progress_percent"],
         33
@@ -645,7 +676,8 @@ fn view_membership_orders_and_partial_metadata_are_explicit() {
     );
     f.raw(&note_in, Value::Null);
     assert_eq!(f.query("notes_all")["matching_count"], 2);
-    assert_eq!(f.query("notes_inbox")["unavailable_count"], 1);
+    assert_eq!(f.query("notes_inbox")["unavailable_count"], 0);
+    assert!(ids(&f.query("notes_inbox")).contains(note_in["id"].as_str().unwrap()));
     f.raw(&topic, json!({"classification":null}));
     let tags = f.query("tags_types");
     assert_eq!(tags["unavailable_count"], 1);
@@ -881,4 +913,349 @@ fn timestamp_and_id_orders_civil_age_and_archived_today() {
         json!({"id":t["id"],"expected_revision":1}),
     );
     assert_eq!(f.query("tasks_today")["matching_count"], 0);
+}
+
+#[test]
+fn pending_tasks_filter_before_pagination_preserves_all_and_moves_on_completion() {
+    let f = F::new();
+    let project = f.create("project", "Project", json!({"state":"doing"}));
+    let todo = f.create("task", "Pending", json!({"state":"todo"}));
+    let doing = f.create("task", "In progress", json!({"state":"doing"}));
+    let done = f.create("task", "Completed", json!({"state":"done"}));
+    let unknown = f.create("task", "Future state", json!({"state":"todo"}));
+    f.raw(&unknown, json!({"state":"future_state"}));
+    f.link(&todo, &project, "project");
+
+    let first = f.ok(
+        "home.query",
+        json!({"view":"tasks_pending","as_of":"2026-10-12","limit":1}),
+    );
+    assert_eq!(first["matching_count"], 2);
+    assert_eq!(first["unavailable_count"], 1);
+    let next = f.ok("home.query", json!({"view":"tasks_pending","as_of":"2026-10-12","limit":1,"cursor":first["next_cursor"]}));
+    assert_eq!(next["matching_count"], 2);
+    assert!(next["next_cursor"].is_null());
+    let actual = ids(&first)
+        .union(&ids(&next))
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        actual,
+        BTreeSet::from([
+            todo["id"].as_str().unwrap().into(),
+            doing["id"].as_str().unwrap().into()
+        ])
+    );
+    let all = f.query("tasks_all");
+    assert_eq!(ids(&all).len(), 4);
+    assert!(ids(&all).contains(done["id"].as_str().unwrap()));
+    let pending = f.query("tasks_pending");
+    assert!(
+        pending["groups"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|g| g["project_id"] == project["id"]
+                && g["entity_ids"].as_array().unwrap().contains(&todo["id"]))
+    );
+    invalid(
+        &f,
+        json!({"view":"tasks_all","as_of":"2026-10-12","limit":1,"cursor":first["next_cursor"]}),
+    );
+
+    let fresh = f.ok("entity.get", json!({"id":todo["id"]}));
+    f.ok(
+        "entity.update",
+        json!({"id":todo["id"],"expected_revision":fresh["revision"],"payload":{"state":"done"}}),
+    );
+    assert!(!ids(&f.query("tasks_pending")).contains(todo["id"].as_str().unwrap()));
+    assert!(ids(&f.query("tasks_done")).contains(todo["id"].as_str().unwrap()));
+    assert_eq!(ids(&f.query("tasks_all")).len(), 4);
+}
+
+#[test]
+fn projects_calendar_keeps_done_and_undated_without_changing_deadlines_query() {
+    let f = F::new();
+    let active = f.create(
+        "project",
+        "Active",
+        json!({"state":"doing","end_date":"2026-11-10"}),
+    );
+    let completed = f.create(
+        "project",
+        "Completed",
+        json!({"state":"done","end_date":"2026-11-11"}),
+    );
+    let undated = f.create("project", "Undated", json!({"state":"planned"}));
+    let invalid_date = f.create("project", "Unknown date", json!({"state":"ongoing"}));
+    f.raw(
+        &invalid_date,
+        json!({"state":"ongoing","end_date":"2026-02-30"}),
+    );
+    let archived = f.create("project", "Archived", json!({"state":"doing"}));
+    f.ok(
+        "entity.archive",
+        json!({"id":archived["id"],"expected_revision":archived["revision"]}),
+    );
+    let source_archived = f.create("project", "Archived source", json!({"state":"doing","source":{"provider":"notion","collection":"Projects","archived":true}}));
+    let all = f.query("projects_calendar");
+    assert_eq!(ids(&all).len(), 4);
+    for e in [&active, &completed, &undated, &invalid_date] {
+        assert!(ids(&all).contains(e["id"].as_str().unwrap()));
+    }
+    for e in [&archived, &source_archived] {
+        assert!(!ids(&all).contains(e["id"].as_str().unwrap()));
+    }
+    assert!(
+        item(&all, &invalid_date)["metadata"]["issues"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("end_date"))
+    );
+    assert_eq!(
+        ids(&f.query("projects_deadlines")),
+        BTreeSet::from([active["id"].as_str().unwrap().into()])
+    );
+    let first = f.ok(
+        "home.query",
+        json!({"view":"projects_calendar","as_of":"2026-10-12","limit":1}),
+    );
+    assert_eq!(first["matching_count"], 4);
+    assert_eq!(first["items"][0]["entity"]["id"], active["id"]);
+    invalid(
+        &f,
+        json!({"view":"projects_deadlines","as_of":"2026-10-12","limit":1,"cursor":first["next_cursor"]}),
+    );
+}
+
+#[test]
+fn task_calendars_filter_selected_civil_period_before_pagination() {
+    let f = F::new();
+    let due = f.create(
+        "task",
+        "December",
+        json!({"state":"todo","due_date":"2026-12-31"}),
+    );
+    let done = f.create(
+        "task",
+        "January done",
+        json!({"state":"done","due_date":"2027-01-01"}),
+    );
+    let outside = f.create(
+        "task",
+        "Outside week",
+        json!({"state":"doing","due_date":"2027-01-05"}),
+    );
+    let none = f.create("task", "No date", json!({"state":"todo"}));
+    let invalid_date = f.create("task", "Unknown date", json!({"state":"todo"}));
+    f.raw(
+        &invalid_date,
+        json!({"state":"todo","due_date":"2026-02-30"}),
+    );
+    let week = f.ok(
+        "home.query",
+        json!({"view":"tasks_calendar_week","as_of":"2026-12-31"}),
+    );
+    assert_eq!(
+        ids(&week),
+        BTreeSet::from([
+            due["id"].as_str().unwrap().into(),
+            done["id"].as_str().unwrap().into(),
+            none["id"].as_str().unwrap().into(),
+            invalid_date["id"].as_str().unwrap().into()
+        ])
+    );
+    assert!(!ids(&week).contains(outside["id"].as_str().unwrap()));
+    assert!(
+        item(&week, &invalid_date)["metadata"]["issues"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("due_date"))
+    );
+    let month = f.ok(
+        "home.query",
+        json!({"view":"tasks_calendar_month","as_of":"2026-12-31"}),
+    );
+    assert_eq!(
+        ids(&month),
+        BTreeSet::from([
+            due["id"].as_str().unwrap().into(),
+            none["id"].as_str().unwrap().into(),
+            invalid_date["id"].as_str().unwrap().into()
+        ])
+    );
+    let old_week = f.ok(
+        "home.query",
+        json!({"view":"tasks_week","as_of":"2026-12-31"}),
+    );
+    assert_eq!(
+        ids(&old_week),
+        BTreeSet::from([due["id"].as_str().unwrap().into()])
+    );
+    let first = f.ok(
+        "home.query",
+        json!({"view":"tasks_calendar_week","as_of":"2026-12-31","limit":1}),
+    );
+    assert_eq!(first["matching_count"], 4);
+    assert!(first["next_cursor"].is_string());
+    invalid(
+        &f,
+        json!({"view":"tasks_calendar_week","as_of":"2027-01-05","limit":1,"cursor":first["next_cursor"]}),
+    );
+    invalid(
+        &f,
+        json!({"view":"tasks_week","as_of":"2026-12-31","limit":1,"cursor":first["next_cursor"]}),
+    );
+}
+
+#[test]
+fn notes_general_includes_voice_without_changing_the_existing_library_query() {
+    let f = F::new();
+    let reference = f.create("note", "General", json!({"note_type":"reference"}));
+    let voice = f.create("note", "Voice", json!({"note_type":"voice"}));
+    let clip = f.create("note", "Clip", json!({"note_type":"web_clip"}));
+    let journal = f.create("note", "Journal", json!({"note_type":"journal"}));
+    let goal = f.create("note", "Goal", json!({"goal":{"state":"active"}}));
+    let archived = f.create("note", "Archived", json!({"note_type":"voice","source":{"provider":"notion","collection":"Notes","archived":true}}));
+    let general = f.query("notes_general");
+    assert_eq!(
+        ids(&general),
+        BTreeSet::from([
+            reference["id"].as_str().unwrap().into(),
+            voice["id"].as_str().unwrap().into()
+        ])
+    );
+    for item in [&clip, &journal, &goal, &archived] {
+        assert!(!ids(&general).contains(item["id"].as_str().unwrap()));
+    }
+    assert!(!ids(&f.query("notes_library")).contains(voice["id"].as_str().unwrap()));
+    assert!(ids(&f.query("notes_voice")).contains(voice["id"].as_str().unwrap()));
+    assert!(ids(&f.query("notes_all")).contains(goal["id"].as_str().unwrap()));
+    let first = f.ok(
+        "home.query",
+        json!({"view":"notes_general","as_of":"2026-10-12","limit":1}),
+    );
+    assert_eq!(first["matching_count"], 2);
+    assert!(first["next_cursor"].is_string());
+    invalid(
+        &f,
+        json!({"view":"notes_library","as_of":"2026-10-12","limit":1,"cursor":first["next_cursor"]}),
+    );
+}
+
+#[test]
+fn daily_and_journal_are_distinct_and_diary_filters_before_pagination() {
+    let f = F::new();
+    let daily = f.create("note", "Daily", json!({"note_type":"daily"}));
+    let journal = f.create("note", "Journal", json!({"note_type":"journal"}));
+    let mut others = Vec::new();
+    for kind in ["book", "recipe", "outlier_content", "creator_tips", "tools"] {
+        others.push(f.create("note", kind, json!({"note_type":kind})));
+    }
+    let archived = f.create("note", "Archived Daily", json!({"note_type":"daily","source":{"provider":"notion","collection":"Notes","archived":true}}));
+    let diary = f.query("notes_diary");
+    assert_eq!(
+        ids(&diary),
+        BTreeSet::from([
+            daily["id"].as_str().unwrap().into(),
+            journal["id"].as_str().unwrap().into()
+        ])
+    );
+    let general = ids(&f.query("notes_general"));
+    for item in [&daily, &journal, &archived] {
+        assert!(!general.contains(item["id"].as_str().unwrap()));
+    }
+    for item in &others {
+        assert!(general.contains(item["id"].as_str().unwrap()));
+    }
+    assert_eq!(
+        ids(&f.query("notes_journal")),
+        BTreeSet::from([journal["id"].as_str().unwrap().into()])
+    );
+    assert_eq!(
+        f.ok("entity.get", json!({"id":daily["id"]}))["payload"]["note_type"],
+        "daily"
+    );
+    let first = f.ok(
+        "home.query",
+        json!({"view":"notes_diary","as_of":"2026-10-12","limit":1}),
+    );
+    assert_eq!(first["matching_count"], 2);
+    assert!(first["next_cursor"].is_string());
+    invalid(
+        &f,
+        json!({"view":"notes_journal","as_of":"2026-10-12","limit":1,"cursor":first["next_cursor"]}),
+    );
+}
+
+#[test]
+fn derived_inbox_and_unclassified_follow_saved_project_relations() {
+    let f = F::new();
+    let task = f.create("task", "Tarea suelta", json!({"inbox":false}));
+    let done = f.create("task", "Completa", json!({"state":"done","inbox":true}));
+    let note = f.create("note", "Nota suelta", json!({"inbox":false}));
+    let note2 = f.create("note", "Otra nota", json!({"inbox":true}));
+    let project = f.create("project", "Proyecto", json!({}));
+    let tag = f.create("tag", "Tag", json!({"classification":"topic"}));
+    let person = f.create("person", "Persona", json!({}));
+    // La bandera heredada no decide pertenencia: sólo estado y relaciones.
+    assert!(ids(&f.query("tasks_inbox")).contains(task["id"].as_str().unwrap()));
+    assert!(!ids(&f.query("tasks_inbox")).contains(done["id"].as_str().unwrap()));
+    assert!(ids(&f.query("tasks_unclassified")).contains(task["id"].as_str().unwrap()));
+    assert!(ids(&f.query("notes_inbox")).contains(note["id"].as_str().unwrap()));
+    assert!(ids(&f.query("notes_inbox")).contains(note2["id"].as_str().unwrap()));
+    assert!(ids(&f.query("notes_unclassified")).contains(note["id"].as_str().unwrap()));
+    let first = f.ok(
+        "home.query",
+        json!({"view":"notes_unclassified","as_of":"2026-10-12","limit":1}),
+    );
+    assert_eq!(first["matching_count"], 2);
+    assert!(first["next_cursor"].is_string());
+    invalid(
+        &f,
+        json!({"view":"notes_inbox","as_of":"2026-10-12","limit":1,"cursor":first["next_cursor"]}),
+    );
+    // Tag o People sacan de Unclassified de notas, no de Inbox.
+    f.link(&note, &tag, "tag");
+    f.link(&note2, &person, "person");
+    assert!(!ids(&f.query("notes_unclassified")).contains(note["id"].as_str().unwrap()));
+    assert!(!ids(&f.query("notes_unclassified")).contains(note2["id"].as_str().unwrap()));
+    assert!(ids(&f.query("notes_inbox")).contains(note["id"].as_str().unwrap()));
+    assert!(ids(&f.query("notes_inbox")).contains(note2["id"].as_str().unwrap()));
+    // Project saca de Inbox de tareas y notas, con o sin bandera.
+    f.link(&task, &project, "project");
+    f.link(&note, &project, "project");
+    assert!(!ids(&f.query("tasks_inbox")).contains(task["id"].as_str().unwrap()));
+    assert!(!ids(&f.query("tasks_unclassified")).contains(task["id"].as_str().unwrap()));
+    assert!(!ids(&f.query("notes_inbox")).contains(note["id"].as_str().unwrap()));
+    // Un proyecto archivado sigue contando como vínculo existente.
+    f.ok(
+        "entity.archive",
+        json!({"id":project["id"],"expected_revision":1}),
+    );
+    assert!(!ids(&f.query("tasks_inbox")).contains(task["id"].as_str().unwrap()));
+    // Quitar la relación devuelve la tarea a Inbox sin tocar la bandera.
+    let relation = f.ok("relation.list", json!({"entity_id":task["id"]}));
+    let current = f.ok("entity.get", json!({"id":task["id"]}));
+    f.ok(
+        "relation.remove",
+        json!({"id":relation["items"][0]["id"],"expected_revision":current["revision"]}),
+    );
+    assert!(ids(&f.query("tasks_inbox")).contains(task["id"].as_str().unwrap()));
+    assert_eq!(
+        f.ok("entity.get", json!({"id":task["id"]}))["payload"]["inbox"],
+        false
+    );
+    // Un vínculo project con destino incompatible sigue siendo error de almacenamiento.
+    f.db()
+        .execute(
+            "INSERT INTO relations (id,source_id,target_id,kind) VALUES (?1,?2,?3,'project')",
+            params![
+                uuid::Uuid::new_v4().to_string(),
+                task["id"].as_str().unwrap(),
+                tag["id"].as_str().unwrap()
+            ],
+        )
+        .unwrap();
+    assert!(!f.call("home.query", json!({"view":"tasks_inbox"})).ok);
 }

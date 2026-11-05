@@ -302,13 +302,15 @@ Tasks SHALL presentar encabezado, acción New Task, pestañas con iconos, filas 
 
 ### Requirement: Vistas adicionales de tareas locales
 
-El núcleo SHALL ofrecer Week, Month, Scheduled, No Due y tareas pendientes de proyectos activos/en progreso en home.query. MUST filtrar antes de paginar, conservar cursores/caps/snapshot y distinguir metadatos inválidos; Today, Inbox, All y Done conservan sus reglas. Las vistas sin soporte no se presentan como acciones habilitadas.
+El núcleo SHALL ofrecer Week, Month, Scheduled, No Due y tareas pendientes de proyectos activos/en progreso en home.query. MUST filtrar antes de paginar, conservar cursores/caps/snapshot y distinguir metadatos inválidos; Today, All y Done conservan sus reglas e Inbox se deriva de la ausencia de relación Project local. Las vistas sin soporte no se presentan como acciones habilitadas.
 
 #### Scenario: Fechas y proyectos
+
 - **WHEN** se consulta una semana ISO, mes civil, fechas asignadas/ausentes o proyectos activos
 - **THEN** Rust devuelve sólo tareas pendientes admisibles del alcance solicitado, con grupos de proyectos elegibles y conteos anteriores a la página; no asigna fechas ni cambia estados
 
 #### Scenario: Cursor o metadatos inválidos
+
 - **WHEN** se reutiliza un cursor de otra vista o hay metadatos no interpretables
 - **THEN** se rechaza el cursor ajeno y se identifica la cobertura no disponible, sin reparar originales ni atribuir filas viejas a la vista nueva
 
@@ -544,13 +546,15 @@ Home SHALL omitir el desplegable Navegación y el botón Actualizar Home y ofrec
 
 ### Requirement: Página Tasks del menú lateral
 
-Tasks SHALL abrir una página amplia con icono sobre título, navegación Inbox/Today/Week/Month, New Task y filas compactas con relaciones/fechas locales. MUST iniciar Today, acumular páginas únicas y mantener apertura/captura protegidas. Recurring y Active Content se identifican como pendientes deshabilitadas.
+Tasks SHALL abrir una página amplia con icono sobre título, navegación Inbox/Today/Week/Month, New Task y filas compactas con relaciones/fechas locales. Inbox MUST listar tareas pendientes sin relación Project local. MUST iniciar Today, acumular páginas únicas y mantener apertura/captura protegidas. MUST NOT ofrecer la vista Unclassified ni un control manual de Inbox. Recurring y Active Content se identifican como pendientes deshabilitadas.
 
 #### Scenario: Apertura y páginas independientes
+
 - **WHEN** se navega a Tasks, se cambia de vista o se solicita Load more
 - **THEN** aparece Today inicialmente, cada vista conserva su identidad de consulta y las páginas siguientes acumulan tareas únicas; una respuesta vieja no reaparece tras cambiar vista o abandonar la página
 
 #### Scenario: Error y captura
+
 - **WHEN** falla la lectura o se abre un original o New Task
 - **THEN** el error permite reintentar sin fingir ausencia, y apertura/captura usan guardias y originales existentes; crear no asigna fechas ni guarda automáticamente
 
@@ -604,17 +608,20 @@ Home y las páginas que reutilizan sus secciones SHALL omitir contadores/fechas 
 
 ### Requirement: Página Notes del menú lateral
 
-Notes SHALL abrir una página amplia con icono propio sobre el título, navegación Inbox/Fav./All/Tags, New Note y vistas Notes/Inbox/Fav./Clips/Voice/Journal/Meetings/All. MUST iniciar Notes, mostrar filas con relaciones, tipo y antigüedad reales y mantener breadcrumb Home → Notes, captura/apertura protegidas y acciones textuales de ancho completo. All conserva acceso a todas las notas activas.
+Notes SHALL abrir una página amplia con icono sobre el título, navegación Inbox/Fav./All/Tags, New Note y vistas Notes/Inbox/Fav./Clips/Voice/Journal/Meetings/All. Inbox MUST listar notas activas sin Project local; Unclassified conserva biblioteca sin Tag/Project/People. MUST iniciar Notes, mostrar filas con relaciones, tipo y antigüedad reales y mantener breadcrumb Home → Notes, captura/apertura protegidas y acciones textuales de ancho completo. All conserva acceso a todas las notas activas.
 
 #### Scenario: Composición y vistas locales
+
 - **WHEN** se abre Notes desde el menú lateral y se alternan sus vistas
 - **THEN** aparece Notes inicialmente y se muestran sólo resultados de la consulta vigente, con iconos y relaciones locales, sin listado técnico paralelo ni recursos remotos
 
 #### Scenario: Paginación y captura
+
 - **WHEN** se activa Load more o New page desde el extremo derecho de su fila
-- **THEN** se acumulan notas únicas con el cursor existente o se prepara un borrador protegido sin guardarlo; las categorías de creación conservan su tipo/favorito/inbox y los botones con borde mantienen su tamaño
+- **THEN** se acumulan notas únicas con el cursor existente o se prepara un borrador protegido sin guardarlo; las categorías de creación conservan su tipo y favorito, e Inbox deja de seleccionarse con una marca manual
 
 #### Scenario: Actualización y salida
+
 - **WHEN** se actualiza mediante ⌘R/Ctrl+R/F5 o se abandona la página durante una lectura
 - **THEN** se conservan las vistas sin recargar el WebView, un diálogo/bloqueo impide iniciar la actualización y las respuestas de una instancia anterior no reemplazan la pantalla actual ni sus borradores
 
@@ -1242,3 +1249,32 @@ El escritorio MUST conservar borradores, selección e historial de edición mien
 #### Scenario: Tablero pendiente o con error
 - **WHEN** el tablero se actualiza o falla su lectura
 - **THEN** las tarjetas anteriores pueden seguir visibles identificadas como anteriores, pero sus movimientos permanecen deshabilitados hasta obtener datos vigentes y completos
+
+### Requirement: Reapertura automática del workspace
+
+La interfaz MUST abrir automáticamente al iniciar el último workspace usado y SHALL conservar su ruta como preferencia local. Si no hay preferencia o la ruta guardada ya no contiene un workspace, MUST intentar el directorio de datos predeterminado. MUST mostrar la selección explícita sólo cuando no exista ningún workspace, la apertura falle o el usuario pida Change workspace.
+
+#### Scenario: Apertura automática
+
+- **WHEN** se inicia la aplicación y existe un workspace guardado o el del directorio de datos predeterminado
+- **THEN** la interfaz abre ese workspace sin pedir una ruta y muestra Home con su contenido
+
+#### Scenario: Preferencia persistente
+
+- **WHEN** se crea o abre un workspace con éxito
+- **THEN** su ruta se guarda como preferencia local y el siguiente arranque la reutiliza
+
+#### Scenario: Ruta guardada no disponible
+
+- **WHEN** la preferencia apunta a una ruta que ya no contiene un workspace
+- **THEN** se intenta el directorio de datos predeterminado, sin presentar datos de otro workspace como propios
+
+#### Scenario: Primer uso
+
+- **WHEN** se inicia la aplicación y no existe ningún workspace en la preferencia ni en el directorio de datos
+- **THEN** ofrece crear o abrir uno y muestra su ruta después de seleccionarlo
+
+#### Scenario: Cambio explícito de workspace
+
+- **WHEN** el usuario elige Change workspace en Settings
+- **THEN** vuelve a la pantalla de selección y su elección se guarda para el siguiente arranque

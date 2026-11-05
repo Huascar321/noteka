@@ -7,10 +7,18 @@ iconos de clave usan el [catálogo local vigente](icons.md); imágenes personali
 ## Vistas y edición
 
 - Notes: notas locales sin procedencia importada y notas generales de la base
-  Notes, sin las archivadas en origen ni tipos Web Clip/Voice/Journal/Meeting.
-- Inbox: marca local inbox, con su regla previa.
+  Notes, incluidas Voice y excluidas las archivadas en origen y los tipos Web
+  Clip/Journal/Daily/Meeting. Usa `notes_general`; `notes_library` conserva su regla
+  anterior que excluye Voice. El filtro remoto adicional por URL todavía no se
+  replica: la URL importada reside en el documento, no en la proyección Home.
+- Inbox: notas activas sin relación local Project; Tag y People no las excluyen.
+  Se deriva de relaciones guardadas y ya no existe una marca manual.
+- Unclassified: notas de biblioteca sin relación local Tag, Project ni People,
+  con independencia de Inbox (que sólo mira Project y no restringe a biblioteca).
+  No comprueba Content, que aún no está modelado.
 - Fav.: favorito explícito dentro de la biblioteca.
-- Clips, Voice, Journal y Meetings: tipo explícito dentro de la biblioteca.
+- Clips, Voice y Meetings: tipo explícito dentro de la biblioteca. Journal reúne
+  Journal y Daily mediante `notes_diary`; `notes_journal` conserva sólo Journal.
 - All: todas las notas activas de Noteka, incluidas páginas importadas de otras
   bases. La pestaña All de la página Notes y la búsqueda conservan ese acceso completo.
 
@@ -21,14 +29,16 @@ ID y conserva el cursor del núcleo. Actualizar o cambiar de vista inicia otra
 lectura. Errores y cobertura no disponible se muestran explícitamente.
 
 En el [detalle de Note](note-detail.md), Type y Favorite se editan en la fila
-principal; Inbox y metadata de origen permanecen en View details. Crear desde una categoría
-preselecciona ese tipo; desde Inbox/Fav. preselecciona su marca. No hay escritura
-hasta guardar. Voice clasifica notas: grabación/transcripción siguen pendientes.
+principal; la metadata de origen permanece en View details y ya no hay marca
+Inbox. Crear desde una categoría preselecciona ese tipo; desde Fav. preselecciona
+su favorito. No hay escritura hasta guardar. Voice clasifica notas: grabación/transcripción siguen pendientes.
 
 ## Datos
 
 NoteFields admite `note_type`, `favorite` y `source` opcionales. Los tipos son
-reference, plan, web_clip, voice, journal, meeting, topic_research, idea y lecture.
+reference, plan, web_clip, voice, journal, daily, meeting, topic_research,
+outlier_content, creator_tips, tools, book, recipe, idea y lecture. Clientes con
+enums cerrados anteriores deben actualizarse antes de editar los tipos nuevos.
 Source conserva provider, collection, record_id y fechas originales opcionales,
 además del archivo en origen. Sus cadenas/fechas se validan en Rust.
 
@@ -46,6 +56,9 @@ importación, CSV y metadata visible autorizada. Dry-run inicial; `--apply` exig
 backup canónico nuevo. Resuelve IDs originales y coincidencias únicas de extremos,
 aplica con revisión esperada, conserva iconos/tipos/favoritos locales existentes
 y guarda informe incremental con payload/revisión anteriores.
+El tipo explícito `Voice Note` se traduce a `voice` cuando falta el tipo local;
+no se modifican automáticamente notas ya importadas. Ejecutar la recuperación
+requiere las fuentes originales y una aplicación explícita con backup.
 
 Una consulta de metadata actual de Notion puede refrescar timestamps originales
 por record_id exacto, sin solicitar cuerpos. La entrega contrastó las diez filas

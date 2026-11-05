@@ -17,7 +17,7 @@ Autorización de trabajo autónomo: 12 de octubre de 2026. No se activan llamada
 - [ ] Revisar [Search con evidencia local](evidence-search-ui.md): ámbitos separados, filtros por IDs y una página de 20 fragmentos. Fixture/cliente/UI, regresión y cuatro gates aprobados; [evidencia y límites](verification-evidence-search-ui.md). Search sigue siendo de lectura; el nuevo panel de preparación permite extracción/selección explícitas mediante las operaciones existentes. UX manual diferida, no autoriza pantalla/modelos/remotos ni bloquea desarrollo local.
 
 - [ ] Probar la interfaz oscura, navegación, editor y atajos con tu uso real. No se importó tu contenido de Notion.
-- [ ] Revisar [reglas de Inbox/My Day](productivity.md): Inbox es explícito; My Day usa planned_date y Overdue se mantiene separado. Sin inferencias de IA.
+- [x] Resuelto 5/11/2026: Inbox ya no es explícito; se deriva de relaciones Project ([ADR0059](decisions/0059-derived-inbox.md)). My Day sigue usando planned_date y Overdue se mantiene separado. Sin inferencias de IA.
 - [ ] Confirmar la [política de centavos](formulas.md) de la fixture de suscripción antes de aplicarla a datos financieros reales; asientos vacantes, sobreasignación y períodos no están definidos.
 - [ ] Revisar [formularios de colecciones](collections.md): inicialmente JSON/IDs y tabla/lista; elegir refinamientos de UX después de probar sistemas reales, sin confundirlos con paridad total con Notion.
 - [ ] Revisar [vistas avanzadas](views.md): grupos/días parciales por página, calendarios civiles con mes explícito y galería textual inicial. El Home confirmado sigue siendo otra entrega.

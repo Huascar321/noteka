@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, tick, setContext } from 'svelte';
+  import { onMount, tick, setContext, untrack } from 'svelte';
   import { isTauri } from '@tauri-apps/api/core';
   import { listen } from '@tauri-apps/api/event';
   import { operate, setPending, closeConfirmed } from './lib/api';
@@ -17,20 +17,24 @@
   import { installSmoothWheel, readSmoothWheel, saveSmoothWheel } from './lib/smooth-wheel';
   import { readPeekMode, savePeekMode, type PeekMode, type PeekPresentation } from './lib/peek-mode';
   import { readPanelWidths, savePanelWidths, panelLimits, effectivePanelWidth, clampPanelWidth, sidePeekExcludesSidebar, PANEL_MOTION_MS, type PanelKind, type PanelWidths } from './lib/panel-widths';
+  import { saveWorkspacePath } from './lib/workspace-startup';
   import type { WorkspaceInfo } from './lib/contracts.generated';
   import { WORKSPACE_ICON_CONTEXT } from './lib/visual-icon';
 
   type Tab = { id: string; initialTarget: NavigationTarget; state: PaneState; ownerId?: string; presentation?: PeekPresentation; returnFocus?: HTMLElement; sideHidden?: boolean; sideEpoch?: number; closing?: boolean };
-  let workspace = $state<WorkspaceInfo | null>(null);
+  let { startupWorkspace = null, startupError = '' }: { startupWorkspace?: WorkspaceInfo | null; startupError?: string } = $props();
+  // Los props de arranque se leen una vez: describen el estado resuelto antes de montar.
+  const initial = untrack(() => ({ workspace: startupWorkspace, error: startupError }));
+  let workspace = $state<WorkspaceInfo | null>(initial.workspace);
   setContext(WORKSPACE_ICON_CONTEXT, () => workspace?.path);
-  let path = $state('');
+  let path = $state(initial.workspace?.path ?? '');
   let tabs = $state<Tab[]>([]);
   let activeId = $state('');
   let focusedId = $state('');
   let paneRefs = $state<Record<string, WorkspacePaneApi | undefined>>({});
   let working = $state(false);
   let preparing = $state(false);
-  let error = $state('');
+  let error = $state(initial.error);
   let searchMode = $state<'current' | 'new' | null>(null);
   let settingsOpen = $state(false);
   let sidebarOpen = $state(false);
@@ -126,12 +130,15 @@
     const tab = makePane(target); tabs = [...tabs, tab];
     activeId = tab.id; focusedId = tab.id; sidebarOpen = false;
   }
+  if (initial.workspace) addTab();
   async function selectWorkspace(create: boolean) {
     if (working) return;
     working = true; error = '';
     try {
       workspace = await operate<WorkspaceInfo>({ operation: create ? 'workspace.create' : 'workspace.open', input: {} }, path.trim() || undefined);
       path = workspace.path; tabs = []; addTab();
+      const saveError = saveWorkspacePath(workspace.path, () => localStorage);
+      if (saveError) error = saveError;
     } catch (e) { error = e instanceof Error ? e.message : "Could not open the workspace."; }
     finally { working = false; }
   }

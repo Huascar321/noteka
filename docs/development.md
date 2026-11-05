@@ -328,8 +328,8 @@ Requieren `NOTEKA_TEST_TMP` externo y binarios/helper preparados por perfil. En 
 
 ## Entidades, documentos y relaciones
 
-- `note`: inbox booleano default true y documento v1/v2/v3. Registros creados por plantilla quedan fuera de Inbox. `person`: payload `{}`. Otras entidades todavía no tienen bloques.
-- `task`: state todo/doing/done, priority low/normal/high, planned_date/due_date civiles opcionales e inbox booleano.
+- `note`: inbox booleano heredado (default true, sin efecto en vistas) y documento v1/v2/v3. `person`: payload `{}`. Otras entidades todavía no tienen bloques.
+- `task`: state todo/doing/done, priority low/normal/high, planned_date/due_date civiles opcionales e inbox booleano heredado. Inbox de Tasks/Notes se deriva de la ausencia de relación Project.
 - `project`: state planned/doing/done/ongoing/on_hold, purpose y start_date/end_date opcionales.
 - `tag`: exige `{classification: "area" | "resource" | "topic"}`; área/recurso son los mismos IDs de tag.
 - Título: trim, no vacío, máximo 4.096 bytes. Tipo/ID inmutables. Instantes UTC y zona IANA del workspace obtenida del entorno, o `UTC` si no se puede detectar.

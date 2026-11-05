@@ -136,21 +136,40 @@ pub(crate) fn validate_person_fields(fields: &PersonFields) -> Result<()> {
     if let Some(source) = &fields.source {
         validate_note_source(source)?;
     }
-    if fields
-        .company
-        .as_ref()
-        .is_some_and(|s| s.len() > 512 || s.chars().any(char::is_control))
-        || fields.relationships.as_ref().is_some_and(|labels| {
-            labels.len() > 32
-                || labels.iter().any(|s| {
-                    s.trim().is_empty() || s.len() > 128 || s.chars().any(char::is_control)
-                })
-                || labels
-                    .iter()
-                    .collect::<std::collections::BTreeSet<_>>()
-                    .len()
-                    != labels.len()
-        })
+    let invalid_labels = |labels: &Vec<String>| {
+        labels.len() > 32
+            || labels
+                .iter()
+                .any(|s| s.trim().is_empty() || s.len() > 128 || s.chars().any(char::is_control))
+            || labels
+                .iter()
+                .collect::<std::collections::BTreeSet<_>>()
+                .len()
+                != labels.len()
+    };
+    let invalid_contact = [
+        &fields.job_title,
+        &fields.location,
+        &fields.phone,
+        &fields.email,
+        &fields.instagram,
+        &fields.linkedin,
+        &fields.twitter,
+        &fields.website,
+    ]
+    .iter()
+    .any(|value| {
+        value
+            .as_ref()
+            .is_some_and(|s| s.len() > 2048 || s.chars().any(char::is_control))
+    });
+    if invalid_contact
+        || fields.interests.as_ref().is_some_and(invalid_labels)
+        || fields
+            .company
+            .as_ref()
+            .is_some_and(|s| s.len() > 512 || s.chars().any(char::is_control))
+        || fields.relationships.as_ref().is_some_and(invalid_labels)
         || fields
             .photo
             .as_ref()
@@ -255,7 +274,9 @@ impl Workspace {
         }
         let filter = match input.view {
             WorkflowView::Inbox => {
-                "kind IN ('note','task') AND coalesce(json_extract(payload,'$.inbox'),1)=1 AND (kind='note' OR coalesce(json_extract(payload,'$.state'),'todo') IN ('todo','doing'))"
+                // Derivado de relaciones: notas activas y tareas pendientes sin
+                // relación Project. payload.inbox queda como dato heredado.
+                "kind IN ('note','task') AND (kind='note' OR coalesce(json_extract(payload,'$.state'),'todo') IN ('todo','doing')) AND NOT EXISTS (SELECT 1 FROM relations r JOIN entities t ON t.id=r.target_id WHERE r.source_id=entities.id AND r.kind='project' AND t.kind='project')"
             }
             WorkflowView::MyDay => {
                 "kind='task' AND coalesce(json_extract(payload,'$.state'),'todo') IN ('todo','doing') AND json_extract(payload,'$.planned_date')=?4"

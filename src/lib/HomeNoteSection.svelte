@@ -13,21 +13,22 @@
     oncreate: (seed?: Record<string, unknown>) => Promise<void>; onnavigate: () => Promise<void>;
   } = $props();
   const views: { id: HomeView; label: string; icon: string }[] = [
-    { id: 'notes_library', label: 'Notes', icon: 'file-text' },
+    { id: 'notes_general', label: 'Notes', icon: 'file-text' },
     { id: 'notes_inbox', label: 'Inbox', icon: 'inbox' },
     { id: 'notes_favorites', label: 'Fav.', icon: 'star' },
     { id: 'notes_clips', label: 'Clips', icon: 'globe' },
     { id: 'notes_voice', label: 'Voice', icon: 'mic' },
-    { id: 'notes_journal', label: 'Journal', icon: 'pen' },
+    { id: 'notes_diary', label: 'Journal', icon: 'pen' },
     { id: 'notes_meetings', label: 'Meetings', icon: 'users' },
     { id: 'notes_all', label: 'All', icon: 'asterisk' },
+    { id: 'notes_unclassified', label: 'Unclassified', icon: 'circle-dot' },
   ];
   const page = $derived(readState?.page);
   let optionsOpen = $state(false);
   let root: HTMLElement;
   function create() {
-    const type = ({ notes_clips: 'web_clip', notes_voice: 'voice', notes_journal: 'journal', notes_meetings: 'meeting' } as Record<string, string>)[readState?.view ?? ''];
-    return oncreate({ inbox: readState?.view === 'notes_inbox', ...(type ? { note_type: type } : {}), ...(readState?.view === 'notes_favorites' ? { favorite: true } : {}) });
+    const type = ({ notes_clips: 'web_clip', notes_voice: 'voice', notes_diary: 'journal', notes_meetings: 'meeting' } as Record<string, string>)[readState?.view ?? ''];
+    return oncreate({ ...(type ? { note_type: type } : {}), ...(readState?.view === 'notes_favorites' ? { favorite: true } : {}) });
   }
 </script>
 
@@ -49,10 +50,12 @@
       </div><button class="task-new primary" onclick={() => void create()}><AppIcon name="plus" size={16} />New</button>
     </div>
   </div>
-  {#if optionsOpen}<div class="task-view-options"><p>Notes: local notes and general notes from the Notes database, excluding those archived at the source. Clips, Voice, Journal and Meetings use their explicit type. Fav. uses the favorite flag; Inbox preserves its local flag. All includes every active local page.</p><p>Imported age uses the last recorded source modification; local notes use their local modification. Voice does not record or transcribe audio.</p>{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}
+  {#if optionsOpen}<div class="task-view-options"><p>Notes: local and imported library notes, including Voice, excluding those archived at the source. Clips, Voice, Journal and Meetings use their explicit type. Fav. uses the favorite flag; Inbox shows active notes without a Project relation (Tag or People links do not remove them). All includes every active local page.</p><p>Imported URL filters are not fully represented. Imported age uses the last recorded source modification; local notes use their local modification. Voice does not record or transcribe audio.</p>{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}
   {#if readState?.busy && !page}<p role="status" class="task-read-status">Loading Notes…</p>{/if}
   {#if readState?.error}<p class="error" role="alert">Read failed: {readState.error}</p><button onclick={() => void onretry()}>Retry Notes</button>{/if}
   <HomeReadStatus state={readState} />
+  {#if readState?.view === 'notes_inbox'}<p class="task-read-status">Active notes without a local Project relation. Tag or People links do not remove them.</p>{/if}
+  {#if readState?.view === 'notes_unclassified'}<p class="task-read-status">Library notes without local Tag, Project or People relations. Content is not yet modeled, so this does not check for Content.</p>{/if}
   {#if page}
     {#if page.unavailable_count}<p class="home-unavailable">{page.unavailable_count} notes with uninterpretable metadata for this view.</p>{/if}
     <div class="home-rows note-rows">{#each page.items as row (row.entity.id)}<HomeRow item={row} {onopen} noteStyle />{/each}{#if !page.items.length}<p class="home-empty">No Notes in this view.</p>{/if}</div>

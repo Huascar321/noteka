@@ -134,7 +134,7 @@ def main():
         if args.apply:
             save_report()
 
-    note_types = {"reference", "plan", "web_clip", "voice", "journal", "meeting", "topic_research", "idea", "lecture"}
+    note_types = {"reference", "plan", "web_clip", "voice", "journal", "daily", "meeting", "topic_research", "outlier_content", "creator_tips", "tools", "book", "recipe", "idea", "lecture"}
 
     def timestamp(value):
         if not value.strip():
@@ -188,7 +188,9 @@ def main():
                 if value:
                     source[key] = value
             source["archived"] = row.get("Archived") == "Yes"
-            note_type = row.get("Type", "").strip().lower().replace(" ", "_")
+            note_type = "_".join(row.get("Type", "").strip().lower().split())
+            if note_type == "voice_note":
+                note_type = "voice"
             if note_type in note_types and "note_type" not in entity["payload"]:
                 extra["note_type"] = note_type
             if row.get("Favorite") in {"Yes", "No"} and "favorite" not in entity["payload"]:

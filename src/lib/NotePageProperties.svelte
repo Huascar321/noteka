@@ -2,6 +2,7 @@
   import AppIcon from './AppIcon.svelte';
   import type { Entity } from './contracts.generated';
   import { entityIcon, entityIconColor } from './entity-appearance';
+  import { noteTypes as types } from './note-types';
   let { payload, tags, sourceUrl = '', disabled = false, readOnly = false, canRelate = false, captureTag = false, onchange, onopen, oneditrelations }: {
     payload: Record<string, unknown>;
     tags: Entity[];
@@ -14,7 +15,6 @@
     onopen: (entity: Entity) => Promise<void>;
     oneditrelations: (anchor: HTMLElement) => void;
   } = $props();
-  const types = [['reference','Reference'],['plan','Plan'],['web_clip','Web Clip'],['voice','Voice'],['journal','Journal'],['meeting','Meeting'],['topic_research','Topic Research'],['idea','Idea'],['lecture','Lecture']];
   const noteType = $derived(String(payload.note_type ?? ''));
   function set(key: string, value: unknown) { if (disabled || readOnly) return; payload[key] = value; onchange(); }
 </script>

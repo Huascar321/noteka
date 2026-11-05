@@ -4389,26 +4389,34 @@
       "enum": [
         "tasks_today",
         "tasks_inbox",
+        "tasks_unclassified",
         "tasks_all",
+        "tasks_pending",
         "tasks_done",
         "tasks_week",
         "tasks_month",
+        "tasks_calendar_week",
+        "tasks_calendar_month",
         "tasks_scheduled",
         "tasks_no_due",
         "tasks_active_projects",
         "tasks_projects_in_progress",
         "notes_all",
         "notes_inbox",
+        "notes_unclassified",
         "notes_library",
+        "notes_general",
         "notes_favorites",
         "notes_clips",
         "notes_voice",
         "notes_journal",
+        "notes_diary",
         "notes_meetings",
         "projects_active",
         "projects_planned",
         "projects_board",
         "projects_deadlines",
+        "projects_calendar",
         "projects_completed",
         "projects_on_hold",
         "projects_by_tag",
@@ -5003,8 +5011,14 @@
         "web_clip",
         "voice",
         "journal",
+        "daily",
         "meeting",
         "topic_research",
+        "outlier_content",
+        "creator_tips",
+        "tools",
+        "book",
+        "recipe",
         "idea",
         "lecture"
       ],
@@ -7455,6 +7469,12 @@
             "null"
           ]
         },
+        "email": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "gallery_order": {
           "format": "uint32",
           "minimum": 0,
@@ -7475,7 +7495,46 @@
             "null"
           ]
         },
+        "instagram": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "interests": {
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "job_title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "last_check_in": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "linkedin": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "location": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "phone": {
           "type": [
             "string",
             "null"
@@ -7522,6 +7581,18 @@
             {
               "type": "null"
             }
+          ]
+        },
+        "twitter": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "website": {
+          "type": [
+            "string",
+            "null"
           ]
         }
       },

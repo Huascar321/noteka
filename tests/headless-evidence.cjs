@@ -195,7 +195,7 @@ async (page) => {
     await changeWorkspace(restored.path); await enter();
     const restoredBefore = await snapshot(); await submit('nkprobe'); await assertPage(fixture.pages[0], 'Restaurado UI');
     expect(equal(await snapshot(), restoredBefore), 'Restaurado UI conserva snapshot');
-    await page.reload(); await open(workspace); await enter();
+    await page.evaluate(() => localStorage.removeItem('noteka.workspace-path.v1')); await page.reload(); await open(workspace); await enter();
     expect(await page.locator('.attachment-coverage, .attachment-hit').count() === 0, 'Reapertura no recupera resultados ni cursores');
     await submit('nkprobe'); await assertPage(fixture.pages[0], 'Reapertura UI');
     await control('evidence_reset', { workspace }); const reset = await snapshot();

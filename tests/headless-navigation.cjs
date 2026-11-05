@@ -30,6 +30,7 @@ async (page) => {
   await page.goto(origin);await page.evaluate(theme=>{localStorage.clear();localStorage.setItem('noteka.theme.v1',theme);},theme);await page.reload();
   await page.locator('#workspace-path').fill(info.path);await page.getByRole('button',{name:"Create workspace",exact:true}).click();
   await active().locator('.home').waitFor();await page.waitForFunction(()=>document.querySelectorAll('.home-coverage').length===5);
+  await page.reload();await active().locator('.home').waitFor();check(await page.locator('#workspace-path').count()===0,'reload reabre el workspace guardado sin pedir ruta');
   check(JSON.stringify(await page.locator("nav[aria-label=\"Sections\"] button").allTextContents())===JSON.stringify(['Home','Tasks','Notes','Projects','Tags','People']),'exact six sidebar entries in order');
   check(await page.locator('.collections-shortcut').count()===1,'Collections icon outside navigation list');
   const a=await control('entity_create',{kind:'note',title:'Alpha navigation',document:{schema_version:2,blocks:[{id:'a-block',type:'paragraph',content:[{type:'text',text:'Alpha original'}]}]}});

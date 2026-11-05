@@ -4,8 +4,8 @@ Fase 2 (`add-productivity-workflows`). El núcleo valida metadatos y consultas; 
 
 ## Metadatos y compatibilidad
 
-- Nota: `inbox` booleano, default true.
-- Tarea: `state` todo/doing/done (default todo), `priority` low/normal/high (default normal), `due_date` y `planned_date` opcionales, `inbox` true por defecto. `doing` cuenta como pendiente en vistas y resúmenes; sólo `done` está completada.
+- Nota y tarea conservan `inbox` booleano con default `true` al crear. Es un dato heredado: desde `derive-inbox-from-projects` ([ADR0059](decisions/0059-derived-inbox.md)) ninguna vista lo consulta y no hay control en la interfaz.
+- Tarea: `state` todo/doing/done (default todo), `priority` low/normal/high (default normal), `due_date` y `planned_date` opcionales. `doing` cuenta como pendiente en vistas y resúmenes; sólo `done` está completada.
 - Proyecto: los estados previos, `purpose` hasta 16 KiB y `start_date/end_date` opcionales; fin >= inicio.
 - Tag: clasificación area/resource/topic requerida. Persona: payload vacío.
 - Fechas civiles canónicas YYYY-MM-DD, años 0001–9999, sin hora ni zona. Instantes de creación/modificación siguen UTC. No se convierten fechas inválidas.
@@ -17,14 +17,14 @@ CLI `workflow query --json` recibe `{view,as_of?,related_id?,limit?,cursor?}`. `
 
 | view | Filtro |
 | --- | --- |
-| inbox | Notas y tareas activas con inbox true/ausente; tareas todo/doing incluidas y done fuera |
+| inbox | Notas activas y tareas todo/doing sin relación local Project; done fuera. Tag/People no excluyen notas |
 | my_day | Tareas activas todo/doing con planned_date igual al día |
 | pending | Todas las tareas activas todo/doing |
 | overdue | Tareas activas todo/doing con due_date menor al día; vencer hoy no equivale a vencida |
 | active_projects | Proyectos activos planned/doing/ongoing; on_hold/done fuera |
 | context | Entidades activas relacionadas a proyecto/tag/persona indicado por related_id, por cualquiera de los extremos y sin duplicados |
 
-Clasificar o relacionar no saca una captura del Inbox; desmarcarlo es una decisión explícita. My Day no agrega automáticamente vencidas. Archivar excluye de vistas pero conserva relaciones. Completar una tarea no elimina fechas ni vínculos. Contexto puede seguir mostrando tareas completadas; es un dashboard de relaciones, no otra copia de pendientes. No hay snapshot entre páginas ante escrituras concurrentes.
+Inbox se deriva de relaciones: vincular una nota o tarea pendiente a un proyecto la saca; quitar el vínculo la devuelve. Un vínculo Tag/People no saca una nota. La bandera heredada no participa. My Day no agrega automáticamente vencidas. Archivar excluye de vistas pero conserva relaciones. Completar una tarea no elimina fechas ni vínculos. Contexto puede seguir mostrando tareas completadas; es un dashboard de relaciones, no otra copia de pendientes. No hay snapshot entre páginas ante escrituras concurrentes.
 
 ```sh
 printf '%s' '{"view":"my_day","as_of":"2026-10-12"}' | ./target/debug/noteka --workspace /ruta/al/workspace workflow query --json
@@ -36,4 +36,4 @@ printf '%s' '{"view":"my_day","as_of":"2026-10-12"}' | ./target/debug/noteka --w
 
 Los formularios mantienen el buffer ante error/conflicto. En una entidad ya creada, las relaciones se confirman por separado sin guardar ni descartar el buffer; su revisión confirmada permite guardar el contenido después. Quitar una relación entrante verifica la revisión actual de su origen; no elimina entidades. La UI permite elegir destinos por nombre, sin introducir IDs; CLI y MCP conservan sus contratos basados en identificadores.
 
-Pendientes de producto fuera de esta entrega: subtareas, recurrencias, recordatorios, contactos externos, colecciones/propiedades genéricas y modelos. Preferencias de Inbox/My Day quedan en review queue para revisión no bloqueante.
+Pendientes de producto fuera de esta entrega: subtareas, recurrencias, recordatorios, contactos externos, colecciones/propiedades genéricas y modelos. Preferencias de My Day quedan en review queue para revisión no bloqueante; Inbox se resolvió con una regla derivada.

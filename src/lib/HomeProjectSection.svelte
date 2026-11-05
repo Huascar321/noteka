@@ -4,6 +4,7 @@
   import AppIcon from './AppIcon.svelte';
   import HomeProjectCard from './HomeProjectCard.svelte';
   import TaskPageProjectRow from './TaskPageProjectRow.svelte';
+  import ProjectDeadlineCalendar from './ProjectDeadlineCalendar.svelte';
   import { homeGroupLabel, type HomeReadState } from './home-reads';
   import HomeReadStatus from './HomeReadStatus.svelte';
   import type { HomeView, HomeGroup, ProjectState } from './contracts.generated';
@@ -26,7 +27,7 @@
     { state: 'ongoing', label: 'Ongoing' }, { state: 'done', label: 'Done' }, { state: 'on_hold', label: 'On Hold' },
   ];
   const page = $derived(readState?.page);
-  const displayedViews = $derived(pageMode ? [...views, { id: 'projects_deadlines' as HomeView, label: 'Deadlines', icon: 'calendar' }, { id: 'projects_completed' as HomeView, label: 'Completed', icon: 'circle-check' }, ...(standalone ? [{ id: 'projects_on_hold' as HomeView, label: 'On Hold', icon: 'pause' }] : [])] : views);
+  const displayedViews = $derived(pageMode ? [...views, { id: 'projects_calendar' as HomeView, label: 'Deadlines', icon: 'calendar' }, { id: 'projects_completed' as HomeView, label: 'Completed', icon: 'circle-check' }, ...(standalone ? [{ id: 'projects_on_hold' as HomeView, label: 'On Hold', icon: 'pause' }] : [])] : views);
   const columns = $derived(definitions.filter(c => readState?.view === 'projects_active' ? c.state === 'doing' || c.state === 'ongoing' : readState?.view === 'projects_planned' ? c.state === 'planned' : readState?.view === 'projects_completed' ? c.state === 'done' : readState?.view === 'projects_on_hold' ? c.state === 'on_hold' : true));
   const relationView = $derived(readState?.view === 'projects_by_tag' || readState?.view === 'projects_by_people');
   let optionsOpen = $state(false);
@@ -129,7 +130,7 @@
       </div><button class="task-new primary" disabled={moving} onclick={() => void create()}><AppIcon name="plus" size={16} />New</button>
     </div>
   </div>
-  {#if optionsOpen}<div class="task-view-options"><p>Active: Doing and Ongoing. Planned: planned projects. Board: all five statuses. Projects archived locally or in their imported source are excluded; general search keeps source-archived imports accessible.</p>{#if pageMode}<p>Deadlines: incomplete projects with an end date, sorted by that date. Completed: Done status. Dates are not derived from tasks.</p>{/if}{#if standalone}<p>On Hold: paused projects. By Tag and By People group all five statuses by local links; a project may appear in several groups. Groups and counts cover loaded projects. New page in a relation group prepares Planned with that link.</p>{/if}<p>Progress uses related local tasks: completed / total, rounded to one decimal place. Overdue: pending tasks due before the workspace calendar day. Goal references open their imported pages.</p>{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}
+  {#if optionsOpen}<div class="task-view-options"><p>Active: Doing and Ongoing. Planned: planned projects. Board: all five statuses. Projects archived locally or in their imported source are excluded; general search keeps source-archived imports accessible.</p>{#if pageMode}<p>Deadlines: calendar of project end dates, including completed and undated projects. Completed: Done status. Dates are not derived from tasks.</p>{/if}{#if standalone}<p>On Hold: paused projects. By Tag and By People group all five statuses by local links; a project may appear in several groups. Groups and counts cover loaded projects. New page in a relation group prepares Planned with that link.</p>{/if}<p>Progress uses related local tasks: completed / total, rounded to one decimal place. Overdue: pending tasks due before the workspace calendar day. Goal references open their imported pages.</p>{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}
   {#if readState?.busy && !page}<p role="status" class="task-read-status">Loading Projects…</p>{/if}
   {#if readState?.error}<p class="error" role="alert">Read failed: {readState.error}</p><button onclick={() => void onretry()}>Retry Projects</button>{/if}
   <HomeReadStatus state={readState} />
@@ -151,10 +152,8 @@
             </details>
           {/each}
           {#if !page.items.length}<p class="home-empty">No projects in this view.</p>{/if}
-        {:else if readState?.view === 'projects_deadlines'}
-          {#each page.items as row (row.entity.id)}<TaskPageProjectRow item={row} {onopen} showDeadline />{/each}
-          {#if !page.items.length}<p class="home-empty">No pending projects with an end date.</p>{/if}
-          <button class="home-new task-add-row" onclick={() => void create()}><AppIcon name="plus" size={16} />New page</button>
+        {:else if readState?.view === 'projects_calendar'}
+          <ProjectDeadlineCalendar items={page.items} date={page.date} partial={!!page.next_cursor} disabled={!!readState?.busy || moving} {onopen} oncreate={(date) => void oncreate({ state:'planned', end_date:date })} />
         {:else}
           {#each columns as column (column.state)}
             {@const rows = page.items.filter(row => row.metadata.state === column.state)}

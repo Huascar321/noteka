@@ -1,3 +1,7 @@
+> Revisión Inbox 5/11/2026: el usuario cambia la decisión PARA y convierte Inbox en un conjunto derivado. Tasks y Notes muestran activos sin relación Project; vincular a un proyecto los saca y quitar el vínculo los devuelve. Se retira la marca manual y la tab Unclassified de Tasks; Notes conserva Unclassified (biblioteca sin Tag/Project/People). `payload.inbox` queda inerte, sin migración. Ver [ADR0059](decisions/0059-derived-inbox.md) y [verificación](verification-derived-inbox.md).
+>
+> Revisión PARA 5/11/2026: el usuario conserva Inbox manual y elige una vista automática separada Unclassified. Tasks comprueba ausencia local de Project; Notes, de Tag/Project/People. Content no está modelado. Los tipos Daily y Journal son distintos y comparten la vista Journal; se incorporan los demás tipos observados y se corrige la recuperación explícita de Voice Note. Ver [revisión](verification-para-consistency.md). Sin recuperación de datos reales, sync, archivo ni push.
+>
 > Consolidación visual 4/11/2026: el usuario autoriza guardar los siete cambios Liquid Glass aceptados en un commit local conjunto. `document-liquid-glass-system` consolida la [guía obligatoria](design-system.md) con recetas, tokens, estados, accesibilidad y [29 screenshots sintéticos reproducibles](design/liquid-glass/README.md). No cambia el comportamiento del producto; los deltas siguen activos sin sync/archivo y no se publica remotamente. Sustituye las restricciones anteriores de «sin commit adicional» para esta serie.
 >
 > Actualización 4/11/2026: `add-project-task-board` agrega `doing` a las tareas y List/Board al detalle de Project. Board tiene columnas To Do/Doing/Done, tarjetas con vencimiento, New task por columna y movimiento por arrastre o selector con CAS. El núcleo trata doing como pendiente; no hay migración. Calendar, comentarios y orden manual quedan fuera. Ver [guía](project-detail.md), [ADR0058](decisions/0058-task-status-and-project-board.md) y [verificación](verification-project-task-board.md).
@@ -686,7 +690,7 @@ PARA organiza por propósito: proyectos con resultado, áreas de responsabilidad
 - **Tags:** clasificación `area`, `resource` o `topic`; pueden relacionar notas, proyectos, personas y otras entidades. Área y recurso no necesitan identidades duplicadas en tablas independientes.
 - **People:** personas relacionadas con notas, proyectos y registros; datos adicionales serán propiedades del sistema.
 - **Archive:** estado reversible de cualquier entidad compatible, conservando identidad, contenido y relaciones. Archivar no elimina físicamente el original.
-- **Inbox:** captura sin exigir una clasificación previa. Las reglas exactas de salida de inbox se definirán con el cambio de productividad; serán filtros explícitos y reproducibles.
+- **Inbox:** captura sin exigir una clasificación previa. Inbox se deriva de la ausencia de relación Project local; vincular a un proyecto saca la nota/tarea y quitar el vínculo la devuelve. Filtro explícito, sin marca manual ([ADR0059](decisions/0059-derived-inbox.md)).
 - **My Day y vistas de trabajo:** tareas seleccionadas para el día, pendientes, vencidas, proyectos activos y notas por contexto. No depender de prompts para calcular estados.
 
 Crear contenido desde una vista de proyecto debe establecer la relación correspondiente. Las vistas deben consultar entidades compartidas; mostrar una nota en dos lugares no crea dos copias.
@@ -1224,3 +1228,43 @@ la alineación de relaciones y acciones de preparación y la altura de selects
 compactos en WebKit. La revisión usa escenas y datos sintéticos; su cobertura y
 límites figuran en [la verificación](verification-visual-alignment.md). El
 cambio permanece sin sincronizar ni archivar.
+
+## Actualización 05/11/2026: All de Tasks
+
+La vista All de Notion, tanto en Home como en la página Tasks, filtra Status
+distinto de Done. La interfaz local usa `tasks_pending` para ese resultado;
+`tasks_all` conserva su contrato de todas las tareas y Done sigue separado.
+Ver [evidencia](verification-pending-tasks-view.md). Cambio sin sync ni archivo.
+
+## Actualización 05/11/2026: calendario del Project
+
+`add-project-task-calendar` incorpora la vista mensual por Due sobre relaciones
+locales cargadas, con captura contextual y aviso de cobertura parcial. No replica
+la jerarquía Parent Project de Notion. Ver [verificación](verification-project-task-calendar.md);
+delta sin sincronizar ni archivar.
+
+## Actualización 05/11/2026: Deadlines de Projects
+
+`align-project-deadlines-calendar` incorpora calendario mensual por fecha de
+fin para proyectos no archivados, incluidos completados y sin fecha. La consulta
+histórica `projects_deadlines` se conserva; la interfaz usa `projects_calendar`.
+Ver [verificación](verification-project-deadlines-calendar.md); sin sync/archivo.
+
+## Actualización 05/11/2026: contacto local de Person
+
+`add-person-contact-fields` incorpora campos opcionales e intereses editables
+sin importar ni enviar datos personales. La proyección Home omite esos nuevos
+campos; el detalle los obtiene mediante `entity.get`. Ver
+[verificación](verification-person-contact-fields.md); sin sync/archivo.
+
+## Actualización 05/11/2026: calendarios de Tasks
+
+`align-task-calendars` agrega Week/Month navegables por Due, con consultas por
+período y tareas sin fecha; conserva las consultas antiguas. Ver
+[verificación](verification-task-calendars.md); sin sync/archivo.
+
+## Actualización 05/11/2026: Voice en Notes
+
+`include-voice-in-notes-view` añade `notes_general` para mostrar Voice también
+en Notes sin cambiar `notes_library`. El filtro remoto por URL sigue limitado;
+ver [verificación](verification-notes-voice-view.md). Sin sync ni archivo.

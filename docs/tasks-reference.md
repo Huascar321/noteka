@@ -14,11 +14,24 @@ Projects** también admite Planned. Estas definiciones locales no acreditan
 paridad con todos los filtros internos de Notion. El modelo actual de tarea
 conserva todo/doing/done; `doing` cuenta como pendiente y `done` como completada.
 
-Week usa la semana ISO de vencimiento; Month su año/mes civil. Scheduled tiene
-vencimiento asignado y No Due carece de él. No se derivan estas vistas de
-planned_date ni se asignan fechas al crear. Inbox, All y Done mantienen sus
-reglas anteriores. El núcleo conserva `tasks_today` con vencimiento hasta el día
-civil para CLI/MCP; la tab visual Today ya no consulta esa vista.
+All muestra tareas pendientes; Done muestra las completadas. La consulta pública
+`tasks_all` conserva todas las tareas; la interfaz usa `tasks_pending` para All,
+como en la referencia inspeccionada. La búsqueda también conserva las completadas.
+
+Week y Month son calendarios navegables de Due por semana ISO y mes civil;
+incluyen completadas y acceso a tareas sin fecha. Crear desde un día prepara
+ese vencimiento; New general no asigna fecha. Las consultas previas
+`tasks_week`/`tasks_month` siguen siendo listas de pendientes, y la interfaz usa
+las variantes aditivas `tasks_calendar_week`/`tasks_calendar_month`. Scheduled tiene
+vencimiento asignado y No Due carece de él. No se derivan de planned_date.
+Inbox muestra tareas pendientes (`todo`/`doing`) sin relación local Project; se
+deriva de las relaciones guardadas y no de una marca manual. Vincular la tarea a
+un proyecto la saca y quitar el vínculo la devuelve; una relación a un proyecto
+archivado sigue contando. Done conserva su regla anterior. El núcleo conserva
+`tasks_today` con vencimiento hasta el día civil para CLI/MCP y
+`tasks_unclassified` como alias compatible del mismo conjunto de Inbox; la
+interfaz ya no muestra la tab Unclassified ni un control Inbox. Content aún no
+está modelado y no se comprueba en esta vista.
 
 Recurring y Active Content siguen pendientes. Cobertura, contexto de consulta y
 reglas se consultan en Opciones de vista y en el footer; los conteos de grupo son

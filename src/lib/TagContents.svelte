@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { noteTypeLabels as types } from './note-types';
   import AppIcon from './AppIcon.svelte';
   import { entityIcon, entityIconColor } from './entity-appearance';
   import type { Entity } from './contracts.generated';
@@ -13,7 +14,6 @@
     { key: 'clip' as const, label:'Clips', items:noteItems.filter(item => (item.payload as Record<string,unknown>)?.note_type === 'web_clip') },
   ]);
   const tasks = $derived(items.filter(item => item.kind === 'task'));
-  const types: Record<string,string> = { reference:'Reference', plan:'Plan', web_clip:'Web Clip', voice:'Voice', journal:'Journal', meeting:'Meeting', topic_research:'Topic Research', idea:'Idea', lecture:'Lecture' };
 </script>
 
 <div class="tag-contents" aria-busy={busy}>

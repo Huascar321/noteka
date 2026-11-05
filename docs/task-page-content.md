@@ -20,8 +20,8 @@ insertar, transformar, duplicar, mover y eliminar bloques, y clic debajo del
 se reutiliza. Los cambios permanecen en el borrador hasta guardarlos. Ver
 [editor contextual](note-editor.md) y [verificación](verification-task-block-editor.md).
 
-Status, Project y Due aparecen arriba. **View details** mantiene Inbox, prioridad,
-fecha planificada y metadatos. Project abre su original con las guardias de salida;
+Status, Project y Due aparecen arriba. **View details** mantiene prioridad,
+fecha planificada y metadatos; Inbox ya no es una marca manual. Project abre su original con las guardias de salida;
 su control de edición y las acciones de persona/tag abren selectores locales por
 nombre. En una tarea ya creada se puede modificar un vínculo sin guardar su
 borrador; el vínculo se confirma por separado. Los vínculos existentes se pueden

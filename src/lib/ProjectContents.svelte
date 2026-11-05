@@ -1,14 +1,16 @@
 <script lang="ts">
+  import { noteTypeLabels as types } from './note-types';
   import AppIcon from './AppIcon.svelte';
   import ProjectTaskRow from './ProjectTaskRow.svelte';
   import ProjectTaskBoard from './ProjectTaskBoard.svelte';
+  import ProjectTaskCalendar from './ProjectTaskCalendar.svelte';
   import { entityIcon, entityIconColor } from './entity-appearance';
   import { slidingTabs } from './sliding-tabs';
   import { updateTaskState, taskStateOf, type TaskState } from './task-board';
   import type { Entity } from './contracts.generated';
 
-  let { items, workspace, hasMore = false, busy = false, stale = false, notice = '', error = '', createDisabled = false, onopen, oncreate, onchanged, onmore, onretry }: {
-    items: Entity[]; workspace: string; hasMore?: boolean; busy?: boolean; stale?: boolean; notice?: string; error?: string; createDisabled?: boolean;
+  let { items, workspace, timezone, hasMore = false, busy = false, stale = false, notice = '', error = '', createDisabled = false, onopen, oncreate, onchanged, onmore, onretry }: {
+    items: Entity[]; workspace: string; timezone: string; hasMore?: boolean; busy?: boolean; stale?: boolean; notice?: string; error?: string; createDisabled?: boolean;
     onopen: (entity: Entity) => Promise<void>; oncreate: (kind: 'task' | 'note', seed?: Record<string, unknown>) => void;
     onchanged: () => Promise<void>; onmore: () => void; onretry: () => void;
   } = $props();
@@ -20,8 +22,7 @@
     { key: 'done', label: 'Done', items: tasks.filter(item => taskStateOf(item) === 'done') },
     { key: 'unknown', label: 'Status unavailable', items: tasks.filter(item => taskStateOf(item) === null) },
   ]);
-  const types: Record<string,string> = { reference:'Reference', plan:'Plan', web_clip:'Web Clip', voice:'Voice', journal:'Journal', meeting:'Meeting', topic_research:'Topic Research', idea:'Idea', lecture:'Lecture' };
-  let taskView = $state<'list' | 'board'>('list');
+  let taskView = $state<'list' | 'board' | 'calendar'>('list');
   let movingId = $state('');
   let taskError = $state('');
 
@@ -48,14 +49,17 @@
     <div class="project-task-views" use:slidingTabs role="group" aria-label="Project task views">
       <button class:active={taskView === 'list'} aria-pressed={taskView === 'list'} onclick={() => taskView = 'list'}><AppIcon name="list" size={15} />List</button>
       <button class:active={taskView === 'board'} aria-pressed={taskView === 'board'} onclick={() => taskView = 'board'}><AppIcon name="columns" size={15} />Board</button>
+      <button class:active={taskView === 'calendar'} aria-pressed={taskView === 'calendar'} onclick={() => taskView = 'calendar'}><AppIcon name="calendar" size={15} />Calendar</button>
     </div>
     {#if taskView === 'list'}
       {#if taskError}<p class="error" role="alert">{taskError}</p>{/if}
       {#each taskGroups as group (group.key)}{#if group.items.length}<details class="project-task-group" open={group.key !== 'done'}><summary><span class="project-task-state" data-state={group.key}>{group.label}</span><span>{group.items.length}</span></summary>{#each group.items as item (item.id)}<ProjectTaskRow task={item} disabled={busy || createDisabled || movingId !== ''} onopen={onopen} ontoggle={applyTaskState} />{/each}</details>{/if}{/each}
       {#if !busy && !error && !tasks.length}<p class="project-context-message">{hasMore ? "No Tasks in the loaded relations. You can load more." : "No related Tasks."}</p>{/if}
-    {:else}
+    {:else if taskView === 'board'}
       <ProjectTaskBoard tasks={tasks} movingId={movingId} error={taskError} disabled={busy || createDisabled} {onopen} onmove={applyTaskState} oncreate={(state) => createTask(state)} />
       {#if !busy && !error && !tasks.length && !hasMore}<p class="project-context-message">No related Tasks.</p>{/if}
+    {:else}
+      <ProjectTaskCalendar {tasks} {timezone} partial={hasMore} disabled={busy || createDisabled} {onopen} oncreate={(date) => oncreate('task', { due_date: date })} />
     {/if}
     <button class="project-add-row" disabled={createDisabled} onclick={() => createTask()}><AppIcon name="plus" size={16} />New task</button>
   </section>

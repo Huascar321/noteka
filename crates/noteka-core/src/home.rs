@@ -281,7 +281,19 @@ fn read_row(r: &Row<'_>, day: &str, tz: chrono_tz::Tz) -> rusqlite::Result<ReadR
                             .filter(|d| d.month() == day.month())
                             .map(|d| d.to_string())
                     });
-                meta.person = Some(fields);
+                // Home sólo necesita la metadata de sus vistas; los datos de
+                // contacto se leen mediante entity.get al abrir la persona.
+                let mut visible = fields;
+                visible.job_title = None;
+                visible.location = None;
+                visible.phone = None;
+                visible.email = None;
+                visible.instagram = None;
+                visible.linkedin = None;
+                visible.twitter = None;
+                visible.website = None;
+                visible.interests = None;
+                meta.person = Some(visible);
             }
             None => meta.issues.push("person_metadata".into()),
         }
@@ -316,6 +328,7 @@ fn matches_view(row: &ReadRow, view: HomeView, day: &str, timezone: chrono_tz::T
             | ProjectsPlanned
             | ProjectsBoard
             | ProjectsDeadlines
+            | ProjectsCalendar
             | ProjectsCompleted
             | ProjectsOnHold
             | ProjectsByTag
@@ -375,15 +388,25 @@ fn matches_view(row: &ReadRow, view: HomeView, day: &str, timezone: chrono_tz::T
                 Some(false)
             }
         }
-        TasksInbox => {
-            if state(&["todo", "doing"])? {
-                m.inbox
-            } else {
-                Some(false)
-            }
-        }
+        // Inbox se deriva de la ausencia de relación Project (ver el filtro de
+        // vínculos): la bandera manual payload.inbox ya no decide pertenencia.
+        TasksInbox => state(&["todo", "doing"]),
         TasksDone => state(&["done"]),
+        TasksUnclassified => state(&["todo", "doing"]),
+        TasksPending => state(&["todo", "doing"]),
         TasksActiveProjects | TasksProjectsInProgress => state(&["todo", "doing"]),
+        TasksCalendarWeek | TasksCalendarMonth => {
+            if bad(m, "due_date") || m.due_date.is_none() {
+                return Some(true);
+            }
+            let due = NaiveDate::parse_from_str(m.due_date.as_deref()?, "%Y-%m-%d").ok()?;
+            let day = NaiveDate::parse_from_str(day, "%Y-%m-%d").ok()?;
+            Some(if view == TasksCalendarWeek {
+                due.iso_week() == day.iso_week()
+            } else {
+                due.year() == day.year() && due.month() == day.month()
+            })
+        }
         TasksWeek | TasksMonth | TasksScheduled | TasksNoDue => {
             if !state(&["todo", "doing"])? {
                 return Some(false);
@@ -408,24 +431,31 @@ fn matches_view(row: &ReadRow, view: HomeView, day: &str, timezone: chrono_tz::T
                 due.year() == day.year() && due.month() == day.month()
             })
         }
-        NotesLibrary | NotesFavorites | NotesClips | NotesVoice | NotesJournal | NotesMeetings => {
+        NotesLibrary | NotesGeneral | NotesFavorites | NotesClips | NotesVoice | NotesJournal
+        | NotesDiary | NotesMeetings => {
             if !m.note_library? {
                 return Some(false);
             }
             Some(match view {
                 NotesLibrary => !matches!(
                     m.note_type.as_deref(),
-                    Some("web_clip" | "voice" | "journal" | "meeting")
+                    Some("web_clip" | "voice" | "journal" | "daily" | "meeting")
+                ),
+                NotesGeneral => !matches!(
+                    m.note_type.as_deref(),
+                    Some("web_clip" | "journal" | "daily" | "meeting")
                 ),
                 NotesFavorites => m.favorite?,
                 NotesClips => m.note_type.as_deref() == Some("web_clip"),
                 NotesVoice => m.note_type.as_deref() == Some("voice"),
                 NotesJournal => m.note_type.as_deref() == Some("journal"),
+                NotesDiary => matches!(m.note_type.as_deref(), Some("journal" | "daily")),
                 NotesMeetings => m.note_type.as_deref() == Some("meeting"),
                 _ => unreachable!(),
             })
         }
-        NotesInbox => m.inbox,
+        NotesInbox => Some(true),
+        NotesUnclassified => m.note_library,
         TagsFavorites => m.favorite,
         ProjectsActive | PeopleActiveProjects => state(&["doing", "ongoing"]),
         ProjectsPlanned => state(&["planned"]),
@@ -434,6 +464,7 @@ fn matches_view(row: &ReadRow, view: HomeView, day: &str, timezone: chrono_tz::T
         ProjectsByTag | ProjectsByPeople => {
             state(&["planned", "doing", "ongoing", "done", "on_hold"])
         }
+        ProjectsCalendar => Some(true),
         ProjectsDeadlines => {
             if state(&["done"])? {
                 Some(false)
@@ -483,18 +514,23 @@ fn kind(view: HomeView) -> &'static str {
     match view {
         TasksToday
         | TasksInbox
+        | TasksUnclassified
         | TasksAll
+        | TasksPending
         | TasksDone
         | TasksWeek
         | TasksMonth
+        | TasksCalendarWeek
+        | TasksCalendarMonth
         | TasksScheduled
         | TasksNoDue
         | TasksActiveProjects
         | TasksProjectsInProgress => "task",
-        NotesAll | NotesInbox | NotesLibrary | NotesFavorites | NotesClips | NotesVoice
-        | NotesJournal | NotesMeetings | GoalsActivity | GoalsDeadline | GoalsByTag
-        | GoalsAchieved | MilestonesCompleted | MilestonesAll => "note",
-        ProjectsActive | ProjectsPlanned | ProjectsBoard | ProjectsDeadlines
+        NotesAll | NotesInbox | NotesUnclassified | NotesLibrary | NotesGeneral
+        | NotesFavorites | NotesClips | NotesVoice | NotesJournal | NotesDiary | NotesMeetings
+        | GoalsActivity | GoalsDeadline | GoalsByTag | GoalsAchieved | MilestonesCompleted
+        | MilestonesAll => "note",
+        ProjectsActive | ProjectsPlanned | ProjectsBoard | ProjectsDeadlines | ProjectsCalendar
         | ProjectsCompleted | ProjectsOnHold | ProjectsByTag | ProjectsByPeople
         | PeopleActiveProjects => "project",
         TagsRecent | TagsFavorites | TagsAlphabetical | TagsTypes => "tag",
@@ -528,19 +564,26 @@ fn compare(a: &ReadRow, b: &ReadRow, view: HomeView) -> Ordering {
     use HomeView::*;
     let title = || a.title_key.cmp(&b.title_key);
     let order = match view {
+        TasksCalendarWeek | TasksCalendarMonth => a
+            .meta
+            .due_date
+            .is_none()
+            .cmp(&b.meta.due_date.is_none())
+            .then(a.meta.due_date.cmp(&b.meta.due_date))
+            .then(a.entity.created_at.cmp(&b.entity.created_at)),
         TasksToday | TasksWeek | TasksMonth | TasksScheduled => a
             .meta
             .due_date
             .cmp(&b.meta.due_date)
             .then(a.entity.created_at.cmp(&b.entity.created_at)),
-        TasksInbox | TasksAll | TasksNoDue | NotesInbox => {
-            a.entity.created_at.cmp(&b.entity.created_at)
-        }
+        TasksInbox | TasksUnclassified | TasksAll | TasksPending | TasksNoDue | NotesInbox
+        | NotesUnclassified => a.entity.created_at.cmp(&b.entity.created_at),
         TasksActiveProjects | TasksProjectsInProgress => {
             b.entity.created_at.cmp(&a.entity.created_at)
         }
         TasksDone | NotesAll => b.entity.updated_at.cmp(&a.entity.updated_at),
-        NotesLibrary | NotesFavorites | NotesClips | NotesVoice | NotesJournal | NotesMeetings => {
+        NotesLibrary | NotesGeneral | NotesFavorites | NotesClips | NotesVoice | NotesJournal
+        | NotesDiary | NotesMeetings => {
             let modified = |row: &ReadRow| {
                 DateTime::parse_from_rfc3339(
                     row.meta
@@ -574,6 +617,13 @@ fn compare(a: &ReadRow, b: &ReadRow, view: HomeView) -> Ordering {
                     .and_then(|p| p.gallery_order)
                     .unwrap_or(u32::MAX),
             )
+            .then_with(title),
+        ProjectsCalendar => a
+            .meta
+            .project_end_date
+            .is_none()
+            .cmp(&b.meta.project_end_date.is_none())
+            .then(a.meta.project_end_date.cmp(&b.meta.project_end_date))
             .then_with(title),
         ProjectsDeadlines => a
             .meta
@@ -755,6 +805,42 @@ impl Workspace {
             input.view,
             HomeView::TasksActiveProjects | HomeView::TasksProjectsInProgress
         );
+        // Inbox y Unclassified se derivan de relaciones guardadas: un vínculo
+        // que clasifica la entidad la saca de la vista. Tasks usa sólo Project;
+        // Notes Inbox ignora Tag/People y Unclassified de notas también los excluye.
+        let link_kinds = match input.view {
+            HomeView::TasksInbox | HomeView::TasksUnclassified | HomeView::NotesInbox => {
+                Some("'project'")
+            }
+            HomeView::NotesUnclassified => Some("'project','tag','person'"),
+            _ => None,
+        };
+        let mut classified_ids = BTreeSet::<String>::new();
+        if let Some(kinds) = link_kinds {
+            let candidates =
+                serde_json::to_string(&rows.iter().map(|row| &row.entity.id).collect::<Vec<_>>())?;
+            let mut statement = tx.prepare(&format!("SELECT r.source_id,r.kind,t.kind FROM relations r LEFT JOIN entities t ON t.id=r.target_id WHERE r.kind IN ({kinds}) AND r.source_id IN (SELECT value FROM json_each(?1)) LIMIT ?2"))?;
+            let links = statement.query_map(params![candidates, (LINKS + 1) as u32], |r| {
+                Ok((
+                    r.get::<_, String>(0)?,
+                    r.get::<_, String>(1)?,
+                    r.get::<_, Option<String>>(2)?,
+                ))
+            })?;
+            for (index, link) in links.enumerate() {
+                if index >= LINKS {
+                    return Err(exceeded("links", LINKS));
+                }
+                let (source_id, relation_kind, target_kind) = link?;
+                if Some(relation_kind.as_str()) != target_kind.as_deref() {
+                    return Err(CoreError::new(
+                        ErrorCode::StorageError,
+                        "Relación de clasificación incompatible; Home no la convierte.",
+                    ));
+                }
+                classified_ids.insert(source_id);
+            }
+        }
         let mut eligible_projects = BTreeSet::<String>::new();
         let mut project_membership = BTreeMap::<String, (bool, bool)>::new();
         if by_project {
@@ -842,6 +928,7 @@ impl Workspace {
         let mut selected = rows
             .into_iter()
             .filter(|r| match matches_view(r, input.view, &date, tz) {
+                Some(true) if link_kinds.is_some() => !classified_ids.contains(&r.entity.id),
                 Some(true) if by_project => {
                     let (eligible, unknown) = project_membership
                         .get(&r.entity.id)
@@ -958,7 +1045,12 @@ impl Workspace {
         use HomeView::*;
         if matches!(
             input.view,
-            TasksInbox | TasksAll | TasksDone | TasksActiveProjects | TasksProjectsInProgress
+            TasksInbox
+                | TasksAll
+                | TasksPending
+                | TasksDone
+                | TasksActiveProjects
+                | TasksProjectsInProgress
         ) {
             if !by_project {
                 groups.insert("none".into(), group("none", "Sin proyecto"));
@@ -1028,7 +1120,12 @@ impl Workspace {
             });
             if matches!(
                 input.view,
-                TasksInbox | TasksAll | TasksDone | TasksActiveProjects | TasksProjectsInProgress
+                TasksInbox
+                    | TasksAll
+                    | TasksPending
+                    | TasksDone
+                    | TasksActiveProjects
+                    | TasksProjectsInProgress
             ) {
                 let projects = ctx
                     .iter()

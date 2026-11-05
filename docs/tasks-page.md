@@ -25,13 +25,14 @@ Los grupos cubren los proyectos cargados y los originales siguen siendo la
 fuente de verdad. Los [Goals](goals.md) referidos conservan sus páginas originales
 y sus subtipos tipados abren la sección Goals.
 
-Deadlines selecciona proyectos no Done con `end_date` y los ordena por su fecha
-civil ascendente. No toma fechas de tareas ni inventa plazos para importados sin
-fecha de fin. El campo se edita mediante la propiedad Fin de proyecto existente.
-`home.query` agrega `projects_deadlines`, `projects_completed` y una proyección
-opcional `project_end_date`; no cambia SQLite, payloads ni la lista de operaciones.
-El archivo local y de origen se excluye antes de paginar. Fechas inválidas se
-informan como metadatos no disponibles; los cursores siguen ligados a su consulta.
+Deadlines muestra un calendario mensual por `end_date` con proyectos de todos
+los estados, incluidos Done y sin fecha. Los días permiten preparar un proyecto
+Planned con ese plazo; guardar sigue siendo explícito. La proyección aditiva
+`projects_calendar` excluye archivo local y de origen antes de paginar; se avisa
+si hay más páginas. El calendario separa fechas inválidas y no inventa plazos.
+La consulta previa `projects_deadlines` conserva su selección de proyectos no
+Done con fecha; los cursores siguen ligados a su consulta. Ver
+[verificación](verification-project-deadlines-calendar.md).
 
 ## Lectura y teclado
 
