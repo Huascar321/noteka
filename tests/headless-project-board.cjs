@@ -111,5 +111,6 @@ async (page) => {
   checks.push('New task por columna prepara la captura con estado y Project correctos');
 
   if (errors.length) throw new Error('Errores de página: ' + errors.join(' | '));
-  console.log(JSON.stringify({ ok: true, checks }));
+  await control('finish', { ok: true, checks });
+  return { ok: true, checks };
 }

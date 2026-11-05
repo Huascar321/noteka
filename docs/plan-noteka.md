@@ -1207,3 +1207,20 @@ El canal vertical de scroll aumenta de 8 a 9 px; el horizontal permanece en 8 px
 ## Actualización 27/10/2026: separación del scrollbar
 
 Se agrega un píxel transparente a la derecha del tirador vertical y se conserva su ancho visible; canal vertical de 10 px y horizontal de 8 px en motores compatibles. Ver [verificación](verification-scrollbar-appearance.md).
+
+## Actualización 05/11/2026: controles Liquid Glass
+
+`complete-liquid-glass-adoption` continúa activo y sin sincronizar. La decisión
+solicitada unifica el icono `+` de 16 px en las acciones New de barras y
+cabeceras, conservando las filas contextuales discretas. El anillo de foco se
+oculta tras interacción con puntero y vuelve al usar teclado; selección y
+arrastre mantienen sus propias señales. La implementación y los límites de
+verificación se registran en [la evidencia del cambio](verification-complete-liquid-glass-adoption.md).
+
+## Actualización 05/11/2026: revisión de alineación
+
+`audit-visual-alignment` corrige la separación lateral de fechas compactas,
+la alineación de relaciones y acciones de preparación y la altura de selects
+compactos en WebKit. La revisión usa escenas y datos sintéticos; su cobertura y
+límites figuran en [la verificación](verification-visual-alignment.md). El
+cambio permanece sin sincronizar ni archivar.

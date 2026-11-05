@@ -580,8 +580,8 @@
     <button disabled={disabled || !viewSelected} onclick={removeView}>Remove selected view</button>
   </div>
   <details class="editor-tools"><summary>Insert link or attachment</summary>
-    <label>Link for selected text<input aria-label="Link" bind:value={link} placeholder="https://…" disabled={disabled} /></label><button disabled={disabled} onclick={setLink}>Aplicar enlace</button>
-    <label>Original local<input aria-label="Attachment path" bind:value={attachmentPath} placeholder="/path/to/file" disabled={disabled || importing} /></label><button disabled={disabled || importing || !attachmentPath.trim()} onclick={() => void attach()}>{importing ? 'Copiando…' : "Insert attachment"}</button>
+    <label>Link for selected text<input class="glass-field" aria-label="Link" bind:value={link} placeholder="https://…" disabled={disabled} /></label><button class="glass-secondary" disabled={disabled} onclick={setLink}>Aplicar enlace</button>
+    <label>Original local<input class="glass-field" aria-label="Attachment path" bind:value={attachmentPath} placeholder="/path/to/file" disabled={disabled || importing} /></label><button class="glass-secondary" disabled={disabled || importing || !attachmentPath.trim()} onclick={() => void attach()}>{importing ? 'Copiando…' : "Insert attachment"}</button>
   </details>
   </details>
   {/if}
@@ -631,17 +631,17 @@
     <form class="editor-link-panel editor-popover glass-menu" aria-label={panel === 'link' ? 'Edit link' : 'Insert attachment'} style:left={`${panelPosition.left}px`} style:top={`${panelPosition.top}px`} onsubmit={event => { event.preventDefault(); if (panel === 'link') applyPageLink(); else void attach(); }}>
       <div class="editor-panel-heading"><strong>{panel === 'link' ? 'Link' : 'Image or file'}</strong><button type="button" aria-label="Close editor panel" disabled={importing} onclick={() => closeMenus()}><AppIcon name="close" size={15} /></button></div>
       {#if panel === 'link'}
-        <label for={`${menuId}-link`}>Paste an http, https or mailto link</label><input bind:this={panelInput} id={`${menuId}-link`} aria-label="Link" bind:value={link} placeholder="https://…" autocomplete="off" />
-        <div class="editor-panel-actions"><button type="button" onclick={() => { link = ''; applyPageLink(); }}>Remove link</button><button type="submit" class="primary">Apply link</button></div>
+        <label for={`${menuId}-link`}>Paste an http, https or mailto link</label><input bind:this={panelInput} id={`${menuId}-link`} class="glass-field" aria-label="Link" bind:value={link} placeholder="https://…" autocomplete="off" />
+        <div class="editor-panel-actions"><button class="glass-secondary" type="button" onclick={() => { link = ''; applyPageLink(); }}>Remove link</button><button type="submit" class="primary glass-action">Apply link</button></div>
       {:else}
-        <label for={`${menuId}-attachment`}>Local file path</label><input bind:this={panelInput} id={`${menuId}-attachment`} aria-label="Attachment path" bind:value={attachmentPath} placeholder="/path/to/file" disabled={importing} />
-        <div class="editor-panel-actions"><button type="button" disabled={importing} onclick={() => closeMenus()}>Cancel</button><button type="submit" class="primary" disabled={importing || !attachmentPath.trim()}>{importing ? 'Importing…' : 'Insert attachment'}</button></div>
+        <label for={`${menuId}-attachment`}>Local file path</label><input bind:this={panelInput} id={`${menuId}-attachment`} class="glass-field" aria-label="Attachment path" bind:value={attachmentPath} placeholder="/path/to/file" disabled={importing} />
+        <div class="editor-panel-actions"><button class="glass-secondary" type="button" disabled={importing} onclick={() => closeMenus()}>Cancel</button><button type="submit" class="primary glass-action" disabled={importing || !attachmentPath.trim()}>{importing ? 'Importing…' : 'Insert attachment'}</button></div>
       {/if}
       {#if panelError}<p class="editor-panel-error" role="alert">{panelError}</p>{/if}
     </form>
   {/if}
   {#if pageStyle && dropTarget}<div class="block-drop-line" style:top={`${dropTarget.top}px`}></div>{/if}
-  {#if picker}<section class="view-picker" class:editor-popover={pageStyle} class:page-view-picker={pageStyle} style:left={pageStyle ? `${menuPosition.left}px` : undefined} style:top={pageStyle ? `${menuPosition.top}px` : undefined} aria-label="Insert local view">
+  {#if picker}<section class="view-picker" class:editor-popover={pageStyle} class:page-view-picker={pageStyle} class:glass-menu={pageStyle} style:left={pageStyle ? `${menuPosition.left}px` : undefined} style:top={pageStyle ? `${menuPosition.top}px` : undefined} aria-label="Insert local view">
     <label>Collection<select aria-label="Collection to embed" disabled={disabled || pickerBusy} bind:value={pickerCollection} onchange={() => void loadPickerViews()}><option value="">Choose a collection</option>{#each pickerCollections as c (c.id)}<option value={c.id}>{c.name}</option>{/each}</select></label>
     {#if pickerCursor}<button disabled={pickerBusy} onclick={() => void listPicker(pickerCursor ?? undefined)}>More collections to embed</button>{/if}
     <label>Saved view<select aria-label="View to embed" disabled={disabled || pickerBusy} bind:value={pickerView}><option value="">Choose a view</option>{#each pickerViews as v (v.id)}<option value={v.id}>{v.name} · {v.layout}</option>{/each}</select></label>

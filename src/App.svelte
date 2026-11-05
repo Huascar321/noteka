@@ -336,6 +336,12 @@
   }
   function beforeUnload(event: BeforeUnloadEvent) { if (protectedState) { event.preventDefault(); event.returnValue = ''; } }
   onMount(() => {
+    const focusRoot = document.documentElement;
+    const pointerFocus = () => { focusRoot.dataset.focusModality = 'pointer'; };
+    const keyboardFocus = (event: KeyboardEvent) => { if (!['Shift', 'Control', 'Alt', 'Meta'].includes(event.key)) focusRoot.dataset.focusModality = 'keyboard'; };
+    focusRoot.dataset.focusModality = 'keyboard';
+    document.addEventListener('pointerdown', pointerFocus, true);
+    document.addEventListener('keydown', keyboardFocus, true);
     const updateMotion = () => { reduceMotion = motionMedia.matches; };
     motionMedia.addEventListener('change', updateMotion);
     updateMotion();
@@ -349,7 +355,7 @@
     window.addEventListener('resize', resized);
     let disposed = false; let unlisten: (() => void) | undefined;
     if (isTauri()) void listen('noteka-close-requested', () => { void leaveWorkspace(true); }).then(fn => { if (disposed) fn(); else unlisten = fn; });
-    return () => { disposed = true; unlisten?.(); motionMedia.removeEventListener('change', updateMotion); systemThemeMedia?.removeEventListener('change', updateSystemTheme); media.removeEventListener('change', resizeSidebar); window.removeEventListener('resize', resized); };
+    return () => { disposed = true; unlisten?.(); document.removeEventListener('pointerdown', pointerFocus, true); document.removeEventListener('keydown', keyboardFocus, true); delete focusRoot.dataset.focusModality; motionMedia.removeEventListener('change', updateMotion); systemThemeMedia?.removeEventListener('change', updateSystemTheme); media.removeEventListener('change', resizeSidebar); window.removeEventListener('resize', resized); };
   });
 </script>
 
@@ -365,8 +371,8 @@
     <div class="brandmark">n<span>.</span></div><p class="eyebrow">YOUR SPACE</p><h1>Noteka</h1>
     <p>A place for your notes and what comes next.<br />No accounts. No models. Your data stays local.</p>
     <form onsubmit={(event) => { event.preventDefault(); void selectWorkspace(false); }}>
-      <label for="workspace-path">Workspace path</label><input id="workspace-path" bind:value={path} placeholder="Leave blank to use the Noteka data directory" disabled={working} />
-      <div class="actions"><button class="primary" type="button" disabled={working} onclick={() => void selectWorkspace(true)}>Create workspace</button><button disabled={working}>Open workspace</button></div>
+      <label for="workspace-path">Workspace path</label><input id="workspace-path" class="glass-field" bind:value={path} placeholder="Leave blank to use the Noteka data directory" disabled={working} />
+      <div class="actions"><button class="primary glass-action" type="button" disabled={working} onclick={() => void selectWorkspace(true)}>Create workspace</button><button class="glass-secondary" disabled={working}>Open workspace</button></div>
     </form>
     {#if error}<p class="error" role="alert">{error}</p>{/if}<small>Local editor · No external services</small>
   </main>

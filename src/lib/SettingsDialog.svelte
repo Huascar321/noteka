@@ -98,7 +98,7 @@
           {#if visible('theme')}
             <div class="settings-row settings-theme-row">
               <div><label for="settings-theme">Theme</label><p id="settings-theme-description">Follow your system or choose light or dark.</p></div>
-              <select id="settings-theme" aria-label="Theme" aria-describedby={themeError ? 'settings-theme-description settings-theme-error' : 'settings-theme-description'} value={theme} onchange={(event) => onthemechange(event.currentTarget.value as ThemePreference)}><option value="system">System</option><option value="dark">Dark</option><option value="light">Light</option></select>
+              <select id="settings-theme" class="glass-field" aria-label="Theme" aria-describedby={themeError ? 'settings-theme-description settings-theme-error' : 'settings-theme-description'} value={theme} onchange={(event) => onthemechange(event.currentTarget.value as ThemePreference)}><option value="system">System</option><option value="dark">Dark</option><option value="light">Light</option></select>
               {#if themeError}<p id="settings-theme-error" class="settings-error" role="status">{themeError}</p>{/if}
             </div>
           {/if}
@@ -117,7 +117,7 @@
         <section class="settings-group" aria-labelledby="settings-workspace-title">
           <h3 id="settings-workspace-title">General</h3>
           {#if visible('path')}<div class="settings-location"><h4>Workspace path</h4><p class="settings-path" title={workspace}>{workspace}</p></div>{/if}
-          {#if visible('change-workspace')}<div class="settings-row settings-workspace-row"><div><h4>Workspace</h4><p>Open another workspace.</p></div><button class="settings-change-workspace" disabled={blocked} onclick={onworkspacechange}>Change workspace</button></div>{/if}
+          {#if visible('change-workspace')}<div class="settings-row settings-workspace-row"><div><h4>Workspace</h4><p>Open another workspace.</p></div><button class="settings-change-workspace glass-secondary" disabled={blocked} onclick={onworkspacechange}>Change workspace</button></div>{/if}
         </section>
       {/if}
     {:else}

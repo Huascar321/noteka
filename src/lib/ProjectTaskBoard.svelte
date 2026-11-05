@@ -110,7 +110,7 @@
             </div>
           </article>
         {/each}
-        {#if column.state}<button class="task-board-new" disabled={disabled || !!movingId} onclick={() => oncreate(column.state!)}><AppIcon name="plus" size={15} />New task</button>{/if}
+        {#if column.state}<button class="task-board-new" disabled={disabled || !!movingId} onclick={() => oncreate(column.state!)}><AppIcon name="plus" size={16} />New task</button>{/if}
       </div>
     </section>
   {/each}

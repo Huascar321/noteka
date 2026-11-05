@@ -9,6 +9,9 @@ import { startHeadlessBridge } from './headless-bridge.mjs';
 const repo = fileURLToPath(new URL('../', import.meta.url));
 process.chdir(repo);
 const browser = process.env.NOTEKA_TEST_BROWSER || 'chromium';
+const auditAccent = process.env.NOTEKA_CONTRAST_ACCENT || '';
+const auditScenes = process.env.NOTEKA_CONTRAST_SCENES || '';
+if (auditAccent && !['Blue', 'Violet'].includes(auditAccent)) throw Error('NOTEKA_CONTRAST_ACCENT debe ser Blue o Violet');
 if (!['chromium', 'webkit'].includes(browser)) throw Error('NOTEKA_TEST_BROWSER debe ser chromium o webkit');
 if (!existsSync('dist/index.html') || !existsSync('target/debug/noteka')) {
   throw Error('Primero ejecutá npm run build y cargo build -p noteka-cli');
@@ -32,13 +35,21 @@ const run = args => new Promise((done, reject) => {
   child.on('exit', code => code === 0 ? done() : reject(Error('Playwright terminó con código ' + code)));
 });
 try {
-  await run(['open', bridge.origin, '--config=' + config, ...(browser === 'webkit' ? ['--browser=webkit'] : [])]);
+  await run(['open', bridge.origin + (auditAccent ? '#contrast=' + auditAccent + (auditScenes ? '&scenes=' + encodeURIComponent(auditScenes) : '') : ''), '--config=' + config, ...(browser === 'webkit' ? ['--browser=webkit'] : [])]);
   await run(['run-code', '--filename=' + resolve('scripts/capture-liquid-glass-guide.cjs')]);
   const result = JSON.parse(readFileSync(join(bridge.root, 'results.json'), 'utf8')).at(-1);
   if (result.browser !== browser || result.errors.length || result.externalRequests) throw Error('Captura incompleta');
   for (const [path, digest] of Object.entries(sourceHashes)) {
     if (hash(path) !== digest) throw Error('La fuente cambió durante la captura: ' + path);
   }
+  const buildHashes = Object.fromEntries(['dist/index.html', ...readdirSync('dist/assets').map(name => 'dist/assets/' + name)].sort().map(path => [path, hash(path)]));
+  if (auditAccent) {
+    const report = resolve('output/playwright', `liquid-contrast-${browser}-${auditAccent.toLowerCase()}${auditScenes ? '-focused' : ''}.json`);
+    writeFileSync(report, JSON.stringify({browser, browserVersion:result.browserVersion, accent:auditAccent, sourceHashes, buildHashes, measurements:result.contrast, failures:result.contrastFailures, skipped:result.contrastSkipped, fallbackChecks:result.fallbackChecks, fallbackFailures:result.fallbackFailures}, null, 2) + '\n');
+    if (!result.contrast?.length || result.contrastFailures?.length || result.fallbackFailures?.length) throw Error('Contraste o fallbacks incompletos; ver ' + report);
+    console.log(`Contraste ${browser}/${auditAccent}: ${result.contrast.length} mediciones; ${relative(repo, report)}`);
+    process.exitCode = 0;
+  } else {
   const destination = resolve('docs/design/liquid-glass', browser);
   mkdirSync(destination, { recursive: true });
   const captures = result.captures.map(capture => {
@@ -52,10 +63,11 @@ try {
     data: 'Workspace temporal nuevo, nombres ficticios, foto = icono local de Noteka. Sin datos de usuario.',
     scope: 'Frontend compilado con puente CLI Rust/SQLite. No acredita composición Tauri/macOS ni IPC nativo.',
     sourceHashes, captures,
-    buildHashes: Object.fromEntries(['dist/index.html', ...readdirSync('dist/assets').map(name => 'dist/assets/' + name)].sort().map(path => [path, hash(path)])),
+    buildHashes,
   };
   writeFileSync(join(destination, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
   console.log(`Galería ${browser}: ${captures.length} PNG en ${relative(repo, destination)}`);
+  }
 } finally {
   try { await run(['close']); } finally { await bridge.close(); }
 }

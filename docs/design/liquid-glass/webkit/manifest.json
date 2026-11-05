@@ -1,0 +1,1934 @@
+{
+  "generatedAt": "2026-11-05T05:41:26.642Z",
+  "browser": "webkit",
+  "browserVersion": "26.6",
+  "playwrightCli": "0.1.22",
+  "deviceScaleFactor": 2,
+  "reducedMotion": "reduce",
+  "data": "Workspace temporal nuevo, nombres ficticios, foto = icono local de Noteka. Sin datos de usuario.",
+  "scope": "Frontend compilado con puente CLI Rust/SQLite. No acredita composición Tauri/macOS ni IPC nativo.",
+  "sourceHashes": {
+    "scripts/capture-liquid-glass-guide.cjs": "a781cf1979336caf81159eb81a446d0fe895cd75eba265ed405b62c83e0927eb",
+    "scripts/capture-liquid-glass-guide.mjs": "b93d6f512cf168c85e90a8cd70b0d376aab373bdcd172dd8cec390dfb75d7e6c",
+    "src/App.svelte": "c54a82f15bc8c35c9d2fc1eb173c642caab2cb95c36b771342fe8cdca9ba845a",
+    "src/lib/AppIcon.svelte": "4f974db2ef613fe1737b318d11ad263df224c59f63ef6de086472fd791072403",
+    "src/lib/AsciiShark.svelte": "a9eb572b37fc70a1c82a51e20fe06d359f4698199b1db663a2bdac9b9959792f",
+    "src/lib/AttachmentGenerationPanel.svelte": "c88352bfa30d6be18bbbf1b2994fa75f7addf10f9589869bb401e64851dda531",
+    "src/lib/AttachmentPreparationPanel.svelte": "1058f5d2f5b0f2efcf7b9f7c730b75b8f31f8f445f94bfe920452a911efac5a2",
+    "src/lib/AttachmentSearchPanel.svelte": "ce0c993aefe46593cbd501fa22519cdd314b808dc2b30528827ba179f75f6d39",
+    "src/lib/BlockEditor.svelte": "507563430dd1445327487852546d02026496d028852fc18d06114f929296a2d6",
+    "src/lib/CollectionPresentation.svelte": "8a18c8c4f950ba00bcab206e1dfa34c1a3bcb9f6d051a2435cb4cc2ef0469bd2",
+    "src/lib/DatabasePanel.svelte": "92791a4288b5a7731db4e61fbbf832fc2a0c3c0bbb62d5e9217e7064c4817134",
+    "src/lib/EmbeddedCollectionView.svelte": "f0ceb13719d8fe9bfd71c379ec0dcc46cd063b4ad6d26d5f96245b7f1505383f",
+    "src/lib/EntityFields.svelte": "0e8ded51b788e412fa55c002c93faecb36b22daaff3133691ab56751726cce1e",
+    "src/lib/GoalPageProperties.svelte": "c55fc1882c0f6f8364506950372bb1602895652b5a9a94b9b31cc522f8aaeef3",
+    "src/lib/GoalPicker.svelte": "ac6fc55ed15a61d31234490a3dc6f76718b4c6185f1f940f4ec06c4e73157ba4",
+    "src/lib/GoalProjects.svelte": "8f91a45adbf2868298768fdcaf7f2431751c45cedbdeffcc2cd97b1b0fd149f6",
+    "src/lib/GoalsPage.svelte": "b849cf52fa89b8095c9c04cf5710fedd598e1247d1ce09255c65b825eb85aa2f",
+    "src/lib/GroupedSearchPanel.svelte": "2e31ac1e97dcefd53096c4a7c2eb135e1a3cda9a1b1757e958c984a789f1caa1",
+    "src/lib/HomeGoalRow.svelte": "6ac8a50bb3641547b6a3b573798d6d9041eed8a377b551aee98be98efb1f6afc",
+    "src/lib/HomeGoalSection.svelte": "4f032ff4b8c3488b96248ff008ac62d588b6768358b7af067d2ae891f5899ec7",
+    "src/lib/HomeItem.svelte": "a02ccc083395da4a8346307a1ee15030fdb0f71e67502347eefc5c6943b2e536",
+    "src/lib/HomeNoteSection.svelte": "5df5da2b5c3c51e4da24caa45467769ee1a7d27f6a6acc3578785a170a974b7e",
+    "src/lib/HomePanel.svelte": "52d4a3abca076cb4f738fdbf0e4ffeec4c3285ef59b382d606a4aa53d2da97d4",
+    "src/lib/HomePersonCard.svelte": "a79f6d45eba37f90021c728ebb8569c43986009531ec500edf756ce903aca90b",
+    "src/lib/HomePersonProjectRow.svelte": "659410c1d68b0dd2915971b47b779850cc4f71a8357cdd810bcac6624335ffcb",
+    "src/lib/HomePersonSection.svelte": "6d5596fca06ea394bfd050bf9d0d645961ed7858ba179c0bb0ccf11d10dee5fc",
+    "src/lib/HomeProjectCard.svelte": "8c69c32253ca5d4af89e4ca0faf9f3c46aaed95a016442718ea413c65d1b9967",
+    "src/lib/HomeProjectSection.svelte": "2aeaa96fef818ff1ef2e8fe2c10cba460fecd26400aeb78b57e423c586d2ce2f",
+    "src/lib/HomeReadStatus.svelte": "74e135ad566ece99639430edd1cb5a1fec58e642e2dee776902a98596d36820c",
+    "src/lib/HomeTagRow.svelte": "ff7408fba78140f191c75c7e90ef97a7cdde8e403b178c9986512860d348b10c",
+    "src/lib/HomeTagSection.svelte": "3af6923a5e0066a2b8868d3b95fc7612ea590e7b6e57789e54266a597337b719",
+    "src/lib/HomeTagTable.svelte": "6ad97c1662bb92486fa73729d52ef24a7a0e6679a7e1b04529969ce5b0a36eeb",
+    "src/lib/HomeTaskSection.svelte": "1433ebe4a61f15c19245c629aabadfa5b81dfadbf235e822f233e68ce2e0d35b",
+    "src/lib/HomeWeather.svelte": "ec36653d73bfb3fa41f29a90f8565830f0af86aa5b462f2b95701a3571579a4e",
+    "src/lib/IconPicker.svelte": "528923fe48071634cc98202bcfd7b360fa87ac7bc48e119559a70ff1f256952b",
+    "src/lib/MilestonesPanel.svelte": "769612cf816a74ebbb4b9c7f4f37dde0c13dbedaa2fae4b29087dc8bdb1b80de",
+    "src/lib/NotePageProperties.svelte": "ea554023c00e57bab9ad74d57cdd675c38fb826eaba3966ea67446cee6658385",
+    "src/lib/NotesPage.svelte": "5dfdda9065711a57ad4781a6331bad8324ef684648fb55647293ee32fa2e0fdf",
+    "src/lib/PageBreadcrumb.svelte": "7c3ce1263ff30727406bcd4c1ccabc1563e364c1ef49e4d950b9b40119bb8a34",
+    "src/lib/PageTools.svelte": "ba3040d5ac414ae03611ea34d481abe89499460878b74b02397b136c2d319db0",
+    "src/lib/PanelResizeHandle.svelte": "9e62942ff7eb4dfec635e3b8c25e7da3bb17214538552d0a1a949327eeb0839c",
+    "src/lib/PeekModeMenu.svelte": "0092cdf49177976f87819dea4a990f563214b276b5cf00c776b6d1e9e20f3308",
+    "src/lib/PeoplePage.svelte": "009ec8b5d308d75cf89393a2b954eb2653769bccc58e0b762b2890af4cbb6529",
+    "src/lib/PersonContents.svelte": "2b4773643bdc64027d5e1e12cc88958c5f6b2dfc998d8926a46af075acedf752",
+    "src/lib/PersonPhoto.svelte": "14f72d572edac61dd81c56317cdb4a7948b83042913237c70b5a33d6adb51140",
+    "src/lib/PrimaryColorPicker.svelte": "24c2f3468370ee860be5696d80ab3472b28f8a077b9a585a463399785e2ee8d1",
+    "src/lib/ProjectContents.svelte": "7e0fb766c6a3601e0743d8be3aca5aabcc873dc0e426fa82a7a88e73b665e0ca",
+    "src/lib/ProjectPageProperties.svelte": "f0a34139de3a2f1012be53d603aaaa59f9e087863e31eb93b59f4641bed49619",
+    "src/lib/ProjectTaskBoard.svelte": "e56a7ed2cf0b107932f84a8d3619cb37b119fee43613d90a355db9fd988cde51",
+    "src/lib/ProjectTaskRow.svelte": "8c04af3e5e8c61a4b9bdc1377afb2406a26775f282e47b4df6071910678c92eb",
+    "src/lib/ProjectsPage.svelte": "713ac3265756f7e2ebe68a7b2dff81a86eacd787b71b1d7f3cbc491660f87422",
+    "src/lib/RelationPicker.svelte": "3d7c3e93a9a2d57798daad8d7a20bdbdb2324482f7c009c61dd41c15dcdd8894",
+    "src/lib/ScrollOutline.svelte": "4bd0651196de94b69215c70dfbb78e6766fba93dcd6eee7c99cc1f08f46c102c",
+    "src/lib/SearchDialog.svelte": "b41b124aa17082e091351cb54e41e9429aee09f8cb92d658da7b6299b70da578",
+    "src/lib/SectionIcon.svelte": "4c55a3f779585c21745b0b2d55ad65b38385918064a5053e69bfe2c58d42de91",
+    "src/lib/SettingsDialog.svelte": "352ab826b4cc151c17be2f5ad1718eac215ee0f410e7dc94c727397e87b3f8b5",
+    "src/lib/TagContents.svelte": "8260ecb0584fad113bc4796a8a710d1953ef429a8aabc898aa71cfe3e8adf2b0",
+    "src/lib/TagPageProperties.svelte": "bb195bd4c57d3d98b0010139b6a9f385de382a8db82457e5e1c2306bf7f10a31",
+    "src/lib/TagsPage.svelte": "6c25bcc640c26eed40573f49bc42f5a9142fa117f7f6f1ce0bb5d7df633cd886",
+    "src/lib/TaskPageProjectRow.svelte": "461b7be38a037e0b641d46c08acd201fdf6f00cef486f0508a940363c0c00c38",
+    "src/lib/TaskPageProperties.svelte": "50997a9f56dc43902c44b43c6a1def44b8857c1d8c6d5f8b0134f2229ed59431",
+    "src/lib/TasksPage.svelte": "517849ff23daf892190a9720bf728db90f72f64ac0e54a609fe3de4486a0ea41",
+    "src/lib/WeatherIcon.svelte": "afd3581c752e3214cfc08920af913d30dfbe9fa28d7b4824c0d347c220666367",
+    "src/lib/WindowTitlebar.svelte": "8b6015fc01597224926186eec1c578dcd888888480a3ebac214f7c82fb8b19ba",
+    "src/lib/WorkspacePane.svelte": "6194da088759b4aaf6f2c242b19427d438bfbf33131a78468d120901d1bc2dff",
+    "src/lib/primary-color.ts": "6d383ca488491970f71788555116c04f0f8d7ec4cfc88334bf8950cab9063bcd",
+    "src/lib/sliding-tabs.ts": "3b35beda1a85e96c452bbf49c719cc3fc31bf8aec6feb2eed86bf62a0d726383",
+    "src/style.css": "c34ff0d0b85512fe97b0c6bf0052a4a4d1ea9ddc882659e4d7c8a1dc9c6ccdf6"
+  },
+  "captures": [
+    {
+      "file": "welcome-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Empty synthetic workspace path; no workspace selected",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 419.8125,
+        "height": 561.28125
+      },
+      "sha256": "bb11a1ef16baad33e95ea99eacdf103045db9fecc8a8245ad437f923fc644e18",
+      "bytes": 117556
+    },
+    {
+      "file": "welcome-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Empty synthetic workspace path; no workspace selected",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 419.8125,
+        "height": 561.28125
+      },
+      "sha256": "92f200aa44965ea0e24abdc9a010a40980ba0c3ada5c03f062d4edc6fec12893",
+      "bytes": 113772
+    },
+    {
+      "file": "overview-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Home, sidebar, tabs and breadcrumb",
+      "sceneContext": {
+        "collection": null,
+        "view": "Tasks / Today",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1440,
+        "height": 900
+      },
+      "sha256": "a49f203575be0a30de1ee689decf7134bbea475a62b01d1afee1ae63135912d8",
+      "bytes": 1648696
+    },
+    {
+      "file": "sidebar-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Selected Home and compact Search",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 250,
+        "height": 856
+      },
+      "sha256": "bda36fe6db9261ff4e60d650fbfcb0d5e882c544ec97862854035c7e9887e9e0",
+      "bytes": 916409
+    },
+    {
+      "file": "cover-selector-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "ASCII selected, keyboard focus",
+      "sceneContext": {
+        "collection": null,
+        "view": "Home / ASCII",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 109.21875,
+        "height": 32
+      },
+      "sha256": "5c6be35197a90a6eed6a714543406a3e3080b5d9893ac711eedadd764dee980c",
+      "bytes": 12527
+    },
+    {
+      "file": "toolbar-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Sliding view indicator, grouped tools and New",
+      "sceneContext": {
+        "collection": null,
+        "view": "Tasks / Today",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1072,
+        "height": 50
+      },
+      "sha256": "64dee65299504311428a49491dc0f148557985af3d5344f4bc429cea2a4a3355",
+      "bytes": 51273
+    },
+    {
+      "file": "people-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Synthetic contacts, solid cards with glass frame and keyboard focus",
+      "sceneContext": {
+        "collection": null,
+        "view": "People / Contacts",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1060.40625,
+        "height": 530.484375
+      },
+      "sha256": "1f19cb90c59666a78ddfcb67234d4b9b2600938a8d7f1404bddcf2cf4646e9de",
+      "bytes": 144881
+    },
+    {
+      "file": "birthday-calendar-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "People / Birthdays; calendar navigation grouped",
+      "sceneContext": {
+        "collection": null,
+        "view": "People / Birthdays",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1050.40625,
+        "height": 32
+      },
+      "sha256": "d1aaf89d26cb452b99d0eebbc09992bd7377892f3e209d8fa2609d731b0270a7",
+      "bytes": 20037
+    },
+    {
+      "file": "move-project-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Projects / Board; confirmation and native selectors",
+      "sceneContext": {
+        "collection": null,
+        "view": "Projects / Board",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 203.265625,
+        "height": 323
+      },
+      "sha256": "c13503ccd2556d071029edab1c8f1b346df15a20fd02e330a617ca87502ac366",
+      "bytes": 72343
+    },
+    {
+      "file": "collections-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Studio collection / Studio list; loaded local results",
+      "sceneContext": {
+        "collection": "Studio collection",
+        "view": "Studio list",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 747.21875,
+        "height": 564.421875
+      },
+      "sha256": "cc65d22feb4aada3b02a0bd15cac49d214a118f8c250fa1e17ebfd0edd498408",
+      "bytes": 193023
+    },
+    {
+      "file": "detail-task-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "task detail; View details open",
+      "sceneContext": {
+        "collection": null,
+        "view": "Task detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 856
+      },
+      "sha256": "c7977fb2e0d44d819d646e476455c265345c7266e33427458c04db7326cf9ea3",
+      "bytes": 255613
+    },
+    {
+      "file": "detail-project-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "project detail; View details open",
+      "sceneContext": {
+        "collection": null,
+        "view": "Project detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 856
+      },
+      "sha256": "bb845f8137258a56976d025c697533778c408cf8a390458d035525de6f76f4ad",
+      "bytes": 1248218
+    },
+    {
+      "file": "detail-goal-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "goal detail; View details open",
+      "sceneContext": {
+        "collection": null,
+        "view": "Goal detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 856
+      },
+      "sha256": "a995b2dd97b957eb18ac259af9c939386d0fae2d43ad0ff60af671c4fc6de1bc",
+      "bytes": 236512
+    },
+    {
+      "file": "detail-tag-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "tag detail; View details open",
+      "sceneContext": {
+        "collection": null,
+        "view": "Tag detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 856
+      },
+      "sha256": "dd11ae1e5d6907600d9e165a7030bcba818f95d80955542d2b751561b948d47b",
+      "bytes": 1225841
+    },
+    {
+      "file": "detail-person-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "person detail; View details open",
+      "sceneContext": {
+        "collection": null,
+        "view": "Person detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 856
+      },
+      "sha256": "15955a4b29283ca98ba1e37329f1d0190ad60db9bc24d1011aeee2a0e1e3ce57",
+      "bytes": 254130
+    },
+    {
+      "file": "detail-milestone-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "milestone detail; View details open",
+      "sceneContext": {
+        "collection": null,
+        "view": "Milestone detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 856
+      },
+      "sha256": "848e292715599a5173078641359141874aea39a213bc5dbf523b3d0bf3ff0be6",
+      "bytes": 206271
+    },
+    {
+      "file": "note-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Full note pane: compact Tag/Type, relation capsules, header and solid content",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 856
+      },
+      "sha256": "4f5984aef3940edf4c2ea6f0cbec01480ff5c8415aa2fa275cb2f338b28f6038",
+      "bytes": 225235
+    },
+    {
+      "file": "page-menu-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Open local glass menu",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 260,
+        "height": 203.9375
+      },
+      "sha256": "a87b2d248fb42b95f466b51d913e53b0501bfb4561e343449c856026e7bec626",
+      "bytes": 86727
+    },
+    {
+      "file": "export-tools-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Export tool; synthetic note",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 620,
+        "height": 178
+      },
+      "sha256": "3a55965de65e810675946cc5af016c7c57cdf80a7c512f597cadb942e4cc0ee5",
+      "bytes": 59710
+    },
+    {
+      "file": "attachment-tools-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Attachments tool; synthetic note",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 620,
+        "height": 761.65625
+      },
+      "sha256": "56b4ba272ad62cd162590b54a103b8c02cd8e29bee7337939ef700d549a00d8e",
+      "bytes": 264537
+    },
+    {
+      "file": "resource-tools-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "External resources tool; synthetic note",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 620,
+        "height": 235.28125
+      },
+      "sha256": "286930034c8eb17b742c7fa858fff8550ac1c1ad3230330129b2248881867630",
+      "bytes": 50118
+    },
+    {
+      "file": "note-locked-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Locked fields retain frame and height; Tag destination remains navigable",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 778.40625,
+        "height": 57
+      },
+      "sha256": "5a5cb8f1fe1932188f7cd5d1f6837dd8de57ed0f28da287ac0829c0363cc803e",
+      "bytes": 26081
+    },
+    {
+      "file": "relation-picker-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Mounted relation picker uses glass-menu",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 320,
+        "height": 89
+      },
+      "sha256": "c1e4be78fb64372dc71e90118a2ec4843324dac45123b80e0fa5947234d580bd",
+      "bytes": 48507
+    },
+    {
+      "file": "insert-view-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Studio collection / Studio list selected; floating picker",
+      "sceneContext": {
+        "collection": "Studio collection",
+        "view": "Studio list",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 320,
+        "height": 219.28125
+      },
+      "sha256": "42b43e476b1d26dd2ab50ffcc752f255313a2dc596f575c2e9447f81f74b39de",
+      "bytes": 114080
+    },
+    {
+      "file": "note-header-dirty-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Unsaved changes, tinted Save and white shortcut",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1180,
+        "height": 52
+      },
+      "sha256": "863a26d9c1c3b677e131a25d11b3d059e75b231e91cc5b3414baaf7a53f2ee30",
+      "bytes": 65220
+    },
+    {
+      "file": "save-guard-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Default Cancel focus, neutral secondary capsules and tinted confirmation",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 436.25,
+        "height": 172.4375
+      },
+      "sha256": "51d2bdb368e4737a49fee070a2d1f41c92f510e883dbe34dc222b25abd2c5a35",
+      "bytes": 99345
+    },
+    {
+      "file": "settings-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Preferences, shared popup material and compact Search",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1000,
+        "height": 640
+      },
+      "sha256": "8eefe5592c79963138e5ae6eeaca52094c8fd7aea61a8deeb2bfca69f4223163",
+      "bytes": 595986
+    },
+    {
+      "file": "settings-color-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Custom color controls, theme and Apply",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1000,
+        "height": 640
+      },
+      "sha256": "16134c1968f3d6451ce7cf3a924dfe644ed1c648359b52ccc1f649e0567a4dac",
+      "bytes": 658862
+    },
+    {
+      "file": "settings-workspace-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Workspace controls, including Change workspace",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1000,
+        "height": 640
+      },
+      "sha256": "b11ee5c2333c0cbc0dbab123b186b0c111d000cce3659c582422061bd610843e",
+      "bytes": 555673
+    },
+    {
+      "file": "search-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Shared popup material over actual Home content",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Local search / all types"
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Local search: all types, unscoped"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 780,
+        "height": 620
+      },
+      "sha256": "499da08fd9953fcc16930349c7457ecff4958654048180dcfc48bc64216628b1",
+      "bytes": 471723
+    },
+    {
+      "file": "advanced-search-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Advanced search / notes; empty query",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Notes and entities"
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Notes and entities"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1080,
+        "height": 856
+      },
+      "sha256": "ccea980a3519e07abd579578c6372b8e28db11fb20cd278472885f47ca40da3b",
+      "bytes": 177403
+    },
+    {
+      "file": "attachment-search-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Advanced search / attachments; empty query",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Attachments"
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Attachments"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1080,
+        "height": 856
+      },
+      "sha256": "84ab99cf0051af1ad4faa717bba53dbf1bef77b5c11303c43f97a7190bd1e12d",
+      "bytes": 216516
+    },
+    {
+      "file": "combined-search-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Advanced search / combined; empty query",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Notes and attachments (groups)"
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Notes and attachments (groups)"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1080,
+        "height": 856
+      },
+      "sha256": "385ddad6201ddea81b3fd8f75f206c57ec01743bd0862b98158e24165df68f49",
+      "bytes": 224954
+    },
+    {
+      "file": "advanced-search-narrow-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "420px, notes and entities scope",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Notes and entities"
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Notes and entities"
+      },
+      "viewport": {
+        "width": 420,
+        "height": 740
+      },
+      "cssSize": {
+        "width": 420,
+        "height": 696
+      },
+      "sha256": "8c4b9b4ab2cfd866b661f7ee4b7ddb4185abc830d284f6f7cba8af05aa5bd269",
+      "bytes": 128792
+    },
+    {
+      "file": "search-solid-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "High contrast fallback; local search",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Local search / all types"
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Notes and entities"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 780,
+        "height": 620
+      },
+      "sha256": "5afdeb449ed30052f88d9c5f9cf6b375b56a2b9c8416a8a70bd6a6f178ec434f",
+      "bytes": 137319
+    },
+    {
+      "file": "overview-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Home, sidebar, tabs and breadcrumb",
+      "sceneContext": {
+        "collection": null,
+        "view": "Tasks / Today",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1440,
+        "height": 900
+      },
+      "sha256": "3c552eafcfb2c2c12e000828684d49005524e57dff0ef1c855a8d0769a68a509",
+      "bytes": 2690286
+    },
+    {
+      "file": "sidebar-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Selected Home and compact Search",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 250,
+        "height": 856
+      },
+      "sha256": "5bb1dd7c172457b6f811167a32499b6ab7577442f2cb73d20d1f7fcc89c33b31",
+      "bytes": 903348
+    },
+    {
+      "file": "cover-selector-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "ASCII selected, keyboard focus",
+      "sceneContext": {
+        "collection": null,
+        "view": "Home / ASCII",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 109.21875,
+        "height": 32
+      },
+      "sha256": "dbf8b38c27ab894cd6d143d1d282156bc040a412ce6a33e62f0e04edea5d36ed",
+      "bytes": 23697
+    },
+    {
+      "file": "toolbar-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Sliding view indicator, grouped tools and New",
+      "sceneContext": {
+        "collection": null,
+        "view": "Tasks / Today",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1072,
+        "height": 50
+      },
+      "sha256": "478a54d49a1499c651c8d95262e5716db44245e88adf4d965ebc6842da2ad0b4",
+      "bytes": 87300
+    },
+    {
+      "file": "people-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Synthetic contacts, solid cards with glass frame and keyboard focus",
+      "sceneContext": {
+        "collection": null,
+        "view": "People / Contacts",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1060.40625,
+        "height": 530.484375
+      },
+      "sha256": "3a040f07a79f7af055a019cf47df0c0d756b58dcbe33dee6a8ccd39d32cd3fd4",
+      "bytes": 151043
+    },
+    {
+      "file": "birthday-calendar-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "People / Birthdays; calendar navigation grouped",
+      "sceneContext": {
+        "collection": null,
+        "view": "People / Birthdays",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1050.40625,
+        "height": 32
+      },
+      "sha256": "403cc02166cbeff9382267b7e9d68143032dba6a8f3d5c57f644f7926ebd4593",
+      "bytes": 17825
+    },
+    {
+      "file": "move-project-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Projects / Board; confirmation and native selectors",
+      "sceneContext": {
+        "collection": null,
+        "view": "Projects / Board",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 203.265625,
+        "height": 323
+      },
+      "sha256": "e9fd06e6f72fefef32f43c3bd16a046bdd4071c4ab56ca6d28543f1cb2a0d7e0",
+      "bytes": 70526
+    },
+    {
+      "file": "collections-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Studio collection / Studio list; loaded local results",
+      "sceneContext": {
+        "collection": "Studio collection",
+        "view": "Studio list",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 747.21875,
+        "height": 564.421875
+      },
+      "sha256": "5972e037eeec40a7a6fd3be0aeecd72b0e67f99afc0b9d609c8053266d359209",
+      "bytes": 175415
+    },
+    {
+      "file": "detail-task-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "task detail; View details open",
+      "sceneContext": {
+        "collection": null,
+        "view": "Task detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 856
+      },
+      "sha256": "808303a61c444458a649cad363b1fdb682cacb98c9c8bc31217de948fa575a3d",
+      "bytes": 253490
+    },
+    {
+      "file": "detail-project-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "project detail; View details open",
+      "sceneContext": {
+        "collection": null,
+        "view": "Project detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 856
+      },
+      "sha256": "bd6c082f95086f3ed113ab1f354badb68a40dee5b4942ef4b8c57a7fe5d21b8b",
+      "bytes": 1236905
+    },
+    {
+      "file": "detail-goal-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "goal detail; View details open",
+      "sceneContext": {
+        "collection": null,
+        "view": "Goal detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 856
+      },
+      "sha256": "6f78522371f723cfddeaab44b348243e602d2636c91ff7a94b0caef2d4d63cb9",
+      "bytes": 234712
+    },
+    {
+      "file": "detail-tag-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "tag detail; View details open",
+      "sceneContext": {
+        "collection": null,
+        "view": "Tag detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 856
+      },
+      "sha256": "2281ee2ea9576b5b146c0bbdf0dc6c34ff4705ebdec90b67a30713089cf8aab0",
+      "bytes": 1212519
+    },
+    {
+      "file": "detail-person-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "person detail; View details open",
+      "sceneContext": {
+        "collection": null,
+        "view": "Person detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 856
+      },
+      "sha256": "b45402cf0f0bb960c4604f3dce7b29f57be2e96ec5566916fdf8dc44789989f8",
+      "bytes": 251462
+    },
+    {
+      "file": "detail-milestone-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "milestone detail; View details open",
+      "sceneContext": {
+        "collection": null,
+        "view": "Milestone detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 856
+      },
+      "sha256": "e7d9b03ec6b00828056af331daac59549d9f2793a9285e93f17fa373017c49d9",
+      "bytes": 206351
+    },
+    {
+      "file": "note-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Full note pane: compact Tag/Type, relation capsules, header and solid content",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 856
+      },
+      "sha256": "6fff293855a5ad9156cfd6029d4fcf9b383e1489ef5c73509d89bfd6e84789f6",
+      "bytes": 224974
+    },
+    {
+      "file": "page-menu-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Open local glass menu",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 260,
+        "height": 203.9375
+      },
+      "sha256": "a8ab2b8e5edda35bcf490cc08b18148043f100582329ac5f5d2f51b8446d1a18",
+      "bytes": 51339
+    },
+    {
+      "file": "export-tools-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Export tool; synthetic note",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 620,
+        "height": 178
+      },
+      "sha256": "a37780862b35545a86f928e90ea54e42634909e57bc6c3667d838173ce921742",
+      "bytes": 54666
+    },
+    {
+      "file": "attachment-tools-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Attachments tool; synthetic note",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 620,
+        "height": 761.65625
+      },
+      "sha256": "104c27856151e791fd2f04d257f52af2714b51f5e47a69ab45c1b05955007ffd",
+      "bytes": 248231
+    },
+    {
+      "file": "resource-tools-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "External resources tool; synthetic note",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 620,
+        "height": 235.28125
+      },
+      "sha256": "45327066418763860293d6c077bcb56c56f4ff32f5a878689634c7cebea80c0f",
+      "bytes": 48942
+    },
+    {
+      "file": "note-locked-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Locked fields retain frame and height; Tag destination remains navigable",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 778.40625,
+        "height": 57
+      },
+      "sha256": "09314713ae2c0cd1b36171d7ac1d7117ef0687be2188027b4e4ad5d0132d306a",
+      "bytes": 25320
+    },
+    {
+      "file": "relation-picker-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Mounted relation picker uses glass-menu",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 320,
+        "height": 89
+      },
+      "sha256": "643e2b1b8abe473a672d567b4e9f319a288709ac87c45e1be083fbe15466e39e",
+      "bytes": 33169
+    },
+    {
+      "file": "insert-view-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Studio collection / Studio list selected; floating picker",
+      "sceneContext": {
+        "collection": "Studio collection",
+        "view": "Studio list",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 320,
+        "height": 219.28125
+      },
+      "sha256": "00a00c49b4d63fd50ed70bf9e76c2eaf2db15e748053bcee4b7094a5bed24f88",
+      "bytes": 72558
+    },
+    {
+      "file": "note-header-dirty-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Unsaved changes, tinted Save and white shortcut",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1180,
+        "height": 52
+      },
+      "sha256": "47cdd9cf38423f89db27cdd73568154cc538e8ce018a2ec42296e8a620ab9b1c",
+      "bytes": 64260
+    },
+    {
+      "file": "save-guard-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Default Cancel focus, neutral secondary capsules and tinted confirmation",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": "Studio collection",
+        "view": "Studio list · list",
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 436.25,
+        "height": 172.4375
+      },
+      "sha256": "d53d545f1114aea8e81cef2401bdc9bc4f26ca6e9e9141c1c404b9c0e23cefc6",
+      "bytes": 98152
+    },
+    {
+      "file": "settings-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Preferences, shared popup material and compact Search",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1000,
+        "height": 640
+      },
+      "sha256": "7c4ab48d2893e549f541201f615077219b4c54ed899f8dd6575c8b31fb0402dd",
+      "bytes": 592238
+    },
+    {
+      "file": "settings-color-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Custom color controls, theme and Apply",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1000,
+        "height": 640
+      },
+      "sha256": "87a66c77bac71d808d7883f328f8f0d3fc024f61d876f9e4817bc0da550a4793",
+      "bytes": 652276
+    },
+    {
+      "file": "settings-workspace-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Workspace controls, including Change workspace",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": null
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1000,
+        "height": 640
+      },
+      "sha256": "24ffb0f6280d115fb8fdae3b1c85c957379e8880baac2790e4eb909a830c670f",
+      "bytes": 538616
+    },
+    {
+      "file": "search-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Shared popup material over actual Home content",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Local search / all types"
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Local search: all types, unscoped"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 780,
+        "height": 620
+      },
+      "sha256": "96bdd852059f059ed24582eb0b5b898efbd0996e0d2e7a6fbc427315aab5479c",
+      "bytes": 490364
+    },
+    {
+      "file": "advanced-search-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Advanced search / notes; empty query",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Notes and entities"
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Notes and entities"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1080,
+        "height": 856
+      },
+      "sha256": "67ece8de1873221ccbbfb5a32ffc46ffce1feaf9888f1f496b183f845b8aaa31",
+      "bytes": 173263
+    },
+    {
+      "file": "attachment-search-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Advanced search / attachments; empty query",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Attachments"
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Attachments"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1080,
+        "height": 856
+      },
+      "sha256": "bddce55a492e15c518423a1a70dbd01b1f8e1301e2842d6716dba735455f4da1",
+      "bytes": 213368
+    },
+    {
+      "file": "combined-search-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Advanced search / combined; empty query",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Notes and attachments (groups)"
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Notes and attachments (groups)"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1080,
+        "height": 856
+      },
+      "sha256": "7f0946c2ef1b309e8346c69dccbf5684f10978dc0fd79d9390cddfd5985d23a0",
+      "bytes": 221677
+    },
+    {
+      "file": "advanced-search-narrow-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "420px, notes and entities scope",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Notes and entities"
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Notes and entities"
+      },
+      "viewport": {
+        "width": 420,
+        "height": 740
+      },
+      "cssSize": {
+        "width": 420,
+        "height": 696
+      },
+      "sha256": "6e0c9a037916fbcb3db4424274218745443cbf2c1c2d23979ff913322d4b6ee2",
+      "bytes": 124569
+    },
+    {
+      "file": "search-solid-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "High contrast fallback; local search",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Local search / all types"
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Notes and entities"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 780,
+        "height": 620
+      },
+      "sha256": "e7db01a054c7ffecda1923f98d8a8e00c7316e0cad3dacbf2a5fbcd975b50cbd",
+      "bytes": 138329
+    },
+    {
+      "file": "violet-action-dark.png",
+      "theme": "dark",
+      "accent": "Violet",
+      "state": "Alternate accent; header remains neutral",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Notes and entities"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1180,
+        "height": 52
+      },
+      "sha256": "2625e6bb72b65cbe0a6ac0189ebe833f03e9c6245597ce4a8de6cb3f5f811248",
+      "bytes": 64887
+    },
+    {
+      "file": "save-guard-narrow-dark.png",
+      "theme": "dark",
+      "accent": "Violet",
+      "state": "420px, secondary row and full-width confirmation",
+      "sceneContext": {
+        "collection": null,
+        "view": "Note detail",
+        "searchScope": null
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Notes and entities"
+      },
+      "viewport": {
+        "width": 420,
+        "height": 740
+      },
+      "cssSize": {
+        "width": 368.234375,
+        "height": 216.4375
+      },
+      "sha256": "a3d6b7d87062621982aa0f7b692bb9b87b7b846ba07a9ddaa7d9f97d535e4404",
+      "bytes": 94682
+    },
+    {
+      "file": "search-solid-fallback-dark.png",
+      "theme": "dark",
+      "accent": "Violet",
+      "state": "prefers-contrast: more; solid surface, no sheen/filter",
+      "sceneContext": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Local search / all types"
+      },
+      "selection": {
+        "collection": null,
+        "view": null,
+        "searchScope": "Notes and entities"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 780,
+        "height": 620
+      },
+      "sha256": "e7db01a054c7ffecda1923f98d8a8e00c7316e0cad3dacbf2a5fbcd975b50cbd",
+      "bytes": 138329
+    }
+  ],
+  "buildHashes": {
+    "dist/assets/index-Byz6leee.js": "3e7b94c2ed7fe42e9e3c0ac47cdaee3bbb04fa79f4aebf27bd1394f33bc32225",
+    "dist/assets/index-Cn5v4gSb.css": "d371c14d1e9bf7bceb3b299170d016f4c11ab7b7558420f36d47c8c9b148c3db",
+    "dist/assets/sidebar-icon-animation-BtloHV6V.js": "53fb22cc126ea76c3daedb6f5d2e46ee16c570c7e572fac0d501e2747e12a8ca",
+    "dist/index.html": "455d684f6408428de76f3e28ae07336eca6e7956d36a0cd65b5deaba25490060"
+  }
+}

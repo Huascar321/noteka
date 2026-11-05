@@ -31,13 +31,13 @@
 
 <div class="attachment-search" aria-label="Attachment search">
   <form class="search-form" onsubmit={(event) => { event.preventDefault(); void reader.search(criteria()); }}>
-    <label>Attachment text<input aria-label="Attachment text" bind:value={query} oninput={reset} placeholder="1–16 terms · up to 256 UTF-8 bytes" /></label>
-    <label>Extractor<select aria-label="Attachment extractor" bind:value={extractor} onchange={reset}>
+    <label>Attachment text<input class="glass-field" aria-label="Attachment text" bind:value={query} oninput={reset} placeholder="1–16 terms · up to 256 UTF-8 bytes" /></label>
+    <label>Extractor<select class="glass-field" aria-label="Attachment extractor" bind:value={extractor} onchange={reset}>
       <option value="">All extractors</option><option value="utf8_text">UTF-8 text</option><option value="pdfium_text">PDF universal (PDFium)</option><option value="pdf_text">PDF textual</option><option value="xlsx_cells">Celdas XLSX</option><option value="image_ocr">Image OCR (inferred)</option><option value="pdfkit_text">PDFKit (texto seleccionable)</option><option value="paddle_ocr">PDF OCR universal (PaddleOCR)</option><option value="pdf_ocr">PDF OCR (inferido)</option>
     </select></label>
-    <label>Optional job ID<input aria-label="Attachment job" bind:value={jobId} oninput={reset} /></label>
-    <label>Optional attachment ID<input aria-label="Attachment ID" bind:value={attachmentId} oninput={reset} /></label>
-    <button disabled={view.busy || !query.trim()}>Search attachments</button>
+    <label>Optional job ID<input class="glass-field" aria-label="Attachment job" bind:value={jobId} oninput={reset} /></label>
+    <label>Optional attachment ID<input class="glass-field" aria-label="Attachment ID" bind:value={attachmentId} oninput={reset} /></label>
+    <button class="glass-secondary" disabled={view.busy || !query.trim()}>Search attachments</button>
   </form>
   <p class="attachment-help">Only explicitly selected generations. Importing or extracting does not index them. Select a generation in “Prepare local attachments” in a note or through CLI/MCP; searching does not extract files or change indexes.</p>
   <p class="attachment-help">Literal terms within a fragment, not substrings. No entity, file or context filters, or ranking combined with notes.</p>
@@ -47,7 +47,7 @@
     <div class="error attachment-error" role="alert">
       <p>{view.error.code}{view.error.reason ? ` · ${view.error.reason}` : ''}</p><p>{view.error.message}</p>
       <p>There is no current page. Searching again starts at the beginning; it does not repair or index.</p>
-      <button disabled={!query.trim()} onclick={() => void refreshPanel()}>Search again</button>
+      <button class="glass-secondary" disabled={!query.trim()} onclick={() => void refreshPanel()}>Search again</button>
     </div>
   {:else if view.page}
     <section class="attachment-coverage" aria-label="Attachment coverage">
@@ -147,8 +147,8 @@
       </article>
     {/each}
     <div class="attachment-pages">
-      {#if view.page.next_cursor}<button onclick={() => void reader.next()}>Next attachment page</button>{/if}
-      <button onclick={() => void refreshPanel()}>Back to the first attachment page</button>
+      {#if view.page.next_cursor}<button class="glass-secondary" onclick={() => void reader.next()}>Next attachment page</button>{/if}
+      <button class="glass-secondary" onclick={() => void refreshPanel()}>Back to the first attachment page</button>
     </div>
   {:else}<p class="attachment-status" role="status">Enter text and search attachments. The index has not been queried yet.</p>{/if}
 </div>

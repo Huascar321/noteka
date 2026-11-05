@@ -22,11 +22,11 @@
   {#if error}<p class="error" role="alert">{error}</p><button onclick={onretry}>Retry relations</button>{/if}
   {#each sections as section (section.key)}
     <section class="person-content-section" aria-label={`${section.label} for this person`}>
-      <header><h2>{section.label}</h2>{#if section.key !== 'project'}<button class="primary" aria-label={section.key === 'note' ? "Capture a note here" : "Capture a task here"} disabled={createDisabled} onclick={() => oncreate(section.key)}><AppIcon name="plus" size={15} />New</button>{/if}</header>
+      <header><h2>{section.label}</h2>{#if section.key !== 'project'}<button class="primary glass-action" aria-label={section.key === 'note' ? "Capture a note here" : "Capture a task here"} disabled={createDisabled} onclick={() => oncreate(section.key)}><AppIcon name="plus" size={16} />New</button>{/if}</header>
       <div class="person-content-view"><span><AppIcon name="list" size={15} />List</span></div>
       {#each section.items as item (item.id)}{@const payload = item.payload as Record<string,unknown>}<button class="person-content-row" onclick={() => void onopen(item)}><AppIcon name={entityIcon(item.kind,item.title,item.payload)} color={entityIconColor(item.payload)} size={17} /><span>{item.title}</span>{#if typeof payload?.state === 'string'}<small class="property-chip">{states[payload.state] ?? payload.state}</small>{/if}</button>{/each}
       {#if !busy && !error && !section.items.length}<p class="person-context-message">{hasMore ? `No ${section.label} in the loaded relations. You can load more.` : `No related ${section.label}.`}</p>{/if}
-      {#if section.key !== 'project'}<button class="person-add-row" disabled={createDisabled} onclick={() => oncreate(section.key)}><AppIcon name="plus" size={15} />{section.key === 'note' ? 'New note' : 'New task'}</button>{/if}
+      {#if section.key !== 'project'}<button class="person-add-row" disabled={createDisabled} onclick={() => oncreate(section.key)}><AppIcon name="plus" size={16} />{section.key === 'note' ? 'New note' : 'New task'}</button>{/if}
     </section>
   {/each}
   {#if hasMore}<div class="person-context-footer"><span>Sections show loaded relations.</span><button disabled={busy || stale} onclick={onmore}><AppIcon name="arrow-down" size={15} />More related items</button></div>{/if}

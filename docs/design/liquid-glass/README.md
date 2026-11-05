@@ -1,21 +1,26 @@
 # Atlas Liquid Glass de Noteka
 
 Referencia visual de la [guía de diseño obligatoria](../../design-system.md),
-consolidada el 04/11/2026. No hace falta consultar las conversaciones originales.
+actualizada el 05/11/2026. No hace falta consultar las conversaciones originales.
 El material es una aproximación CSS inspirada en Apple; la ventana sigue siendo
 opaca y no muestra ni refracta el escritorio.
 
 ## Procedencia
 
-29 screenshots del frontend compilado, capturados con Chromium headless mediante
+Capturas del frontend compilado, generadas por separado con Chromium y WebKit headless mediante
 Playwright CLI 0.1.22. Corpus temporal nuevo conectado a CLI Rust real/SQLite:
 Ana Torres, Alex Rivera, Studio Norte/Sur, Design system y Product brief son
-fixtures ficticias. La foto de Ana es el icono local de Noteka, no una persona.
+fixtures ficticias. Studio collection, Studio list, Studio goal y Studio milestone también son sintéticos. La foto de Ana es el icono local de Noteka, no una persona.
 No se copiaron los adjuntos privados del usuario ni se abrió su workspace.
+En la escena de Settings se sustituye el texto de la ruta temporal por
+`/synthetic/noteka-workspace` antes de capturar; no se modifica el PNG después.
 
-[manifest.json](chromium/manifest.json) registra fecha UTC, versión exacta del
+[Cada manifiesto](chromium/manifest.json) registra fecha UTC, versión exacta del
 motor, huellas SHA-256 de fuentes/build/PNG, tema, acento, viewport y estado de
-cada captura. Viewport habitual 1440 × 900 CSS px, DPR 2, movimiento reducido;
+cada una de las 71 capturas por motor. La colección, vista y alcance de búsqueda
+se fijan y verifican cuando corresponden a la escena; `null` indica que ese eje
+no aparece en ella. Antes de capturar se espera la finalización de operaciones
+del puente y una ventana sin actividad. Viewport habitual 1440 × 900 CSS px, DPR 2, movimiento reducido;
 la guardia estrecha usa 420 × 740. Los PNG recortados a un componente conservan
 su resolución de captura. Las imágenes no fueron retocadas ni compuestas.
 
@@ -110,6 +115,32 @@ la misma familia de fallbacks.
 
 ![Search sólido con prefers-contrast more](chromium/search-solid-fallback-dark.png)
 
+## Superficies adicionales
+
+Los estados nuevos incluyen Move project, el selector flotante de vistas con
+Studio collection / Studio list, Collections, navegación del calendario,
+los tres alcances de búsqueda avanzada, herramientas de exportación y adjuntos,
+Settings de color y bienvenida. Incluye búsqueda avanzada estrecha y fallback
+de contraste en ambos temas. Las escenas de detalle
+abren View details para Task, Project, Goal, Tag, Person y Milestone. La
+inserción de la vista se verifica en el recorrido y se descarta el borrador.
+Los manifiestos de [Chromium](chromium/manifest.json) y
+[WebKit](webkit/manifest.json) registran sus propias versiones y hashes; no
+se sustituyen entre sí.
+
+| Claro | Oscuro |
+| --- | --- |
+| ![Move project en claro](chromium/move-project-light.png) | ![Move project en oscuro](chromium/move-project-dark.png) |
+| ![Selector de vista en claro](chromium/insert-view-light.png) | ![Selector de vista en oscuro](chromium/insert-view-dark.png) |
+| ![Collections en claro](chromium/collections-light.png) | ![Collections en oscuro](chromium/collections-dark.png) |
+| ![Calendario en claro](chromium/birthday-calendar-light.png) | ![Calendario en oscuro](chromium/birthday-calendar-dark.png) |
+| ![Bienvenida en claro](chromium/welcome-light.png) | ![Bienvenida en oscuro](chromium/welcome-dark.png) |
+| ![Herramientas de adjuntos en claro](chromium/attachment-tools-light.png) | ![Herramientas de adjuntos en oscuro](chromium/attachment-tools-dark.png) |
+| ![Color personalizado en claro](chromium/settings-color-light.png) | ![Color personalizado en oscuro](chromium/settings-color-dark.png) |
+
+Las capturas documentan los estados alcanzados; por sí solas no prueban todos
+los anchos, contraste compuesto, foco o funcionamiento nativo.
+
 ## Regeneración y revisión
 
 Desde la raíz del repositorio, con los prerrequisitos de
@@ -127,6 +158,13 @@ fijado, crea una sesión aislada y ejecuta
 browser, instalá el motor que indique el diagnóstico de ese CLI. La opción
 `NOTEKA_TEST_BROWSER=webkit npm run design:screenshots` genera una galería
 independiente en `webkit/`; no reemplaza las referencias Chromium.
+
+La auditoría de contraste compuesto se ejecuta con
+`NOTEKA_CONTRAST_ACCENT=Blue npm run design:screenshots` y luego con `Violet`;
+se repite con `NOTEKA_TEST_BROWSER=webkit`. Mide las zonas de tinta sobre
+píxeles de fondo capturados en reposo y hover, y comprueba los fallbacks en
+las escenas instrumentadas. Sus resultados y límites se detallan en la
+[verificación](../../verification-complete-liquid-glass-adoption.md).
 
 Primero se guardan artefactos en `output/playwright/liquid-glass-guide/`
 (ignorado por Git). Sólo al completar el recorrido sin errores/solicitudes

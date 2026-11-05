@@ -24,25 +24,25 @@
   <summary>Read local generation</summary>
   <p>Use the job ID shown in preparation or obtained through CLI/MCP. Read the confirmed output by page, even if it is not selected for Search; xlsx_range reads only the chosen region. This does not render the original or process files.</p>
   <form onsubmit={e => { e.preventDefault(); void controller.read(kind === 'xlsx_range' ? { id, kind, sheet_id: Number(sheetId), range, ...(headerRow === '' ? {} : { header_row: Number(headerRow) }) } : kind === 'pdf_ocr_table' ? { id, kind, page_number: Number(pdfPage), x_edges: edges.split(',').map(s => s.trim()), y_min: yMin, y_max: yMax, ...(tableHeader === '' ? {} : { header_row: Number(tableHeader) }) } : { id, kind }); }}>
-    <label>Job ID to read<input aria-label="Job ID to read" bind:value={id} oninput={() => controller.edit()} /></label>
-    <label>Reader type<select aria-label="Reader type" bind:value={kind} onchange={() => controller.edit()}>
+    <label>Job ID to read<input class="glass-field" aria-label="Job ID to read" bind:value={id} oninput={() => controller.edit()} /></label>
+    <label>Reader type<select class="glass-field" aria-label="Reader type" bind:value={kind} onchange={() => controller.edit()}>
       <option value="utf8_text">utf8_text · original bytes and lines</option><option value="pdfium_text">pdfium_text · universal PDF by page</option><option value="pdf_text">pdf_text · derived text by page</option><option value="xlsx_cells">xlsx_cells · typed cells</option><option value="xlsx_range">xlsx_range · selected sheet, range and headers</option><option value="image_ocr">image_ocr · inferred text regions</option><option value="pdfkit_text">pdfkit_text · PDFKit pages</option><option value="paddle_ocr">paddle_ocr · universal text by page</option><option value="pdf_ocr">pdf_ocr · inferred regions by page</option><option value="pdf_ocr_table">pdf_ocr_table · table with selected columns</option>
     </select></label>
     {#if kind === 'xlsx_range'}
-      <label>XLSX sheet ID<input aria-label="XLSX sheet ID" inputmode="numeric" bind:value={sheetId} oninput={() => controller.edit()} /></label>
-      <label>XLSX A1 range<input aria-label="XLSX A1 range" bind:value={range} oninput={() => controller.edit()} /></label>
-      <label>XLSX header row (optional)<input aria-label="XLSX header row" inputmode="numeric" bind:value={headerRow} oninput={() => controller.edit()} /></label>
+      <label>XLSX sheet ID<input class="glass-field" aria-label="XLSX sheet ID" inputmode="numeric" bind:value={sheetId} oninput={() => controller.edit()} /></label>
+      <label>XLSX A1 range<input class="glass-field" aria-label="XLSX A1 range" bind:value={range} oninput={() => controller.edit()} /></label>
+      <label>XLSX header row (optional)<input class="glass-field" aria-label="XLSX header row" inputmode="numeric" bind:value={headerRow} oninput={() => controller.edit()} /></label>
       <p>Choose the ID from the cell manifest. Use a canonical range such as A1:D100, up to 64 columns; headers must be explicitly selected within the range. Sparse grids are preserved; merges are not expanded and titles are not inferred.</p>
     {/if}
     {#if kind === 'pdf_ocr_table'}
-      <label>Physical PDF page<input aria-label="Physical PDF page" inputmode="numeric" bind:value={pdfPage} oninput={() => controller.edit()} /></label>
-      <label>PDF column boundaries<input aria-label="PDF column boundaries" bind:value={edges} oninput={() => controller.edit()} /></label>
-      <label>PDF minimum Y<input aria-label="PDF minimum Y" bind:value={yMin} oninput={() => controller.edit()} /></label>
-      <label>PDF maximum Y<input aria-label="PDF maximum Y" bind:value={yMax} oninput={() => controller.edit()} /></label>
-      <label>PDF header row (optional)<input aria-label="PDF header row" inputmode="numeric" bind:value={tableHeader} oninput={() => controller.edit()} /></label>
+      <label>Physical PDF page<input class="glass-field" aria-label="Physical PDF page" inputmode="numeric" bind:value={pdfPage} oninput={() => controller.edit()} /></label>
+      <label>PDF column boundaries<input class="glass-field" aria-label="PDF column boundaries" bind:value={edges} oninput={() => controller.edit()} /></label>
+      <label>PDF minimum Y<input class="glass-field" aria-label="PDF minimum Y" bind:value={yMin} oninput={() => controller.edit()} /></label>
+      <label>PDF maximum Y<input class="glass-field" aria-label="PDF maximum Y" bind:value={yMax} oninput={() => controller.edit()} /></label>
+      <label>PDF header row (optional)<input class="glass-field" aria-label="PDF header row" inputmode="numeric" bind:value={tableHeader} oninput={() => controller.edit()} /></label>
       <p>Use a prepared pdf_ocr generation. Separate boundaries with commas, such as 0,0.5,1; coordinates range from 0 to 1 relative to the raster, with the origin at the bottom left. Columns are selected; rows are inferred. This does not detect generic tables or split regions spanning columns.</p>
     {/if}
-    <button disabled={view.busy || !id.trim()}>Read from the beginning</button>
+    <button class="glass-secondary" disabled={view.busy || !id.trim()}>Read from the beginning</button>
   </form>
   {#if view.busy}<p role="status">Reading local generation…</p>{/if}
   {#if view.error}<div class="generation-error error" role="alert"><strong>{view.error.code}</strong><p>{view.error.message}</p>{#if view.error.details}<pre>{json(view.error.details)}</pre>{/if}{#if view.error.details && typeof view.error.details === 'object' && 'reason' in view.error.details && view.error.details.reason === 'response_size_limit'}<p>The response exceeds 2 MiB. For XLSX, choose a smaller range or omit the header row; content is never truncated.</p>{/if}<p>The previous page was cleared. Correct the criteria or explicitly read again; this does not repair or process files.</p></div>{/if}
@@ -56,7 +56,7 @@
       {#if page.kind === 'pdf_text' || page.kind === 'pdfium_text' || page.kind === 'paddle_ocr'}
         {#if page.kind === 'paddle_ocr'}
           <p>Universal PaddleOCR: derived text by page. Table structure is optional and separate from the text.</p>
-          <button disabled={!id} onclick={() => void loadStructure()}>Read table structure</button>
+          <button class="glass-secondary" disabled={!id} onclick={() => void loadStructure()}>Read table structure</button>
           {#if structureError}<p role="alert">{structureError}</p>{/if}
           {#if structure}<details open><summary>Estructura Paddle ({structure.manifest.table_count} tables)</summary><pre class="generation-manifest">{json(structure.structure)}</pre></details>{/if}
         {/if}
@@ -112,7 +112,7 @@
         {#each page.data.items as item (item.ordinal)}<article class="generation-item" data-ordinal={item.ordinal}><p>Fragment {item.ordinal} · original bytes [{item.byte_start}, {item.byte_end}) · lines {item.line_start}–{item.line_end}</p><pre class="generation-text">{item.text}</pre><details><summary>Localizador UTF-8</summary><pre class="generation-locator">{json({ byte_start: item.byte_start, byte_end: item.byte_end, line_start: item.line_start, line_end: item.line_end })}</pre></details></article>{/each}
       {/if}
       {#if !page.data.items.length}<p class="generation-empty">{page.kind === 'xlsx_range' ? "No stored cells in this range" : "No items for this reader in this generation"}. This does not prove the original is visually empty or all its text is recognizable.</p>{/if}
-      {#if page.data.next_cursor}<button disabled={view.busy} onclick={() => void controller.next()}>Next reader page</button>{/if}
+      {#if page.data.next_cursor}<button class="glass-secondary" disabled={view.busy} onclick={() => void controller.next()}>Next reader page</button>{/if}
     </section>
   {:else if !view.busy && !view.error}<p class="generation-initial">No reading requested yet. Opening this panel does not query or process files.</p>{/if}
   <p>Reads revalidate original and derived files in Rust; errors do not trigger repairs or fallback. Changing criteria clears the page; leaving discards late responses without cancelling active IPC. No polling or browser content persistence.</p>

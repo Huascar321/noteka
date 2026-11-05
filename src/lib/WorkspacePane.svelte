@@ -911,20 +911,20 @@
 
         {#snippet pageToolContent(name: string)}
           {#if name === 'export'}
-        {#if selected?.document && !dirty}<div class="export-tools"><label>New export directory<input aria-label="Export destination" bind:value={exportPath} placeholder="/ruta/a/exportacion" /></label><button disabled={!exportPath.trim()} onclick={() => void exportNote('json')}>Export JSON and originals</button><button disabled={!selected.document_editable || !exportPath.trim()} onclick={() => void exportNote('markdown')}>Export Markdown</button>{#if exportMessage}<p role="status">{exportMessage}</p>{/if}</div>{/if}
+        {#if selected?.document && !dirty}<div class="export-tools"><label>New export directory<input class="glass-field" aria-label="Export destination" bind:value={exportPath} placeholder="/ruta/a/exportacion" /></label><button class="glass-secondary" disabled={!exportPath.trim()} onclick={() => void exportNote('json')}>Export JSON and originals</button><button class="glass-secondary" disabled={!selected.document_editable || !exportPath.trim()} onclick={() => void exportNote('markdown')}>Export Markdown</button>{#if exportMessage}<p role="status">{exportMessage}</p>{/if}</div>{/if}
           {:else if name === 'resources'}
         {#if selected}
           <div class="external-resources" aria-label="External resources">
-            <div class="actions"><button disabled={dirty || working || externalBusy || noteReadOnly} onclick={() => void linkGoogleDrive()}>{externalBusy ? 'Esperando Google Picker…' : "Link from Google Drive"}</button></div>
+            <div class="actions"><button class="glass-secondary" disabled={dirty || working || externalBusy || noteReadOnly} onclick={() => void linkGoogleDrive()}>{externalBusy ? 'Esperando Google Picker…' : "Link from Google Drive"}</button></div>
             {#if externalError}<p class="error" role="alert">{externalError}</p>{/if}
             {#if externalResources.length}
               {#each externalResources as resource (resource.id)}
                 <div class="external-row">
                   <div><strong>{externalTitle(resource)}</strong><small class="metadata">{resource.provider} · {resource.resource_type} · {resource.resource_id}</small></div>
                   <div class="actions">
-                    {#if externalCanPreview(resource)}<button disabled={externalBusy || externalPreviewBusy} onclick={() => void previewResource(resource)}>Preview</button>{/if}
-                    {#if externalLink(resource)}<button disabled={externalBusy || externalPreviewBusy} onclick={() => void openResource(resource)}>Open</button>{/if}
-                    <button disabled={dirty || working || externalBusy || externalPreviewBusy || noteReadOnly} onclick={() => void unlinkExternal(resource)}>Unlink</button>
+                    {#if externalCanPreview(resource)}<button class="glass-secondary" disabled={externalBusy || externalPreviewBusy} onclick={() => void previewResource(resource)}>Preview</button>{/if}
+                    {#if externalLink(resource)}<button class="glass-secondary" disabled={externalBusy || externalPreviewBusy} onclick={() => void openResource(resource)}>Open</button>{/if}
+                    <button class="glass-secondary" disabled={dirty || working || externalBusy || externalPreviewBusy || noteReadOnly} onclick={() => void unlinkExternal(resource)}>Unlink</button>
                   </div>
                 </div>
               {/each}
@@ -932,7 +932,7 @@
             {#if externalPreviewError}<p class="error" role="alert">{externalPreviewError}</p>{/if}
             {#if externalPreview}
               <section class="external-preview" aria-label="External preview">
-                <div class="external-row"><strong>{externalPreview.name || externalPreview.id}</strong><button onclick={closePreview}>Close</button></div>
+                <div class="external-row"><strong>{externalPreview.name || externalPreview.id}</strong><button class="glass-secondary" onclick={closePreview}>Close</button></div>
                 <pre class="external-preview-text">{externalPreview.text}</pre>
                 <p class="metadata">{externalPreview.preview_mime === 'text/csv' ? "First sheet exported as CSV; formulas are not recalculated." : "Document exported as plain text."} Read-only preview; not saved to the workspace.</p>
               </section>
@@ -965,10 +965,10 @@
     {:else}
     {#if overview}<section class="entity-list" id={`entity-list-${paneId}`} aria-label={currentLabel}>
       <header><h2><span class="section-icon" aria-hidden="true"><AppIcon name={sectionIcon()} size={18} /></span>{currentLabel}</h2><button title="Refresh" aria-label="Refresh" onclick={() => void refresh()} disabled={loading || working}><AppIcon name="refresh" size={16} /></button></header>
-      {#if section !== 'archive' && section !== 'search' && section !== 'collections'}<button class="new-note" onclick={() => void newEntity(createKind)}><AppIcon name="plus" size={15} />{createLabel[createKind]} {#if createKind === 'note'}<kbd>⌘N</kbd>{/if}</button>{/if}
+      {#if section !== 'archive' && section !== 'search' && section !== 'collections'}<button class="new-note" onclick={() => void newEntity(createKind)}><AppIcon name="plus" size={16} />{createLabel[createKind]} {#if createKind === 'note'}<kbd>⌘N</kbd>{/if}</button>{/if}
       {#if section === 'search'}
-        <label>Search scope<select aria-label="Search scope" value={searchScope} disabled={working || status === 'saving'} onchange={(e) => changeSearchScope(e.currentTarget.value as 'notes' | 'attachments' | 'combined')}><option value="notes">Notes and entities</option><option value="attachments">Attachments</option><option value="combined">Notes and attachments (groups)</option></select></label>
-        {#if searchScope === 'notes'}<form class="search-form" onsubmit={(e) => { e.preventDefault(); void loadList(); }}><label>Local text<input aria-label="Search text" bind:value={searchQuery} oninput={invalidateSearchCriteria} placeholder="1–16 terms" maxlength="256" /></label><label>Type<select aria-label="Search type" bind:value={searchKind} onchange={invalidateSearchCriteria}><option value="">All</option>{#each ['note','task','project','tag','person'] as kind}<option value={kind}>{kind}</option>{/each}</select></label><label class="checkbox-label"><input type="checkbox" bind:checked={searchArchived} onchange={invalidateSearchCriteria} /> Archived only</label><label>ID contexto opcional<input aria-label="Search context" bind:value={searchRelated} oninput={invalidateSearchCriteria} /></label><button disabled={loading || working || !searchQuery.trim()}>Search</button><button type="button" disabled={working || loading} onclick={() => void rebuildSearch()}>Rebuild index</button><p class="list-message">Titles and recognized blocks. Choose Attachments for selected file fragments. No models.</p>{#if searchMessage}<p class="list-message" role="status">{searchMessage}</p>{/if}</form>
+        <label>Search scope<select class="glass-field" aria-label="Search scope" value={searchScope} disabled={working || status === 'saving'} onchange={(e) => changeSearchScope(e.currentTarget.value as 'notes' | 'attachments' | 'combined')}><option value="notes">Notes and entities</option><option value="attachments">Attachments</option><option value="combined">Notes and attachments (groups)</option></select></label>
+        {#if searchScope === 'notes'}<form class="search-form" onsubmit={(e) => { e.preventDefault(); void loadList(); }}><label>Local text<input class="glass-field" aria-label="Search text" bind:value={searchQuery} oninput={invalidateSearchCriteria} placeholder="1–16 terms" maxlength="256" /></label><label>Type<select class="glass-field" aria-label="Search type" bind:value={searchKind} onchange={invalidateSearchCriteria}><option value="">All</option>{#each ['note','task','project','tag','person'] as kind}<option value={kind}>{kind}</option>{/each}</select></label><label class="checkbox-label"><input type="checkbox" bind:checked={searchArchived} onchange={invalidateSearchCriteria} /> Archived only</label><label>ID contexto opcional<input class="glass-field" aria-label="Search context" bind:value={searchRelated} oninput={invalidateSearchCriteria} /></label><button class="glass-secondary" disabled={loading || working || !searchQuery.trim()}>Search</button><button class="glass-secondary" type="button" disabled={working || loading} onclick={() => void rebuildSearch()}>Rebuild index</button><p class="list-message">Titles and recognized blocks. Choose Attachments for selected file fragments. No models.</p>{#if searchMessage}<p class="list-message" role="status">{searchMessage}</p>{/if}</form>
         {:else if searchScope === 'attachments'}{#key workspace.path}<AttachmentSearchPanel bind:this={attachmentPanel} workspace={workspace.path} />{/key}{:else}{#key workspace.path}<GroupedSearchPanel bind:this={groupedPanel} workspace={workspace.path} onopen={openSearch} />{/key}{/if}
       {/if}
       {#if workflowDate}<p class="list-message">Calendar day {workflowDate} · {workspace.timezone}</p>{/if}
@@ -989,12 +989,11 @@
       <header class="editor-bar">{#if onclosepeek}<button class="icon-button close-peek" aria-label="Close peek" title="Close peek (Esc)" disabled={blocked || working || status === 'saving'} onclick={onclosepeek}><AppIcon name="forward" size={18} /></button>{/if}
         {#if onpresent && ondefaultpeek && (draft || selected)}<PeekModeMenu mode={peekMode} defaultMode={defaultPeekMode} preferenceError={peekPreferenceError} disabled={blocked || working || status === 'saving'} onchange={onpresent} ondefault={ondefaultpeek} />{/if}
         <PageBreadcrumb {section} record={breadcrumbRecord} disabled={blocked || working || status === 'saving'} onnavigate={navigate} />
-        {#if !plainNotePage}<button class="page-refresh" aria-label="Refresh page" title="Refresh page" disabled={working || loading || status === 'saving'} onclick={() => void refresh()}><AppIcon name="refresh" size={16} /></button>{/if}
-        <div class="actions" class:note-page-actions={plainNotePage} role={plainNotePage ? 'group' : undefined} aria-label={plainNotePage ? 'Note actions' : undefined}>
+        <div class="actions note-page-actions" role="group" aria-label={plainNotePage ? 'Note actions' : 'Page actions'}>
           {#if plainNotePage}
             {#if pageLocked}<button bind:this={lockStatusButton} type="button" class="page-lock-status" class:temporarily-unlocked={!noteReadOnly} aria-label={noteReadOnly ? "Unlock page temporarily" : "Re-lock page"} title={noteReadOnly ? "Unlock temporarily to edit" : "Lock the page again"} disabled={blocked || working || status === 'saving'} onclick={() => void toggleTemporaryUnlock()}><AppIcon name={noteReadOnly ? "lock" : "lock-open"} size={13} /><span>{noteReadOnly ? "Locked" : "Re-lock"}</span></button>{/if}
-            <button class="page-refresh" aria-label="Refresh page" title="Refresh page" disabled={working || loading || status === 'saving'} onclick={() => void refresh()}><AppIcon name="refresh" size={16} /></button>
           {/if}
+          <button class="page-refresh" aria-label="Refresh page" title="Refresh page" disabled={working || loading || status === 'saving'} onclick={() => void refresh()}><AppIcon name="refresh" size={16} /></button>
           {#if draft}<span class:warning={dirty} class="save-status" role="status">{({ saved: "Saved", dirty: "Unsaved changes", saving: "Saving…", error: "Error · Unsaved", conflict: "Conflict · Unsaved" })[status]}</span>{#if dirty}<button class="primary glass-action" onclick={() => void save()} disabled={working || status === 'saving'}>{status === 'error' ? "Retry" : "Save"} <kbd>⌘S</kbd></button>{/if}{/if}
           {#if selected || draft}<PageTools groups={toolGroups} bind:active={utilityPanel} content={pageToolContent} placement="header" actions={[
             ...(plainNotePage ? [{ id: 'lock', label: 'Lock page', icon: 'lock', checked: pageLocked, disabled: !selected || working || status === 'saving', reason: !selected ? 'Save the page to lock it' : undefined, onselect: () => { void togglePageLock(); } }] : []),
@@ -1035,7 +1034,7 @@
             {#if selected}{#key selected.id}<MilestonesPanel bind:this={goalMilestones} workspace={workspace.path} goalId={selected.id} revision={selected.revision} onopen={openHome} oncreate={(goalId) => createHome('note',undefined,{inbox:false,icon:'target',milestone:{goal_id:goalId}})} />{/key}{/if}
             <details class="goal-journal" aria-label="Goal Journal" open>
               <summary><h2>Journal</h2></summary>
-              <header><button type="button" class="goal-journal-add" disabled={noteEditingDisabled} onclick={addGoalLog}><AppIcon name="plus" size={15} />New entry</button></header>
+              <header><button type="button" class="goal-journal-add glass-secondary" disabled={noteEditingDisabled} onclick={addGoalLog}><AppIcon name="plus" size={16} />New entry</button></header>
               {#key editorEpoch}{#if goalJournalInitial}<BlockEditor bind:this={goalJournalEditor} label="Goal journal" placeholder="Record your progress and reflections…" initial={goalJournalInitial} workspace={workspace.path} focusBlock={sourceBlock} disabled={noteEditingDisabled} onopen={openEntity} onchange={document => goalChanged('journal', document)} onerror={message => error = message} oninvalid={(raw, message) => goalInvalid('journal', raw, message)} />{/if}{/key}
             </details>
             {#if selected}<GoalProjects projects={goalProjects} timezone={workspace.timezone} disabled={noteEditingDisabled} onopen={openEntity} onadd={anchor => openPageRelations('project', anchor)} />{/if}

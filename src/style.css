@@ -632,10 +632,14 @@ button, summary, select { transition: background-color var(--motion-fast) var(--
 }
 .glass-tool-group .task-icon-action { border-radius:999px; }
 .task-refresh-status { max-width:95px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); font-size:12px; }
-.task-icon-action { display:grid; place-items:center; width:28px; height:28px; padding:4px; border:0; background:transparent; color:var(--muted); border-radius:5px; }
+.task-icon-action { display:grid; place-items:center; width:28px; height:28px; padding:4px; border:0; background:transparent; color:color-mix(in srgb,var(--muted) 70%,var(--text)); border-radius:5px; }
 .task-icon-action:hover { background:var(--hover); color:var(--text); }
 .task-new.primary {
   position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
   font-size:14px;
   font-weight:500;
   line-height:20px;
@@ -1193,7 +1197,7 @@ svg[data-app-icon] { flex-shrink:0; vertical-align:middle; }
 .task-detail-project>svg,.task-detail-project>img { flex-shrink:0; }
 .task-project-edit.icon-button { width:23px; height:25px; border-radius:4px; }
 .task-property-empty { font-size:14px; color:var(--muted); }
-.task-page-properties .task-due-property input { display:block; width:150px; max-width:100%; margin:0; padding:3px 0; border:1px solid transparent; border-radius:3px; background:transparent; color:var(--text); font-size:14px; }
+.task-page-properties .task-due-property input { display:block; width:150px; max-width:100%; margin:0; padding:3px 8px; border:1px solid transparent; border-radius:3px; background:transparent; color:var(--text); font-size:14px; }
 .task-page-properties .task-due-property input:hover { border-color:var(--control-border); background:var(--surface); }
 .task-detail .page-relations { margin:22px 0; padding:0; border:0; }
 .task-relation-actions { display:flex; align-items:center; gap:8px 16px; flex-wrap:wrap; margin-top:5px; }
@@ -1290,7 +1294,7 @@ svg[data-app-icon] { flex-shrink:0; vertical-align:middle; }
 .project-detail-state[data-state="done"] { background:color-mix(in srgb,#44946b 18%,var(--bg)); }
 .project-detail-state[data-state="done"]>span { background:#44946b; }
 .project-detail-state select { width:auto; padding:2px 1px; border:0; background:transparent; color:var(--text); font-size:14px; }
-.project-page-properties input[type="date"] { width:150px; padding:2px 0; border:1px solid transparent; background:transparent; color:var(--text); font-size:14px; }
+.project-page-properties input[type="date"] { width:150px; max-width:100%; padding:2px 8px; border:1px solid transparent; background:transparent; color:var(--text); font-size:14px; }
 .project-page-properties input[type="date"]:hover { border-color:var(--control-border); }
 .project-detail-progress { display:inline-flex; align-items:center; flex-wrap:wrap; gap:8px; min-height:27px; font-size:14px; }
 .project-detail-progress progress { appearance:none; width:68px; height:4px; border:0; border-radius:3px; overflow:hidden; background:var(--border); accent-color:#44946b; }
@@ -1762,15 +1766,15 @@ input[type="checkbox"],input[type="radio"],progress { accent-color:var(--accent)
 
 /* Local relation picker shares the same surfaces and controls as page menus. */
 .relation-group { display:flex; align-items:flex-start; gap:12px; margin:6px 0; font-size:12px; }
-.relation-group-label { flex:0 0 66px; color:var(--muted); padding-top:5px; }
+.relation-group-label { flex:0 0 66px; color:var(--muted); padding-top:6px; }
 .relation-group .relation-chips { flex:1; min-width:0; gap:5px; }
 .relation-chip-wrap { position:relative; display:inline-flex; align-items:center; max-width:100%; padding:1px; border:1px solid transparent; border-radius:999px; background:var(--glass-content-sheen),var(--glass-content-surface); box-shadow:var(--glass-card-shadow); --glass-control-rim-opacity:.35; --glass-control-inner-opacity:.2; }
 .relation-chips .relation-chip { position:relative; z-index:1; margin:0; padding:4px 7px; border-radius:999px; text-decoration:none; min-width:0; line-height:18px; overflow-wrap:anywhere; }
 .relation-chip>svg,.relation-chip>img { flex-shrink:0; }
 .relation-remove, .relation-add { border:0; background:transparent; color:var(--muted); }
-.relation-remove { position:relative; z-index:1; display:grid; place-items:center; width:26px; height:26px; padding:5px; flex:0 0 auto; border-radius:999px; }
+.page-relations .relation-remove { position:relative; z-index:1; display:grid; place-items:center; width:26px; height:26px; margin:0; padding:5px; flex:0 0 auto; border-radius:999px; }
 .relation-remove:hover:not(:disabled) { color:var(--text); background:var(--hover); }
-.relation-add { display:inline-flex; align-items:center; gap:5px; padding:5px 8px; border:1px solid transparent; border-radius:999px; font-size:12px; }
+.page-relations .relation-add { display:inline-flex; align-items:center; gap:5px; margin:0; padding:5px 8px; border:1px solid transparent; border-radius:999px; font-size:12px; }
 .relation-add:is(:hover,:focus-visible):not(:disabled) { color:var(--text); border-color:var(--glass-field-stroke); background:var(--glass-field-sheen),var(--glass-field-surface); box-shadow:var(--glass-field-shadow); }
 .relation-picker { position:fixed; z-index:90; display:flex; flex-direction:column; overflow:auto; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:9px; box-shadow:0 12px 30px #0004; padding:6px; font-size:13px; }
 .relation-picker-search { display:flex; align-items:center; gap:7px; padding:3px 4px 7px; border-bottom:1px solid var(--border); color:var(--muted); }
@@ -2201,6 +2205,7 @@ input[type="checkbox"],input[type="radio"],progress { accent-color:var(--accent)
   .app-window .sidebar-search:active:not(:disabled) { box-shadow:none; }
   .glass-tool-group { background:var(--surface); border-color:var(--control-border); box-shadow:none; }
   :root:root .glass-menu { background:var(--surface); border-color:var(--control-border); box-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none; }
+  :root:root .page-tools-header .page-tool-panel.glass-menu:not([hidden]) { background:var(--surface); border-color:var(--control-border); box-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none; }
   .home .home-cover-controls { background:var(--surface); border-color:var(--control-border); box-shadow:none; }
   .person-card,.relation-chip-wrap { background:var(--bg); border-color:var(--control-border); box-shadow:none; }
   .note-tag-value,.note-page-properties .note-type-property select,
@@ -2227,3 +2232,65 @@ input[type="checkbox"],input[type="radio"],progress { accent-color:var(--accent)
   :is(.window-titlebar .workspace-tab.active,.sliding-tabs-indicator,.page-breadcrumb button,.page-breadcrumb [aria-current="page"],.task-new.primary,.window-titlebar .new-tab,.window-titlebar .tab-close,.glass-tool-group,.glass-menu,.person-card,.relation-chip-wrap,.note-page-actions,.glass-popup,.settings-navigation button.active,.glass-action,.glass-secondary)::before,
   :is(.window-titlebar .workspace-tab.active,.sliding-tabs-indicator,.page-breadcrumb button,.page-breadcrumb [aria-current="page"],.task-new.primary,.window-titlebar .new-tab,.window-titlebar .tab-close,.glass-tool-group,.glass-menu,.person-card,.relation-chip-wrap,.note-page-actions,.glass-popup,.settings-navigation button.active,.glass-action,.glass-secondary)::after { content:none; }
 }
+
+/* Shared material for the project move confirmation and calendar navigation. */
+.project-move-dialog.glass-popup { --glass-search-surface:var(--glass-confirm-surface); }
+.project-move-dialog .actions>button { min-height:36px; padding:6px 12px; }
+.people-calendar-toolbar .birthday-tools { height:32px; gap:2px; padding:2px; flex-shrink:0; }
+.people-calendar-toolbar .birthday-tools button { min-height:28px; height:28px; padding:4px 8px; border:0; border-radius:999px; background:transparent; }
+.people-calendar-toolbar .birthday-tools button:hover:not(:disabled) { background:var(--hover); }
+.collection-tabs-host { position:relative; min-width:0; margin:14px 0; }
+.collection-tabs-host .collection-tabs { position:relative; z-index:1; flex-wrap:nowrap; overflow-x:auto; margin:0; padding:2px 0; scrollbar-width:thin; }
+.collection-tabs-host .collection-tabs>button { position:relative; flex-shrink:0; border:0; border-radius:999px; background:transparent; white-space:nowrap; }
+.collection-tabs-host .collection-tabs>button.active { background:transparent; }
+.collection-tabs-host .collection-tabs>button:hover:not(:disabled) { background:var(--hover); }
+.collection-actions .glass-secondary { min-height:28px; padding:4px 10px; }
+
+/* Compact fields are opt-in or restricted to the property editors. */
+:root .glass-field,
+.entity-fields :is(input:not([type="checkbox"]),select),
+.task-page-properties .task-due-property input,
+.project-page-properties input[type="date"],
+:is(.task-project-value,.goal-tag-value) {
+  min-height:32px; max-width:100%; border:1px solid var(--glass-field-stroke); border-radius:16px;
+  background:var(--glass-field-sheen),var(--glass-field-surface); box-shadow:var(--glass-field-shadow); color:var(--text);
+}
+:root .glass-field { padding:5px 10px; }
+:root select.glass-field,.entity-fields select { height:32px; }
+:root .glass-field:focus-visible,
+.entity-fields :is(input:not([type="checkbox"]),select):focus-visible,
+:is(.task-project-value,.goal-tag-value):focus-within { outline:2px solid var(--focus); outline-offset:2px; }
+:is(.task-project-value,.goal-tag-value) { flex-wrap:nowrap; gap:4px; padding:2px 6px; min-width:0; }
+.compact-relation-list { display:flex; flex:1; flex-wrap:wrap; align-items:center; gap:4px; min-width:0; }
+.compact-relation-list>:is(button,span) { min-width:0; max-width:100%; }
+.compact-relation-list button>span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+:is(.task-project-value,.goal-tag-value)>.icon-button { flex-shrink:0; width:26px; height:26px; margin-left:auto; border-radius:999px; }
+:is(.task-status-control,.project-detail-state,.goal-detail-state,.tag-detail-type) { min-height:32px; padding:2px 9px; border:1px solid var(--glass-field-stroke); border-radius:999px; box-shadow:var(--glass-field-shadow); }
+.welcome .actions>button { min-height:36px; padding:6px 12px; }
+@media (prefers-reduced-transparency:reduce), (prefers-contrast:more) {
+  :root .glass-field,.entity-fields :is(input:not([type="checkbox"]),select),
+  .task-page-properties .task-due-property input,.project-page-properties input[type="date"],
+  :is(.task-project-value,.goal-tag-value) { background:var(--surface); border-color:var(--control-border); box-shadow:none; }
+  :is(.task-status-control,.project-detail-state,.goal-detail-state,.tag-detail-type) { box-shadow:none; border-color:var(--control-border); }
+}
+:is(.export-tools,.external-resources,.editor-panel-actions) .glass-secondary { min-height:28px; padding:4px 10px; }
+:is(.collection-templates,.property-schema) .glass-secondary { min-height:28px; padding:4px 10px; }
+:root .glass-field:hover:not(:disabled) { background:var(--glass-field-sheen),var(--glass-field-hover); }
+:is(.project-add-row,.tag-add-row,.person-add-row):is(:hover,:focus-visible):not(:disabled) { background:var(--glass-field-sheen),var(--glass-field-surface); box-shadow:var(--glass-field-shadow); border-radius:8px; }
+@media (prefers-reduced-transparency:reduce), (prefers-contrast:more) {
+  :root .glass-field:hover:not(:disabled),
+  :is(.project-add-row,.tag-add-row,.person-add-row):is(:hover,:focus-visible):not(:disabled) { background:var(--hover); box-shadow:none; }
+}
+:is(.attachment-search,.grouped-search,.preparation-panel,.generation-panel) .glass-secondary { min-height:28px; padding:4px 10px; }
+:root .glass-field::placeholder { color:var(--glass-field-text); opacity:1; }
+.search-form .glass-secondary { min-height:28px; padding:4px 10px; }
+
+.editor-tools .glass-secondary { min-height:28px; padding:4px 10px; }
+
+.creation-action { display:inline-flex; align-items:center; gap:6px; }
+
+/* Pointer focus is quiet; keyboard focus and selection/drag markers remain visible. */
+:root[data-focus-modality="pointer"] :focus:not(.color-grid button.selected) { outline:none !important; }
+:root[data-focus-modality="pointer"] :is(.person-card,.settings-search,.context-search-input,.relation-picker-search,.task-project-value,.goal-tag-value):focus-within { outline:none !important; }
+
+:root[data-focus-modality="keyboard"] .note-detail .title-input:focus-visible { outline:2px solid var(--focus); outline-offset:5px; border-radius:3px; }

@@ -46,7 +46,7 @@
       <div class="glass-tool-group" role="group" aria-label="Notes tools"><button class="task-icon-action" aria-label="Refresh Notes" title="Refresh Notes" disabled={readState?.busy} onclick={() => void onview()}><AppIcon name="refresh" size={16} /></button>
       {#if !pageMode}<button class="task-icon-action" aria-label="Open Notes list" title="Open Notes list" onclick={() => void onnavigate()}><AppIcon name="expand" size={16} /></button>{/if}
       <button class="task-icon-action" aria-label="Notes view options" aria-expanded={optionsOpen} title="View options" onclick={() => optionsOpen = !optionsOpen}><AppIcon name="sliders" size={16} /></button>
-      </div><button class="task-new primary" onclick={() => void create()}>New</button>
+      </div><button class="task-new primary" onclick={() => void create()}><AppIcon name="plus" size={16} />New</button>
     </div>
   </div>
   {#if optionsOpen}<div class="task-view-options"><p>Notes: local notes and general notes from the Notes database, excluding those archived at the source. Clips, Voice, Journal and Meetings use their explicit type. Fav. uses the favorite flag; Inbox preserves its local flag. All includes every active local page.</p><p>Imported age uses the last recorded source modification; local notes use their local modification. Voice does not record or transcribe audio.</p>{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}

@@ -18,19 +18,19 @@
   <p>Choose an existing managed original. Each step is explicit: enqueue → resume if needed → run → query → select generation. Search only searches.</p>
   <p>Leaving this panel does not cancel an active operation. There is no polling. Query again to see changes made by other clients.</p>
   {#if refs.length}
-    <label>References in this note<select aria-label="Reference to prepare" value="" onchange={e => controller.select(e.currentTarget.value)}>
+    <label>References in this note<select class="glass-field" aria-label="Reference to prepare" value="" onchange={e => controller.select(e.currentTarget.value)}>
       <option value="" disabled>Choose a reference</option>
       {#each refs as ref (ref.id)}<option value={ref.id}>{ref.id} · Block label: {ref.label}</option>{/each}
     </select></label>
     <p>Labels belong to the document, may be unsaved, and are not file metadata or evidence of exclusive ownership.</p>
   {/if}
-  <label>Managed ID to prepare<input aria-label="Managed ID to prepare" value={view.attachmentId} oninput={e => controller.select(e.currentTarget.value)} /></label>
-  <div class="actions">
-    <button disabled={view.busy || !view.attachmentId} onclick={() => void controller.list()}>Query jobs</button>
-    <label>Preparation extractor<select aria-label="Preparation extractor" bind:value={extractor} disabled={view.busy}>
+  <label>Managed ID to prepare<input class="glass-field" aria-label="Managed ID to prepare" value={view.attachmentId} oninput={e => controller.select(e.currentTarget.value)} /></label>
+  <div class="actions preparation-actions">
+    <button class="glass-secondary" disabled={view.busy || !view.attachmentId} onclick={() => void controller.list()}>Query jobs</button>
+    <label>Preparation extractor<select class="glass-field" aria-label="Preparation extractor" bind:value={extractor} disabled={view.busy}>
       <option value="utf8_text">utf8_text · .txt/.md literal</option><option value="pdfium_text">pdfium_text · PDF universal</option><option value="pdf_text">pdf_text · PDF textual acotado</option><option value="xlsx_cells">xlsx_cells · XLSX Transitional acotado</option><option value="image_ocr">image_ocr · PNG/JPEG inferido local</option><option value="pdfkit_text">pdfkit_text · PDFKit seleccionable local</option><option value="paddle_ocr">paddle_ocr · PDF OCR universal</option><option value="pdf_ocr">pdf_ocr · PDF inferido local</option>
     </select></label>
-    <button disabled={view.busy || !view.attachmentId || view.needsConsult} onclick={() => void controller.enqueue(extractor)}>Enqueue extraction</button>
+    <button class="glass-secondary" disabled={view.busy || !view.attachmentId || view.needsConsult} onclick={() => void controller.enqueue(extractor)}>Enqueue extraction</button>
   </div>
   {#if view.busy}<p role="status">Local operation in progress… Active calls retain their slot until they finish.</p>{/if}
   {#if view.error}<div class="preparation-error error" role="alert"><strong>{view.error.code}</strong><p>{view.error.message}</p>{#if view.error.details}<pre>{json(view.error.details)}</pre>{/if}{#if view.error.uncertain}<p>The state may have changed. Query before choosing another action; the write is not repeated.</p>{/if}</div>{/if}
@@ -41,9 +41,9 @@
     <div class="preparation-jobs">{#each view.jobs.items as job (job.id)}
       <button class="preparation-job" disabled={view.busy} aria-pressed={view.jobId === job.id} onclick={() => controller.chooseJob(job.id)}>{job.id} · {job.extractor} v{job.extractor_version} · {job.state} · r{job.revision} · intentos {job.attempts}{!job.supported ? ' · incompatible' : ''}{job.result_from_previous_attempt ? " · previous result" : ''}</button>
     {/each}</div>
-    {#if view.jobs.next_cursor}<button disabled={view.busy} onclick={() => void controller.list(true)}>Next jobs page</button>{/if}
+    {#if view.jobs.next_cursor}<button class="glass-secondary" disabled={view.busy} onclick={() => void controller.list(true)}>Next jobs page</button>{/if}
   {/if}
-  {#if view.jobId}<p>Selected job: <code>{view.jobId}</code></p><button disabled={view.busy} onclick={() => void controller.inspect()}>Query selected job</button>{/if}
+  {#if view.jobId}<p>Selected job: <code>{view.jobId}</code></p><button class="glass-secondary" disabled={view.busy} onclick={() => void controller.inspect()}>Query selected job</button>{/if}
   {#if view.job && view.control && view.index}
     {@const job = view.job}
     <section class="preparation-inspection" aria-label="Procesamiento consultado">
@@ -55,16 +55,16 @@
       <details><summary>Job provenance and configuration</summary><pre>{json(job)}</pre></details>
       <p class="preparation-control">Cola global {view.control.paused ? 'pausada' : 'habilitada'} · revision {view.control.revision}. Resuming does not run jobs. Running by ID may also recover expired attempts in the workspace.</p>
       <div class="actions">
-        <button disabled={view.busy} onclick={() => void controller.setPaused()}>{view.control.paused ? "Resume global queue" : "Pause global queue"}</button>
-        <button disabled={view.busy || !job.supported || job.state !== 'queued'} onclick={() => void controller.jobAction('run')}>Run selected job</button>
-        <button disabled={view.busy || !['queued', 'running', 'cancelled'].includes(job.state)} onclick={() => void controller.jobAction('cancel')}>Cancel selected job</button>
-        <button disabled={view.busy || !job.supported || ['queued', 'running'].includes(job.state)} onclick={() => void controller.jobAction('retry')}>Reencolar trabajo elegido</button>
+        <button class="glass-secondary" disabled={view.busy} onclick={() => void controller.setPaused()}>{view.control.paused ? "Resume global queue" : "Pause global queue"}</button>
+        <button class="glass-secondary" disabled={view.busy || !job.supported || job.state !== 'queued'} onclick={() => void controller.jobAction('run')}>Run selected job</button>
+        <button class="glass-secondary" disabled={view.busy || !['queued', 'running', 'cancelled'].includes(job.state)} onclick={() => void controller.jobAction('cancel')}>Cancel selected job</button>
+        <button class="glass-secondary" disabled={view.busy || !job.supported || ['queued', 'running'].includes(job.state)} onclick={() => void controller.jobAction('retry')}>Reencolar trabajo elegido</button>
       </div>
       <h3>Queried generation and index</h3>
       {#if job.generation}<p>Generation <code data-preparation="generation">{job.generation.id}</code> · intento {job.generation.attempt} · completa {String(job.generation.complete)} · {job.generation.fragment_count} internal fragments. For XLSX/OCR these are internal JSON chunks, not cells or regions.</p>{:else}<p>No published generation.</p>{/if}
       <p>Index {view.index.profile} · version {view.index.version} · revision <span data-preparation="index-revision">{view.index.revision}</span>. Coverage is filtered by job; get does not verify originals.</p>
       <pre class="preparation-index">{json(view.index)}</pre>
-      <button disabled={!canPut} onclick={() => void controller.selectGeneration()}>Select generation for search</button>
+      <button class="glass-secondary" disabled={!canPut} onclick={() => void controller.selectGeneration()}>Select generation for search</button>
       <p>Selecting does not extract or search. A compatible generation with no text can be selected with zero fragments. Replacing a generation invalidates its previous selection.</p>
     </section>
   {/if}
@@ -86,4 +86,7 @@
   .preparation-receipt, .preparation-inspection { margin-block: 1rem; padding: .75rem; border: 1px solid var(--border); }
   label { display: grid; gap: .35rem; margin-block: .6rem; }
   input, select { min-width: 0; max-width: 100%; }
+  .preparation-actions { align-items: end; }
+  .preparation-actions label { margin-block: 0; }
+  .preparation-actions > button { margin-bottom: 2px; }
 </style>

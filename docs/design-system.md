@@ -246,21 +246,24 @@ Los radios de cápsula usan `999px`, salvo Tag con `16px` para admitir varias fi
 | Selección lateral | Fila 34 px, gap 4 px; tinte sidebar; sin blur | `App.svelte`, `.sidebar-nav-indicator`; un único indicador |
 | Pestaña superior | Alto 32 px; tinte nav, selección neutra | `App.svelte`, `.workspace-tab.active`; +/× sólo elevan en hover/foco |
 | Breadcrumb | Cápsulas independientes, blur 3 px; sombra corta | `PageBreadcrumb.svelte`; barra transparente sobre scroll |
-| Vistas de sección | Indicador ajusta posición y tamaño; sin blur | `sliding-tabs.ts`, `.sliding-tabs-indicator`; no duplicar fondo activo |
+| Vistas de sección y Collections | Indicador ajusta posición y tamaño; sin blur, alojado fuera del área desplazable | `sliding-tabs.ts`, `.sliding-tabs-indicator`; no duplicar fondo activo |
 | Herramientas | Grupo 32 px, botones 28 px; sin blur | `Home*Section.svelte`, `MilestonesPanel.svelte`, `.glass-tool-group` |
-| New | Cápsula teñida con texto blanco | `.task-new.primary`; fuera del grupo de herramientas |
+| New | Cápsula teñida con texto blanco e ícono `+` de 16 px | `.task-new.primary`; fuera del grupo de herramientas |
 | Search lateral | 32 px, fuente 13 px, gap 8 px, padding horizontal 11 px | `.sidebar-search`, botón que abre Search |
 | Search en popups | Misma geometría/tipografía; input interior 30 px sin padding extra | `SearchDialog.svelte`, `SettingsDialog.svelte`; cierres 24 px |
 | ASCII/Photo | Marco de campo, botones 24 px, indicador nav | `HomePanel.svelte`, acción `slidingTabs`; visible en hover/foco |
 | People | Fondo sólido; radio 16 px galería/pipeline, 12 px lista | `HomePersonSection.svelte`, `.person-card` |
 | Relaciones | Cápsulas que admiten nombres largos; × de 26 px | `WorkspacePane.svelte`, `.relation-chip-wrap`; dos botones separados |
 | Tag/Type de Note | 32 px con un valor/vacío; marco de campo | `NotePageProperties.svelte`; Tag envuelve lista, Type conserva select HTML |
-| Cabecera de Note | Radio 18 px, gap 4 px, padding 2 px 5 px; sin blur | `WorkspacePane.svelte`, `.note-page-actions` |
+| Cabeceras de detalle | Radio 18 px, gap 4 px, padding 2 px 5 px; sin blur | `WorkspacePane.svelte`, `.note-page-actions`; Refresh, estado, guardado y menú |
 | Save/Retry | Cápsula teñida, mínimo 28 px en cabecera | `.glass-action.primary`; atajo blanco, estado por separado |
 | Menús/pickers | Radio 14 px, material overlay, blur local 10 px existente | `.glass-menu`; PageTools, PeekModeMenu, BlockEditor, IconPicker, RelationPicker |
 | Search popup | 780 × 620 px, limitado por viewport; radio 20 px | `.context-search.glass-popup`; filtro único 16 px |
 | Settings | 1000 × 640 px, limitado por viewport; radio 20 px | `.settings-dialog.glass-popup`; velo de lectura más denso en panel principal |
-| Guardia de guardado | Radio 20 px, material confirmación; botones mínimos 36 px | `.unsaved-changes-dialog.glass-popup`, `.glass-secondary`, `.glass-action.primary` |
+| Guardia y Move project | Radio 20 px, material confirmación; botones mínimos 36 px | `.glass-popup`, `.glass-secondary`, `.glass-action.primary` |
+| Calendario de cumpleaños | Grupo 32 px con controles interiores de 28 px; calendario sólido | `HomePersonSection.svelte`, `.birthday-tools` |
+| Campos cortos | 32 px; material de campo, controles HTML y etiquetas existentes | `.glass-field`, propiedades y relaciones compactas |
+| Bienvenida | Campo de path compacto; acciones mínimas de 36 px | `App.svelte`, `.glass-field`, `.glass-action`, `.glass-secondary` |
 
 Los límites responsivos y el layout exacto pertenecen al CSS vigente. A 420 px
 ninguna acción debe quedar fuera del viewport ni introducir scroll horizontal
@@ -375,7 +378,7 @@ después. No introduzcas otra capa blanca densa que vuelva a tapar el fondo.
 | Reposo | Reflejos estáticos; inactivos secundarios | Sin timers ni animación de gradientes |
 | Hover | Tinte/relieve algo más presente; primario algo más oscuro | Sin cambiar alto, padding o posición del control |
 | Presión | `--glass-pressed-shadow` interior | Sin desplazamiento artificial |
-| Foco de teclado | Anillo exterior con `--focus` | Visible aunque la tarjeta recorte la foto; no eliminar outline |
+| Foco | Con teclado, anillo exterior con `--focus`; con puntero, sin anillo de foco | La modalidad cambia al usar teclado o puntero; conservar selección, arrastre y foco accesible |
 | Disabled | Tinta atenuada según control; marco de campo conservado | El atributo disabled y la operación siguen protegidos |
 | Note bloqueada | Tag/Type con igual altura/material que al editar | Type y edición deshabilitados; destinos Tag/relaciones aún navegables |
 | Saved | Estado neutro, sin crear una acción Save ficticia | Guardado explícito existente |
@@ -423,18 +426,24 @@ animación perpetua de brillo o renderer para dar sensación de vidrio.
   base de al menos 7:1 contra blanco para dejar margen a los reflejos; el fondo
   compuesto se verifica a 4,5:1 en reposo y hover. Su fallback usa ese tinte
   sólido. La presión añade relieve interior; hover oscurece levemente el tinte.
-  Save/Retry y Save and continue reutilizan esta receta; los demás botones
-  primarios conservan `--accent`.
+  Save/Retry, confirmaciones, creación contextual y bienvenida reutilizan esta
+  receta donde se indica; el resto conserva su jerarquía existente.
 - Conservá la jerarquía, densidad y anchos de los componentes existentes.
   Los cambios de apariencia no deben mover el scroll, perder borradores ni
   alterar el orden de teclado.
+- En fechas compactas, dejá 8 px de separación lateral en Task y Project;
+  conservá el selector nativo. En relaciones, alineá cada etiqueta con el
+  texto de la primera acción o destino y dejá que las siguientes líneas envuelvan.
+  En grupos de acciones con un campo etiquetado, alineá los botones con el
+  control, no con el centro del conjunto de etiqueta y campo.
 - Los textos propios de la interfaz se escriben en inglés, según
   `docs/plan-noteka.md`. La documentación y los artefactos OpenSpec van en
   español con sus headings estructurales en inglés.
 - Las barras de vistas de las páginas de sección comparten el ritmo de Tags:
   sin margen superior, `padding-bottom: 13px` y `gap: 8px`. Las secciones sin
   bloque `.task-capture` reservan además `padding-top: 44px` para que la fila de
-  vistas quede a la misma altura que Tags y People. No agregues márgenes
+  vistas mantenga la alineación compartida, incluida People y Tags sin capturas
+  superiores duplicadas. No agregues márgenes
   verticales por sección; la subsección Projects y Milestones usan el ritmo, sin
   la reserva de 44px.
 - En Home, todas las barras de vistas comparten el espaciado de Tags:
@@ -443,7 +452,9 @@ animación perpetua de brillo o renderer para dar sensación de vidrio.
   después. No uses el `padding-top: 2px` base ni márgenes particulares.
 - Cada sección de listas expone una sola acción de creación contextual (`New`)
   en la barra de vistas; no dupliques botones de captura sobre la lista. Las
-  filas `New page`/`New task` dentro de grupos siguen siendo acciones contextuales.
+  acciones de creación `New` y `New ...` de las barras usan `+` de 16 px; las
+  filas `New page`/`New task` dentro de grupos siguen siendo acciones contextuales
+  discretas con el mismo icono de 16 px.
 - Las tareas de las listas de Home, Tasks y el detalle de Project usan un checkbox real
   (`role="checkbox"`, `aria-checked`) separado del botón que abre la tarea. El
   pendiente es un cuadrado vacío con borde neutro y el completado un check verde;
@@ -599,3 +610,6 @@ La ejecución nueva de build, atlas, tema y revisión documental se registra en
 | People, relaciones y Note | [Tarjetas, cápsulas y corrección Tag/Type](verification-people-and-note-glass.md) |
 | Settings y Search | [Transmisión, contraste y límites por motor](verification-settings-and-search-glass.md) |
 | Save y guardia | [Cancel/Discard/Save, errores y reintento](verification-save-guard-glass.md) |
+
+La [verificación de adopción ampliada](verification-complete-liquid-glass-adoption.md)
+registra los avances y controles pendientes de este cambio.

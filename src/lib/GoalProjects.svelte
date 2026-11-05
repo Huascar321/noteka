@@ -20,7 +20,7 @@
 </script>
 
 <section class="goal-projects" aria-label="Goal Projects">
-  <header><h2>Goal Projects</h2><button class="goal-project-add" type="button" disabled={disabled} aria-haspopup="dialog" onclick={event => onadd(event.currentTarget)}><AppIcon name="plus" size={15} />Add project</button></header>
+  <header><h2>Goal Projects</h2><button class="goal-project-add glass-secondary" type="button" disabled={disabled} aria-haspopup="dialog" onclick={event => onadd(event.currentTarget)}><AppIcon name="plus" size={15} />Add project</button></header>
   <div class="goal-projects-table-wrap">
     <table aria-label="Related projects">
       <thead><tr><th scope="col">Name</th><th scope="col">Status</th><th scope="col">Target Deadline</th></tr></thead>

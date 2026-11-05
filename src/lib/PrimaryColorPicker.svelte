@@ -74,7 +74,7 @@
         <label for="primary-lightness">Lightness <output for="primary-lightness">{Math.round(hsl.l)}%</output></label>
         <input id="primary-lightness" type="range" min="0" max="100" step="1" value={hsl.l} style:background={`linear-gradient(to right, #000, hsl(${hsl.h} ${hsl.s}% 50%), #fff)`} oninput={(event) => changeHsl({ l: Number(event.currentTarget.value) })} />
         <label for="primary-color-hex">Hex color</label>
-        <div class="primary-color-hex"><input id="primary-color-hex" type="text" bind:value={hexInput} maxlength="7" spellcheck="false" autocapitalize="off" autocomplete="off" aria-invalid={!!hexError} aria-describedby={hexError ? 'primary-color-hex-error' : undefined} oninput={() => hexError = ''} onkeydown={(event) => { if (event.key === 'Enter') { event.preventDefault(); applyHex(); } }} /><button onclick={applyHex}>Apply</button></div>
+        <div class="primary-color-hex"><input id="primary-color-hex" class="glass-field" type="text" bind:value={hexInput} maxlength="7" spellcheck="false" autocapitalize="off" autocomplete="off" aria-invalid={!!hexError} aria-describedby={hexError ? 'primary-color-hex-error' : undefined} oninput={() => hexError = ''} onkeydown={(event) => { if (event.key === 'Enter') { event.preventDefault(); applyHex(); } }} /><button class="glass-secondary" onclick={applyHex}>Apply</button></div>
         {#if hexError}<p class="settings-error" id="primary-color-hex-error" role="status">{hexError}</p>{/if}
       </div>
     </div>

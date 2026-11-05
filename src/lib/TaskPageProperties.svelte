@@ -24,8 +24,8 @@
   <div class="task-project-property" role="group" aria-label="Task project">
     <span class="task-property-label"><AppIcon name="arrow-up-right" size={14} />Project</span>
     <div class="task-project-value">
-      {#each projects as project (project.id)}<button class="task-detail-project" title={project.title} onclick={() => void onopen(project)}><AppIcon name={entityIcon(project.kind, project.title, project.payload)} color={entityIconColor(project.payload)} size={15} /><span>{project.title}</span></button>{/each}
-      {#if !projects.length}<span class="task-property-empty">{captureProject ? "Capture project · applied on save" : 'Empty'}</span>{/if}
+      <div class="compact-relation-list">{#each projects as project (project.id)}<button class="task-detail-project" title={project.title} onclick={() => void onopen(project)}><AppIcon name={entityIcon(project.kind, project.title, project.payload)} color={entityIconColor(project.payload)} size={15} /><span>{project.title}</span></button>{/each}
+      {#if !projects.length}<span class="task-property-empty">{captureProject ? "Capture project · applied on save" : 'Empty'}</span>{/if}</div>
       {#if canRelate}<button class="task-project-edit icon-button" aria-label="Edit task project" title="Edit relations" aria-haspopup="dialog" onclick={event => oneditrelations(event.currentTarget)}><AppIcon name="chevron-down" size={13} /></button>{/if}
     </div>
   </div>

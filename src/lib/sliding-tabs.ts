@@ -1,7 +1,7 @@
 let jellyModule: Promise<typeof import('./sidebar-icon-animation')> | undefined;
 
 export function slidingTabs(node: HTMLElement) {
-  const host = node.closest<HTMLElement>('.task-view-toolbar') ?? node;
+  const host = node.closest<HTMLElement>('.task-view-toolbar, .collection-tabs-host') ?? node;
   const indicator = document.createElement('span');
   indicator.className = 'sliding-tabs-indicator';
   indicator.setAttribute('aria-hidden', 'true');
