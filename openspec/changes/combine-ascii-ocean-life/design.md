@@ -2,30 +2,27 @@
 
 ## Context
 
-Ver propuesta. El checkpoint `2d43a66` conserva los tres renderizadores y la alternancia anterior. El compositor actual pinta una o dos escenas completas; eso impide intercalar individuos de distintas familias. El borde del lateral termina 3px fuera de un aside con overflow:auto.
+El checkpoint `2d43a66` conserva las tres escenas. `fd4f436` conserva la primera composición mixta y la corrección del lateral. El usuario descartó la portada mixta luego de verla y pide volver a la alternancia. Las tareas/evidencias anteriores documentan ese experimento, no una aceptación vigente de su apariencia.
 
 ## Goals / Non-Goals
 
-**Goals:** escena única con profundidad entre especies, tamaños coherentes y coste acotado; lateral ajustable sin scroll horizontal.
+**Goals:** recuperar la portada anterior de forma exacta, preservar el lateral sin scrollbar horizontal y conservar los demás avances.
 
-**Non-Goals:** colisiones físicas, interacción con animales, fuentes/remotos, preferencias nuevas o cambios de contenido/Rust/SQLite. Se prueban cambios en navegador aislado, sin pantalla personal.
+**Non-Goals:** nuevos modos, ajustes de geometría, cambios de contenido o reinicios forzados de la sesión.
 
 ## Decisions
 
-- Mantener reloj y ciclo de vida de AsciiShark. Una semilla por instancia configura el elenco y sus fases; no hay temporizador de alternancia ni sorteos por frame. El helper anterior de selección queda disponible como referencia, fuera de la ruta activa.
-- Calcular poses puras y una lista ordenada de mayor a menor profundidad entre todas las familias. Profundidad controla escala y opacidad/contraste; near/far no se asigna a una especie entera. Población acotada y menor en 420px, con rutas repartidas por altura/ancho.
-- Exponer dibujo ambiental y por individuo del renderer de tiburones, conservando su API anterior y geometría/nado. Koi/medusas comparten atlas y rasterizan solamente la región de cada actor en una superficie reutilizada; el compositor pinta cada individuo en el orden global. Evitar ordenar tres canvases completos porque dejaría especies enteras siempre delante.
-- Conservar repintado sincrónico durante resize y pausas/reducido; limitar DPR a2. Medir el coste combinado, también en claro/oscuro, antes de aceptar el experimento.
-- Separar el cuerpo scrolleable del menú y su borde: aside contiene un cuerpo con overflow-y:auto y el handle como hermano fijo al contorno interior. Así el cuerpo no tiene overflow-x y el borde tampoco se desplaza al hacer scroll vertical. Los controles se ajustan a su ancho mínimo, con foco visible y etiqueta truncada cuando hace falta.
-- El cambio depende del delta anterior de escenas: al sincronizar, aplicar primero `add-random-ascii-cover-scenes` y después este. Se reemplaza Portada local y se retira el requisito Variantes ASCII aleatorias y locales agregado por el anterior, para que la spec final no exija también la alternancia.
+- Restaurar AsciiCoverRenderer, AsciiCreaturesRenderer y AsciiOceanRenderer desde `2d43a66`. Selector, geometría, AsciiShark y OceanClock ya coinciden con ese checkpoint. Verificar equivalencia de archivos y transiciones, sin rehacer las escenas.
+- Retirar mixed-ocean-scene y su prueba específica al quedar fuera de uso. El historial del primer experimento sigue disponible en `fd4f436`; ADR0053 pasa a descartada y vuelve a regir ADR0052.
+- Conservar App/style del arreglo del lateral: cuerpo con overflow-y:auto separado del handle interior. No se revierte el commit completo ni los anchos recordados, peeks, editor o indicador.
+- El delta final sólo modifica Lateral plegable sin reconstruir pestañas. Los requisitos de portada pertenecen a `add-random-ascii-cover-scenes` y se conservan; se elimina de este delta la sustitución por composición mixta.
 
 ## Risks / Trade-offs
 
-- [Saturación visual] → tamaños/opacidades escalonados y menos individuos en ancho estrecho; revisión de capturas.
-- [Coste de ordenar/dibujar más actores] → atlas/superficies reutilizados y lectura de regiones acotadas; medición separada de120Hz físicos.
-- [Clipping del borde/foco] → hit area interior, teclado y prueba de arrastre tras corregir overflow.
-- [Regresión del océano anterior] → checkpoint recuperable, API original conservada y pruebas de geometría/reloj.
+- [Deshacer mejoras ajenas al ASCII] → restauración por archivos, comparación de App/style con `fd4f436`.
+- [Bitmap vacío o transición perdida] → pruebas existentes de selector/reloj, matriz por tema/ancho y muestreo del fundido.
+- [Documentación que aún exige mezcla] → guías actuales de tres escenas; anteriores como evidencia histórica.
 
 ## Migration Plan
 
-Sin migración ni formato nuevo. La rama `codex/combined-ascii-ocean` parte del checkpoint local; se recuperan los archivos ASCII anteriores desde `2d43a66` si se rechaza la prueba. No se publica ni reinicia la aplicación nativa.
+Sin migración, datos o preferencia nuevos. La instancia nativa con Vite recibe la actualización sin cerrar borradores. Deltas pendientes de sincronización/archivo; no publicar ni modificar las specs principales como parte de esta restitución.

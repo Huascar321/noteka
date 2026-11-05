@@ -25,17 +25,24 @@ foco inicial y las operaciones se conservan.
 
 ### Requirement: Herramientas de Note en la barra superior
 
-El detalle de Note normal SHALL ubicar Exportar, Recursos externos y Adjuntos
-en la barra superior junto al estado de guardado, sin repetirlos debajo del
-contenido. SHALL abrir paneles acotados al viewport desde esos iconos, con
-tooltip, teclado, Escape y retorno de foco. MUST conservar disponibilidad,
+El detalle de Note normal SHALL agrupar Export, External resources, Attachments
+y Archive/Restore en un único botón `…` de la barra superior junto al estado de
+guardado, sin repetirlos fuera del menú. Cada opción SHALL mostrar icono y texto,
+conservar disponibilidad y permitir recorrer acciones habilitadas con flechas,
+Home/End, Enter y Escape. SHALL abrir los paneles de herramientas acotados al
+viewport desde el menú, con cierre exterior/Escape y retorno de foco al botón.
+MUST conservar disponibilidad,
 campos y resultados al cerrar, sin ejecutar acciones por abrir/cerrar ni
-alterar el contenido o la ubicación de herramientas en otros tipos de detalle.
+alterar el contenido. El seguimiento `unify-page-actions-menu` lleva la misma ubicación a otros tipos de detalle.
 
 #### Scenario: Ubicación y apertura
-- **WHEN** se abre una Note y se pulsa uno de los tres iconos de la barra superior
-- **THEN** su panel aparece desde la cabecera y no al pie; sólo la acción explícita dentro del panel exporta, vincula o procesa
+- **WHEN** se abre una Note y se expande el botón `…` de la cabecera
+- **THEN** Export, External resources, Attachments y Archive/Restore aparecen como filas con icono/texto; seleccionar una herramienta abre su panel y sólo una acción explícita dentro del panel exporta, vincula o procesa
 
 #### Scenario: Cierre y recuperación del panel
 - **WHEN** se escribe un destino de exportación, se cierra con Escape o clic exterior y se reabre
-- **THEN** el campo se conserva, Escape devuelve foco al disparador y las condiciones de guardado siguen aplicándose en ambos temas/420 px
+- **THEN** el campo se conserva, Escape devuelve foco a `…` y las condiciones de guardado siguen aplicándose en ambos temas/420 px
+
+#### Scenario: Teclado y acciones de archivo
+- **WHEN** se abre el menú con teclado, se recorren sus opciones y se elige Archive o Restore con un borrador pendiente o una entidad guardada
+- **THEN** flechas/Home/End omiten acciones deshabilitadas, Escape cierra y retorna el foco; archivar/restaurar conserva la misma guardia Guardar/Descartar/Cancelar y revisión esperada, y abrir/cerrar el menú no muta contenido ni ejecuta acciones

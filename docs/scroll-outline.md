@@ -6,6 +6,9 @@ scroll local.
 
 Ajuste visual del 26/10: marcas de 18/16/14/12px según nivel, grosor de 2px y
 separación de 14px con mouse/trackpad. El rail mide 24px y la activa no usa brillo.
+En Home, el contenido reserva 36 px en el borde final para conservar separación
+con el rail y aprovechar más ancho junto al Side peek. En un panel de Home de
+hasta 300 px, títulos y acciones se adaptan al ancho disponible.
 Las áreas táctiles mantienen 24px.
 
 Home representa **Tasks, Notes, Projects, Tags, Goals y People**. Note representa

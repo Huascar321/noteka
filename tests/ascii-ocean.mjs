@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { OceanClock } from '../src/lib/ocean-clock.ts';
-import { createSharkMesh, createFishMesh, compileSharkMesh, projectSharkMesh, projectShark, sharkPoses, oceanPoses } from '../src/lib/shark-scene.ts';
+import { createSharkMesh, createFishMesh, compileSharkMesh, projectSharkMesh, projectShark, sharkPoses, oceanPoses, OCEAN_ACTORS } from '../src/lib/shark-scene.ts';
 
 test('active time stays consistent from 30 to 240Hz while paint is capped at 120',()=>{
   for(const hz of [30,60,90,120,144,240]){
@@ -63,4 +63,16 @@ test('different fish gaits preserve steady heads with independent tail cadence',
   assert(Math.abs(advances[0]-advances[2])>.1);
   assert(before[2].tailAmplitude<before[3].tailAmplitude);
   for(const pose of after)assert(Object.values(pose).every(Number.isFinite));
+});
+test('third shark stays smaller, deeper and quieter than both foreground sharks',()=>{
+  const sharks=OCEAN_ACTORS.flatMap((actor,i)=>actor.kind==='shark'?[i]:[]);
+  assert.equal(sharks.length,3);
+  for(const [width,height] of [[1000,288],[420,230]])for(let seconds=0;seconds<=180;seconds+=.5){
+    const poses=oceanPoses(width,height,seconds),background=poses[sharks[2]];
+    assert(Object.values(background).every(Number.isFinite));
+    assert(sharks.slice(0,2).every(i=>background.size<poses[i].size&&background.opacity<poses[i].opacity));
+    assert(poses.every((pose,i)=>i===sharks[2]||background.depth>pose.depth));
+    const next=oceanPoses(width,height,seconds+1/120)[sharks[2]];
+    assert(Math.hypot(next.x-background.x,next.y-background.y)<width*.002);
+  }
 });

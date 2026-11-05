@@ -95,7 +95,7 @@ window.notekaHomeSmoke = async (h, stage) => {
   const note = await create('note', 'Home nota original');
   await link(task, project, 'project'); await link(task, other, 'project'); await link(note, tag, 'tag'); await link(note, person, 'person'); await link(person, tag, 'tag');
   await refreshHome(); await wait(settled, 'Home CLI');
-  assert(rowIds('task').includes(task.id) && !rowIds('task').includes(planned.id) && (await control('workflow', { view: 'my_day' })).items.some(e => e.id === planned.id), 'Today y My Day distintos: vencimiento versus planificación');
+  assert(rowIds('task').includes(task.id) && !rowIds('task').includes(planned.id) && (await control('workflow', { view: 'my_day' })).items.some(e => e.id === planned.id), 'Today agrupa proyectos en curso y My Day conserva planificación');
   assert(panel('project').querySelector(`[data-entity-id="${empty.id}"]`).textContent.includes('Sin tareas') && panel('project').querySelector(`[data-entity-id="${project.id}"]`).textContent.includes('0%'), 'Home diferencia sin tareas de progreso cero real');
   await view('task','All'); assert(panel('task').querySelectorAll(`[data-entity-id="${task.id}"]`).length === 2 && panel('task').textContent.includes('elementos únicos'), 'Mismo ID en dos grupos, cantidades de apariciones explícitas');
   const group = panel('task').querySelector(`[data-group-key="project:${project.id}"]`); group.open = false;
@@ -110,7 +110,7 @@ window.notekaHomeSmoke = async (h, stage) => {
   assert(document.querySelector('.relations').textContent.includes(project.title) && captured.payload.due_date == null && captured.payload.planned_date == null, 'Captura Home única con relación atómica y sin fechas ocultas');
   await within(document.querySelector('.workspace-tab-panel.active .page-breadcrumb'), 'Home'); await wait(settled, 'retorno Home'); await within(panel('task'), "Create in Tasks");
   assert(document.activeElement.getAttribute('aria-label') === 'Título de la entidad' && !document.querySelector("[aria-label=\"Due date\"]").value && !document.querySelector("[aria-label=\"Planned date\"]").value, 'Today captura con foco real y fechas vacías');
-  fill("[aria-label=\"Entity title\"]",'Home commit lectura fallida'); await control('home_read', { view: 'tasks_today', failure: true });
+  fill("[aria-label=\"Entity title\"]",'Home commit lectura fallida'); await control('home_read', { view: 'tasks_projects_in_progress', failure: true });
   await within(document.querySelector('.workspace-tab-panel.active .page-breadcrumb'), 'Home'); await click("Save and continue"); await wait(() => panel('task')?.querySelector('.error') && !document.querySelector('dialog'), 'commit y fallo Home');
   assert((await allEntities()).filter(e => e.title === 'Home commit lectura fallida').length === 1 && !panel('task').querySelector('[data-entity-id]') && !document.querySelector('.title-input'), 'Commit antes del fallo de lectura limpia buffer y no ofrece repetir creación');
   assert(ready('note') && ready('project'), 'Fallo de Tasks no borra secciones independientes'); await control('home_read', {}); await within(panel('task'),"Retry Tasks"); await wait(() => ready('task'),'reintento Home');
@@ -137,10 +137,11 @@ window.notekaHomeSmoke = async (h, stage) => {
   await control('cli_update',{id:note.id,expected_revision:(await control('get',{id:note.id})).revision,title:note.title});
   window.dispatchEvent(new Event('focus')); await wait(() => panel('tag')?.querySelector(`[data-entity-id="${tag.id}"]`)?.textContent.includes('1 notas'),'activación actualiza Home');
   assert((await control('get',{id:tag.id})).revision===1,'Refresh de activación no incrementa revisión del tag');
-  await control('home_read',{view:'tasks_today',delay:700}); await within(panel('task'),"Refresh Tasks"); await view('task','All'); await delay(); await delay();
+  await control('home_read',{view:'tasks_projects_in_progress',delay:700}); await within(panel('task'),"Refresh Tasks"); await view('task','All'); await delay(); await delay();
   assert(panel('task').querySelector('[aria-pressed="true"]').textContent==='All' && panel('task').querySelector('.home-group'),'Respuesta retrasada Today no publica sobre All'); await control('home_read',{});
   await control('home_seed',{date:day}); await refreshHome(); await wait(settled,'corpus Home 51');
-  for (const [kind,label,v] of [['task','Today','tasks_today'],['task','Inbox','tasks_inbox'],['task','All','tasks_all'],['task','Done','tasks_done'],['note','Notes','notes_all'],['note','Inbox','notes_inbox'],['project','Active','projects_active'],['project','Planned','projects_planned'],['project','Board','projects_board'],['tag','Recent','tags_recent'],['tag','A–Z','tags_alphabetical'],['tag','Types','tags_types'],['person','Contacts','people_contacts'],['person','New','people_new'],['person','Updated','people_updated']]) {
+  assert(![...panel('task').querySelectorAll('.home-tabs button')].some(b => b.textContent.trim() === 'Active Projects (In Progress)'), 'Sin tab duplicada Active Projects (In Progress)');
+  for (const [kind,label,v] of [['task','Today','tasks_projects_in_progress'],['task','All Active Projects','tasks_active_projects'],['task','Inbox','tasks_inbox'],['task','All','tasks_all'],['task','Done','tasks_done'],['note','Notes','notes_all'],['note','Inbox','notes_inbox'],['project','Active','projects_active'],['project','Planned','projects_planned'],['project','Board','projects_board'],['tag','Recent','tags_recent'],['tag','A–Z','tags_alphabetical'],['tag','Types','tags_types'],['person','Contacts','people_contacts'],['person','New','people_new'],['person','Updated','people_updated']]) {
     if(label==='Done') panel('task').querySelector('.home-tabs details').open=true;
     await view(kind,label);const expected=await control('home',{view:v});const first=rowIds(kind);
     assert(first.length===50 && first.every(id=>expected.items.some(i=>i.entity.id===id)),`${v}: primera página UI/CLI acotada y mismos IDs`);

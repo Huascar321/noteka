@@ -1,7 +1,9 @@
 # Verificación de anchos y transiciones de paneles
 
+Seguimiento 27/10/2026: el umbral de exclusión cambió de 35% a 45%. El build y las cinco pruebas de `tests/panel-widths.mjs` aprobaron. `scripts/headless-sidebar-threshold-smoke.mjs` aprobó 12 comprobaciones con Chromium y 12 con WebKit: coexistencia a 648/1440 px, exclusión a 649 px, alternancia y conservación del borrador. El resultado anterior de 504/505 px es histórico; los máximos de panel siguen iguales. Sin nueva aceptación de ventana nativa.
+
 Fecha: 26/10/2026. Cambio: `resize-workspace-panels`. Implementado y verificado
-localmente; deltas pendientes de sincronización/archivo.
+localmente; cambio sincronizado y archivado el 27/10/2026.
 
 ## Method
 

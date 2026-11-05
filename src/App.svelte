@@ -13,7 +13,8 @@
   import { sidebarIconMotion } from './lib/sidebar-icon-motion';
   import { PRIMARY_SECTIONS, targetTitle, targetIcon, type NavigationTarget, type PaneState, type Section, type WorkspacePaneApi } from './lib/navigation';
   import { readPrimaryColor, savePrimaryColor, primaryPalette, normalizeColor } from './lib/primary-color';
-  import { readTheme, saveTheme, type Theme } from './lib/theme';
+  import { readTheme, resolveTheme, saveTheme, type ThemePreference } from './lib/theme';
+  import { installSmoothWheel, readSmoothWheel, saveSmoothWheel } from './lib/smooth-wheel';
   import { readPeekMode, savePeekMode, type PeekMode, type PeekPresentation } from './lib/peek-mode';
   import { readPanelWidths, savePanelWidths, panelLimits, effectivePanelWidth, clampPanelWidth, sidePeekExcludesSidebar, PANEL_MOTION_MS, type PanelKind, type PanelWidths } from './lib/panel-widths';
   import type { WorkspaceInfo } from './lib/contracts.generated';
@@ -66,15 +67,24 @@
     } else if (!cancelled) panelWidthError = savePanelWidths(preferredWidths, () => localStorage);
     resizing = null; resizeSnapshot = null;
   }
-  let theme = $state<Theme>(readTheme(() => localStorage));
+  let theme = $state<ThemePreference>(readTheme(() => localStorage));
+  const systemThemeMedia = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  let systemDark = $state(systemThemeMedia?.matches ?? true);
+  const effectiveTheme = $derived(resolveTheme(theme, systemDark));
   let themeError = $state('');
+  let smoothWheel = $state(readSmoothWheel(() => localStorage));
+  let smoothWheelError = $state('');
+  const motionMedia = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let reduceMotion = $state(motionMedia.matches);
+  $effect(() => { if (smoothWheel && !reduceMotion) return installSmoothWheel(document); });
+  function changeSmoothWheel(enabled: boolean) { smoothWheel = enabled; smoothWheelError = saveSmoothWheel(enabled, () => localStorage); }
   let primaryColor = $state(readPrimaryColor(() => localStorage));
   let primaryColorError = $state('');
   let defaultPeekMode = $state<PeekMode>(readPeekMode(() => localStorage));
   let peekPreferenceError = $state('');
   function changeDefaultPeekMode(mode: PeekMode) { defaultPeekMode = mode; peekPreferenceError = savePeekMode(mode, () => localStorage); }
   $effect(() => {
-    for (const [name, value] of Object.entries(primaryPalette(primaryColor, theme))) document.documentElement.style.setProperty(name, value);
+    for (const [name, value] of Object.entries(primaryPalette(primaryColor, effectiveTheme))) document.documentElement.style.setProperty(name, value);
   });
   function changePrimaryColor(next: string) {
     const valid = normalizeColor(next);
@@ -82,6 +92,7 @@
     primaryColor = valid; primaryColorError = savePrimaryColor(valid, () => localStorage);
   }
   const activeTab = $derived(tabs.find(tab => tab.id === activeId));
+  const activeSectionIndex = $derived(PRIMARY_SECTIONS.findIndex(section => section.id === activeTab?.state.section));
   const rootTabs = $derived(tabs.filter(tab => !tab.ownerId));
   const activePeek = $derived(tabs.find(tab => tab.ownerId === activeId));
   function peekVisible(tab?: Tab): boolean { return !!tab && !tab.closing && (tab.presentation !== 'side' || !tab.sideHidden); }
@@ -97,12 +108,12 @@
     if (id) void tick().then(() => document.getElementById(`tab-${id}`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' }));
   });
   let pendingWrite = Promise.resolve();
-  $effect(() => { document.documentElement.dataset.theme = theme; });
+  $effect(() => { document.documentElement.dataset.theme = effectiveTheme; });
   $effect(() => {
     const pending = protectedState;
     pendingWrite = pendingWrite.then(() => setPending(pending)).catch(() => { error = "Close protection could not be enabled. Keep this window open while changes are pending."; });
   });
-  function changeTheme(next: Theme) { theme = next; themeError = saveTheme(next, () => localStorage); }
+  function changeTheme(next: ThemePreference) { theme = next; themeError = saveTheme(next, () => localStorage); }
   function updateTab(id: string, state: PaneState) {
     const tab = tabs.find(tab => tab.id === id);
     if (tab && JSON.stringify(tab.state) !== JSON.stringify(state)) tab.state = state;
@@ -297,7 +308,7 @@
       return;
     }
     const command = event.metaKey || event.ctrlKey;
-    if (event.key === 'Escape' && visiblePeek && !searchMode && !document.querySelector('dialog[open], .peek-mode-menu, .page-tool-panel:not([hidden])')) {
+    if (event.key === 'Escape' && visiblePeek && !searchMode && !document.querySelector('dialog[open], .peek-mode-menu, .page-tool-panel:not([hidden]), .relation-picker')) {
       // Let editor menus consume Escape before closing their containing peek.
       const id = visiblePeek.id; queueMicrotask(() => { if (!event.defaultPrevented && !event.isComposing) void closePeek(id); });
       return;
@@ -325,6 +336,12 @@
   }
   function beforeUnload(event: BeforeUnloadEvent) { if (protectedState) { event.preventDefault(); event.returnValue = ''; } }
   onMount(() => {
+    const updateMotion = () => { reduceMotion = motionMedia.matches; };
+    motionMedia.addEventListener('change', updateMotion);
+    updateMotion();
+    const updateSystemTheme = () => { systemDark = systemThemeMedia?.matches ?? true; };
+    systemThemeMedia?.addEventListener('change', updateSystemTheme);
+    updateSystemTheme();
     const media = window.matchMedia('(max-width: 760px)');
     const resizeSidebar = () => { compactSidebar = media.matches; sidebarOpen = false; };
     media.addEventListener('change', resizeSidebar);
@@ -332,7 +349,7 @@
     window.addEventListener('resize', resized);
     let disposed = false; let unlisten: (() => void) | undefined;
     if (isTauri()) void listen('noteka-close-requested', () => { void leaveWorkspace(true); }).then(fn => { if (disposed) fn(); else unlisten = fn; });
-    return () => { disposed = true; unlisten?.(); media.removeEventListener('change', resizeSidebar); window.removeEventListener('resize', resized); };
+    return () => { disposed = true; unlisten?.(); motionMedia.removeEventListener('change', updateMotion); systemThemeMedia?.removeEventListener('change', updateSystemTheme); media.removeEventListener('change', resizeSidebar); window.removeEventListener('resize', resized); };
   });
 </script>
 
@@ -361,7 +378,7 @@
       <div class="workspace-brand"><span class="tiny-mark">n.</span><strong>Noteka</strong></div>
       <div class="sidebar-tools"><button use:sidebarIconMotion class="sidebar-search" aria-label="Search" title="Search (⌘/Ctrl K)" disabled={blocked || activeTab?.state.busy} onclick={() => openSearch('current')}><AppIcon name="search" size={15} /><span>Search</span><kbd>⌘ K</kbd></button><button use:sidebarIconMotion class="icon-button collections-shortcut" aria-label="Collections" title="Collections" disabled={blocked || activeTab?.state.busy} onclick={() => void navigate('collections')}><AppIcon name="collections" size={18} /></button></div>
       <p class="sidebar-caption">WORKSPACE</p>
-      <nav aria-label="Sections">{#each PRIMARY_SECTIONS as section}<button use:sidebarIconMotion class:active={activeTab?.state.section === section.id} aria-current={activeTab?.state.section === section.id ? 'page' : undefined} title={section.label} disabled={blocked || activeTab?.state.busy} onclick={() => void navigate(section.id)}><span class="nav-icon" aria-hidden="true"><SectionIcon section={section.id} size={18} /></span><span class="sidebar-nav-label">{section.label}</span></button>{/each}</nav>
+      <nav aria-label="Sections">{#if activeSectionIndex >= 0}<span class="sidebar-nav-indicator" style={`--active-index:${activeSectionIndex}`} aria-hidden="true"></span>{/if}{#each PRIMARY_SECTIONS as section}<button use:sidebarIconMotion class:active={activeTab?.state.section === section.id} aria-current={activeTab?.state.section === section.id ? 'page' : undefined} title={section.label} disabled={blocked || activeTab?.state.busy} onclick={() => void navigate(section.id)}><span class="nav-icon" aria-hidden="true"><SectionIcon section={section.id} size={18} /></span><span class="sidebar-nav-label">{section.label}</span></button>{/each}</nav>
       <div class="sidebar-bottom"><button class="sidebar-settings" aria-haspopup="dialog" aria-controls={settingsOpen ? 'settings-dialog' : undefined} aria-expanded={settingsOpen} disabled={blocked} onclick={openSettings}><AppIcon name="settings" size={18} /><span>Settings</span></button></div>
       </div>
       <PanelResizeHandle label="Resize sidebar" controls="workspace-sidebar" edge="right" width={sidebarWidth} min={sidebarLimits.min} max={sidebarLimits.max} disabled={!sidebarVisible || blocked || searchMode !== null || settingsOpen} onstart={() => beginResize('sidebar')} onresize={width => resizePanel('sidebar', width)} onend={endResize} />
@@ -377,7 +394,7 @@
           {@const visiblyShown = shown && !(tab.ownerId && tab.presentation === 'side' && (tab.sideHidden || tab.closing))}
           {@const covered = !tab.ownerId && activePeek?.presentation === 'full'}
           <div class="workspace-tab-panel" class:active={tab.id === activeId} class:peek={!!tab.ownerId} class:peek-side={!!tab.ownerId && tab.presentation === 'side'} class:peek-center={!!tab.ownerId && tab.presentation === 'center'} class:peek-full={!!tab.ownerId && tab.presentation === 'full'} class:peek-hidden={!!tab.ownerId && tab.presentation === 'side' && !!(tab.sideHidden || tab.closing)} class:peek-narrow={sidePeekWidth < 480} id={`pane-${tab.id}`} role={tab.ownerId ? tab.presentation === 'center' ? 'dialog' : 'region' : 'tabpanel'} aria-modal={tab.ownerId && tab.presentation === 'center' ? true : undefined} aria-label={tab.ownerId ? `Details: ${tab.state.title}` : undefined} aria-labelledby={!tab.ownerId ? `tab-${tab.id}` : undefined} aria-hidden={(!visiblyShown || covered) && !tab.state.guarded ? true : undefined} hidden={!shown} inert={!visiblyShown || (!tab.ownerId && !tab.state.guarded && (covered || activePeek?.presentation === 'center'))} onfocusin={() => { focusedId = tab.id; }} onpointerdown={() => { focusedId = tab.id; }}>
-            <WorkspacePane bind:this={paneRefs[tab.id]} {workspace} paneId={tab.id} active={visiblyShown && focusedId === tab.id} visible={visiblyShown && !covered} sessionActive={shown} blocked={searchMode !== null || preparing || settingsOpen} initialTarget={tab.initialTarget} onstate={updateTab} onrequestdetail={!tab.ownerId ? target => openDetail(tab.id, target) : undefined} onnavigatesection={tab.ownerId ? async section => { await navigate(section); } : undefined} peekMode={tab.presentation ?? 'full'} {defaultPeekMode} {peekPreferenceError} onpresent={mode => presentPane(tab.id, mode)} ondefaultpeek={changeDefaultPeekMode} onclosepeek={tab.ownerId ? () => { void closePeek(tab.id); } : undefined} />
+            <WorkspacePane bind:this={paneRefs[tab.id]} {workspace} paneId={tab.id} active={visiblyShown && focusedId === tab.id} visible={visiblyShown && !covered} sessionActive={shown} animateAlongsideSidePeek={!tab.ownerId && tab.id === activeId && sideVisible} blocked={searchMode !== null || preparing || settingsOpen} searchOpen={searchMode !== null} initialTarget={tab.initialTarget} onstate={updateTab} onrequestdetail={!tab.ownerId ? target => openDetail(tab.id, target) : undefined} onnavigatesection={tab.ownerId ? async section => { await navigate(section); } : undefined} peekMode={tab.presentation ?? 'full'} {defaultPeekMode} {peekPreferenceError} onpresent={mode => presentPane(tab.id, mode)} ondefaultpeek={changeDefaultPeekMode} onclosepeek={tab.ownerId ? () => { void closePeek(tab.id); } : undefined} />
             {#if tab.ownerId && tab.presentation === 'side'}<PanelResizeHandle label="Resize side peek" controls={`pane-${tab.id}`} edge="left" width={sidePeekWidth} min={sidePeekLimits.min} max={sidePeekLimits.max} disabled={!visiblyShown || blocked || searchMode !== null || settingsOpen} onstart={() => beginResize('sidePeek')} onresize={width => resizePanel('sidePeek', width)} onend={endResize} />{/if}
           </div>
         {/each}
@@ -385,6 +402,6 @@
     </section>
   </div>
   {#if searchMode}<SearchDialog workspace={workspace.path} mode={searchMode} onclose={() => { searchMode = null; }} onchoose={chooseTarget} />{/if}
-  {#if settingsOpen}<SettingsDialog {primaryColor} {primaryColorError} onprimarycolorchange={changePrimaryColor} workspace={workspace.path} {theme} {themeError} {blocked} onthemechange={changeTheme} onworkspacechange={() => { void leaveWorkspace(); }} onclose={() => { settingsOpen = false; }} />{/if}
+  {#if settingsOpen}<SettingsDialog {primaryColor} {primaryColorError} onprimarycolorchange={changePrimaryColor} workspace={workspace.path} {theme} {themeError} {smoothWheel} {smoothWheelError} onsmoothwheelchange={changeSmoothWheel} {blocked} onthemechange={changeTheme} onworkspacechange={() => { void leaveWorkspace(); }} onclose={() => { settingsOpen = false; }} />{/if}
 {/if}
 </div>

@@ -2,11 +2,10 @@
   import AppIcon from './AppIcon.svelte';
   import type { HomeItem } from './contracts.generated';
   let { item, onopen, movable = false, moving = false, dragging = false, dropBefore = false, onmove,
-    onstartdrag, onenddrag, onover, ondropcard }: {
+    onpointerstart, onclickcapture }: {
     item: HomeItem; onopen: (id: string) => Promise<void>; movable?: boolean; moving?: boolean;
     dragging?: boolean; dropBefore?: boolean; onmove?: () => void;
-    onstartdrag?: (event: DragEvent) => void; onenddrag?: () => void;
-    onover?: (event: DragEvent) => void; ondropcard?: (event: DragEvent) => void;
+    onpointerstart?: (event: PointerEvent) => void; onclickcapture?: (event: MouseEvent) => void;
   } = $props();
   const summary = $derived(item.summary?.kind === 'project' ? item.summary : undefined);
   const progress = $derived(summary?.progress_tenths);
@@ -14,9 +13,9 @@
   function percentage(tenths: number) { return tenths % 10 === 0 ? `${tenths / 10}%` : `${(tenths / 10).toFixed(1)}%`; }
 </script>
 
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions (Native drag/drop has a keyboard Move button.) -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions (Pointer movement has a keyboard Move button.) -->
 <article class="project-card" class:project-dragging={dragging} class:project-drop-before={dropBefore} data-project-id={item.entity.id}
-  draggable={movable && !moving} ondragstart={onstartdrag} ondragend={onenddrag} ondragover={onover} ondrop={ondropcard}>
+  class:project-movable={movable && !moving} onpointerdown={onpointerstart} ondragstart={(event) => { if (movable) event.preventDefault(); }} {onclickcapture}>
   {#if movable}<button class="project-move-trigger" aria-label={`Move ${item.entity.title}`} title="Move project" disabled={moving} onclick={() => onmove?.()}><AppIcon name="grip" size={15} /></button>{/if}
   <button class="project-card-open" disabled={moving} onclick={() => void onopen(item.entity.id)} aria-label={`Open ${item.entity.title}`}>
     <span class="project-card-title"><AppIcon name={item.entity.icon ?? 'project'} color={item.entity.icon_color ?? undefined} size={19} /><span>{item.entity.title}</span></span>

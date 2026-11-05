@@ -1,31 +1,63 @@
 <script lang="ts">
   import AppIcon from './AppIcon.svelte';
+  import ProjectTaskRow from './ProjectTaskRow.svelte';
+  import ProjectTaskBoard from './ProjectTaskBoard.svelte';
   import { entityIcon, entityIconColor } from './entity-appearance';
+  import { slidingTabs } from './sliding-tabs';
+  import { updateTaskState, taskStateOf, type TaskState } from './task-board';
   import type { Entity } from './contracts.generated';
-  let { items, hasMore = false, busy = false, error = '', createDisabled = false, onopen, oncreate, onmore, onretry }: {
-    items: Entity[]; hasMore?: boolean; busy?: boolean; error?: string; createDisabled?: boolean;
-    onopen: (entity: Entity) => Promise<void>; oncreate: (kind: 'task' | 'note') => void;
-    onmore: () => void; onretry: () => void;
+
+  let { items, workspace, hasMore = false, busy = false, stale = false, notice = '', error = '', createDisabled = false, onopen, oncreate, onchanged, onmore, onretry }: {
+    items: Entity[]; workspace: string; hasMore?: boolean; busy?: boolean; stale?: boolean; notice?: string; error?: string; createDisabled?: boolean;
+    onopen: (entity: Entity) => Promise<void>; oncreate: (kind: 'task' | 'note', seed?: Record<string, unknown>) => void;
+    onchanged: () => Promise<void>; onmore: () => void; onretry: () => void;
   } = $props();
   const tasks = $derived(items.filter(item => item.kind === 'task'));
   const notes = $derived(items.filter(item => item.kind === 'note' && !(item.payload as Record<string, unknown>)?.goal && !(item.payload as Record<string, unknown>)?.milestone));
   const taskGroups = $derived([
-    { key: 'todo', label: 'To Do', items: tasks.filter(item => (item.payload as Record<string, unknown>)?.state === 'todo') },
-    { key: 'done', label: 'Done', items: tasks.filter(item => (item.payload as Record<string, unknown>)?.state === 'done') },
-    { key: 'unknown', label: "Status unavailable", items: tasks.filter(item => !['todo','done'].includes(String((item.payload as Record<string, unknown>)?.state ?? ''))) },
+    { key: 'todo', label: 'To Do', items: tasks.filter(item => taskStateOf(item) === 'todo') },
+    { key: 'doing', label: 'Doing', items: tasks.filter(item => taskStateOf(item) === 'doing') },
+    { key: 'done', label: 'Done', items: tasks.filter(item => taskStateOf(item) === 'done') },
+    { key: 'unknown', label: 'Status unavailable', items: tasks.filter(item => taskStateOf(item) === null) },
   ]);
   const types: Record<string,string> = { reference:'Reference', plan:'Plan', web_clip:'Web Clip', voice:'Voice', journal:'Journal', meeting:'Meeting', topic_research:'Topic Research', idea:'Idea', lecture:'Lecture' };
+  let taskView = $state<'list' | 'board'>('list');
+  let movingId = $state('');
+  let taskError = $state('');
+
+  async function applyTaskState(task: Entity, state: TaskState) {
+    if (!workspace || movingId) return;
+    movingId = task.id; taskError = '';
+    try {
+      if (await updateTaskState(workspace, task, state)) await onchanged();
+    } catch (e) {
+      taskError = e instanceof Error ? e.message : 'Could not update the task status.';
+      try { await onchanged(); } catch {}
+    } finally { movingId = ''; }
+  }
+  function createTask(state?: TaskState) { oncreate('task', state ? { state } : undefined); }
 </script>
 
 <div class="project-contents" aria-busy={busy}>
   {#if busy}<p role="status" class="project-context-message">Loading relations…</p>{/if}
   {#if error}<p role="alert" class="error">{error}</p><button onclick={onretry}>Retry relations</button>{/if}
+  {#if stale}<p role="status" class="project-context-message">{busy ? 'Updating; showing previous results.' : 'Showing previous results; they may be out of date.'}</p>{/if}
+  {#if notice && !busy}<p role="status" class="project-context-message">{notice}</p>{/if}
   <section aria-label="Project Tasks" class="project-content-section">
-    <header><h2>Tasks</h2><button class="primary" aria-label="New task in this project" disabled={createDisabled} onclick={() => oncreate('task')}><AppIcon name="plus" size={15} />New</button></header>
-    <div class="project-content-view"><span><AppIcon name="list" size={15} />List</span></div>
-    {#each taskGroups as group (group.key)}{#if group.items.length}<details class="project-task-group" open={group.key !== 'done'}><summary><span class="project-task-state" data-state={group.key}>{group.label}</span><span>{group.items.length}</span></summary>{#each group.items as item (item.id)}<button class="project-content-row" onclick={() => void onopen(item)}><span class="task-status-mark" class:complete={group.key === 'done'} aria-hidden="true">{group.key === 'done' ? '✓' : group.key === 'todo' ? '−' : '?'}</span><span>{item.title}</span>{#if (item.payload as Record<string, unknown>)?.due_date}<time>{String((item.payload as Record<string, unknown>).due_date)}</time>{/if}</button>{/each}</details>{/if}{/each}
-    {#if !busy && !error && !tasks.length}<p class="project-context-message">{hasMore ? "No Tasks in the loaded relations. You can load more." : "No related Tasks."}</p>{/if}
-    <button class="project-add-row" disabled={createDisabled} onclick={() => oncreate('task')}><AppIcon name="plus" size={15} />New task</button>
+    <header><h2>Tasks</h2><button class="primary" aria-label="New task in this project" disabled={createDisabled} onclick={() => createTask()}><AppIcon name="plus" size={15} />New</button></header>
+    <div class="project-task-views" use:slidingTabs role="group" aria-label="Project task views">
+      <button class:active={taskView === 'list'} aria-pressed={taskView === 'list'} onclick={() => taskView = 'list'}><AppIcon name="list" size={15} />List</button>
+      <button class:active={taskView === 'board'} aria-pressed={taskView === 'board'} onclick={() => taskView = 'board'}><AppIcon name="columns" size={15} />Board</button>
+    </div>
+    {#if taskView === 'list'}
+      {#if taskError}<p class="error" role="alert">{taskError}</p>{/if}
+      {#each taskGroups as group (group.key)}{#if group.items.length}<details class="project-task-group" open={group.key !== 'done'}><summary><span class="project-task-state" data-state={group.key}>{group.label}</span><span>{group.items.length}</span></summary>{#each group.items as item (item.id)}<ProjectTaskRow task={item} disabled={busy || createDisabled || movingId !== ''} onopen={onopen} ontoggle={applyTaskState} />{/each}</details>{/if}{/each}
+      {#if !busy && !error && !tasks.length}<p class="project-context-message">{hasMore ? "No Tasks in the loaded relations. You can load more." : "No related Tasks."}</p>{/if}
+    {:else}
+      <ProjectTaskBoard tasks={tasks} movingId={movingId} error={taskError} disabled={busy || createDisabled} {onopen} onmove={applyTaskState} oncreate={(state) => createTask(state)} />
+      {#if !busy && !error && !tasks.length && !hasMore}<p class="project-context-message">No related Tasks.</p>{/if}
+    {/if}
+    <button class="project-add-row" disabled={createDisabled} onclick={() => createTask()}><AppIcon name="plus" size={15} />New task</button>
   </section>
   <section aria-label="Project Notes" class="project-content-section">
     <header><h2>Notes</h2><button class="primary" aria-label="New note in this project" disabled={createDisabled} onclick={() => oncreate('note')}><AppIcon name="plus" size={15} />New</button></header>
@@ -34,5 +66,5 @@
     {#if !busy && !error && !notes.length}<p class="project-context-message">{hasMore ? "No Notes in the loaded relations. You can load more." : "No related Notes."}</p>{/if}
     <button class="project-add-row" disabled={createDisabled} onclick={() => oncreate('note')}><AppIcon name="plus" size={15} />New note</button>
   </section>
-  {#if hasMore}<div class="project-context-footer"><span>Sections show loaded relations.</span><button disabled={busy} onclick={onmore}><AppIcon name="arrow-down" size={15} />Load more relations</button></div>{/if}
+  {#if hasMore}<div class="project-context-footer"><span>Sections show loaded relations.</span><button disabled={busy || stale} onclick={onmore}><AppIcon name="arrow-down" size={15} />Load more relations</button></div>{/if}
 </div>

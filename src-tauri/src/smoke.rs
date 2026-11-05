@@ -4,10 +4,11 @@ use std::sync::Mutex;
 use std::{
     io::Write,
     path::PathBuf,
-    process::{Command, Stdio},
+    process::{Child, Command, Stdio},
 };
 use tauri::Manager;
 static HOME_READ: Mutex<(String, u64, bool)> = Mutex::new((String::new(), 0, false));
+static CONCURRENT_WRITERS: Mutex<Option<Child>> = Mutex::new(None);
 pub fn read_instrumentation(request: &Value) -> Option<noteka_core::contracts::Response> {
     if request["command"]["operation"] != "home.query" {
         return None;
@@ -166,6 +167,16 @@ pub fn smoke_control(app: tauri::AppHandle, step: String, input: Value) -> Value
             let window = app.get_webview_window("main").unwrap();
             let webview: tauri::Webview = window.as_ref().clone();
             std::thread::spawn(move || {
+                let window = webview.window();
+                window.unminimize().expect("Restaurar ventana de prueba");
+                // On macOS deminiaturization is asynchronous. Focusing while
+                // the window is still minimized is silently ignored by tao.
+                for _ in 0..100 {
+                    if !window.is_minimized().unwrap_or(true) && window.is_visible().unwrap_or(false) {
+                        break;
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(50));
+                }
                 webview
                     .window()
                     .set_focus()
@@ -173,6 +184,32 @@ pub fn smoke_control(app: tauri::AppHandle, step: String, input: Value) -> Value
                 webview.set_focus().expect("Foco de webview de prueba");
             });
             json!(true)
+        }
+        "blur_host" => {
+            app.get_webview_window("main").unwrap().minimize().expect("Minimizar ventana de prueba");
+            json!(true)
+        }
+        "start_competing_writers" => {
+            let mut child = CONCURRENT_WRITERS.lock().unwrap();
+            assert!(child.is_none());
+            *child = Some(Command::new("python3")
+                .arg(std::env::var("NOTEKA_SMOKE_WRITERS").unwrap())
+                .arg(&path)
+                .arg(std::env::var("NOTEKA_SMOKE_CLI").unwrap())
+                .arg(std::env::var("NOTEKA_SMOKE_MCP").unwrap())
+                .arg(root())
+                .arg(input["cli_id"].as_str().unwrap())
+                .arg(input["mcp_id"].as_str().unwrap())
+                .stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap());
+            json!(true)
+        }
+        "writers_ready" => json!(root().join("writers-ready").is_file()),
+        "writers_release" => { std::fs::write(root().join("writers-release"), b"release").unwrap(); json!(true) }
+        "writers_result" => {
+            let child = CONCURRENT_WRITERS.lock().unwrap().take().unwrap();
+            let result = child.wait_with_output().unwrap();
+            assert!(result.status.success(), "Concurrent writers: {}", String::from_utf8_lossy(&result.stderr));
+            serde_json::from_slice::<Value>(&std::fs::read(root().join("writers-result.json")).unwrap()).unwrap()
         }
         "list" => cli("entity", "list", input),
         "entity_create" => cli("entity", "create", input),

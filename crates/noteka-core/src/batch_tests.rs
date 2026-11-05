@@ -630,9 +630,13 @@ fn budget_cleans_up_after_error_and_unwind_and_maps_only_interrupt() {
     let c = Connection::open_in_memory().unwrap();
     {
         let b = store::Budget::with_duration(&c, Duration::ZERO).unwrap();
+        let nested = store::Budget::with_duration(&c, Duration::from_secs(10)).unwrap();
         assert_eq!(reason(b.check().unwrap_err()), "execution_deadline");
         let error=c.query_row("WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM n WHERE x<100000) SELECT sum(x) FROM n",[],|r|r.get::<_,i64>(0)).unwrap_err();
         assert!(matches!(b.map(error.into()).code, ErrorCode::WorkspaceBusy));
+        let error=c.query_row("WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM n WHERE x<100000) SELECT sum(x) FROM n",[],|r|r.get::<_,i64>(0)).unwrap_err();
+        assert!(matches!(nested.map(error.into()).code, ErrorCode::WorkspaceBusy));
+        drop(nested);
         assert!(matches!(
             b.map(c.execute("invalid SQL", []).unwrap_err().into()).code,
             ErrorCode::StorageError
@@ -650,6 +654,14 @@ fn budget_cleans_up_after_error_and_unwind_and_maps_only_interrupt() {
         c.query_row("SELECT 2", [], |r| r.get::<_, i32>(0)).unwrap(),
         2
     );
+    {
+        let outer = store::Budget::with_duration(&c, Duration::from_secs(10)).unwrap();
+        let inner = store::Budget::with_duration(&c, Duration::ZERO).unwrap();
+        assert!(c.query_row("WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM n WHERE x<100000) SELECT sum(x) FROM n", [], |r| r.get::<_, i64>(0)).is_err());
+        drop(inner);
+        assert!(outer.check().is_ok());
+        assert_eq!(c.query_row("WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM n WHERE x<100000) SELECT sum(x) FROM n", [], |r| r.get::<_, i64>(0)).unwrap(), 5_000_050_000);
+    }
     let mut target = Connection::open_in_memory().unwrap();
     assert_eq!(
         reason(store::copy(&c, &mut target, Instant::now()).unwrap_err()),

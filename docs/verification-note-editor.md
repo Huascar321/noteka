@@ -87,3 +87,101 @@ comprobaciones headless** adicionales, incluidos ambos temas, Note vacía y entr
 desde el título, sin errores de navegador ni solicitudes externas. Evidencia
 ignorada en `output/playwright/hover-controls-20261026/`; no cambia el alcance
 histórico de las revisiones anteriores ni acredita aceptación nativa nueva.
+
+## Hover extendido a los márgenes — 26/10/2026
+
+El seguimiento posterior reemplaza el límite horizontal del bloque por los
+márgenes visibles de su propio panel de Note. La coordenada horizontal se
+proyecta sobre Tiptap; se conserva la altura real del bloque y se valida la
+superficie bajo el puntero. Así puede entrarse directamente desde un margen,
+cambiar de fila y alcanzar los controles sin extender el hover a huecos,
+popovers, lateral u otros paneles.
+
+`npm run build` aprobó iconos (81), contratos, Svelte/TypeScript con cero errores
+y advertencias, y bundle; permanece la advertencia de Vite sobre tamaño de chunk.
+La sesión Chromium headless propia aprobó **82 comprobaciones focalizadas** con
+UI de producción → CLI Rust real → SQLite sintético: párrafos, encabezado, listas,
+cita, checklist y código en ambos márgenes; entrada directa, padding superior e
+inferior del código, cambio de fila, hueco vertical, salida hacia el lateral,
+cruce a controles/menú, Escape/atajo, scroll y resize bajo puntero quieto. Temas
+claro/oscuro a 1280 y 420 px conservaron el hover y ocultaron controles bajo la
+última fila. No hubo estado pendiente, cambio de documento/IDs/revisión, errores
+de navegador ni solicitudes externas.
+
+Evidencia ignorada en `output/playwright/hover-row-20261026/`: `setup.cjs`,
+`review.cjs`, `results.json`, salida completa y capturas por tema/ancho, incluida
+`code-right-margin.png`. Los intentos anteriores corrigieron el fixture de código,
+selectores del DOM y preparación de pestaña/lateral responsive; no se cuentan
+como aceptación. No se repitieron las suites históricas ni la aceptación nativa.
+El cambio sigue activo con sus deltas pendientes de sincronización/archivo.
+
+## Continuar desde el espacio inferior — 26/10/2026
+
+Un clic primario sin modificadores bajo el último bloque crea un párrafo y
+coloca el cursor dentro; un párrafo final vacío se reutiliza. Incluye el vacío
+dentro de la altura mínima y el fondo inferior de la página fuera del editor.
+La pulsación debe empezar y terminar en contenedores vacíos de la propia Note,
+con movimiento máximo de 5 px; no intercepta selección arrastrada, controles,+huecos entre bloques, clic secundario/modificado ni el estado deshabilitado.
+Los listeners se retiran al desmontar la instancia. El guardado sigue explícito.
+
+`npm run build` aprobó iconos/contratos, Svelte/TypeScript con cero errores y
+advertencias, y bundle; conserva la advertencia de tamaño de Vite. La sesión
+Chromium headless propia aprobó **70 comprobaciones principales y 4 adicionales**
+sobre UI de producción → CLI Rust real → SQLite sintético:
+
+- Finales de párrafo, código SQL, H2, lista y divisor: párrafo con ID propio,
+  foco/escritura sin heredar tipo, clics repetidos, undo/redo, IDs/contenido
+  previos exactos y guardado/reapertura.
+- Note vacía y final vacío existente: foco sin acumular bloques ni cambiar
+  documento/revisión guardada o estado pendiente sólo por enfocar.
+- Clic secundario/modificado, arrastre desde texto o dentro del vacío, hueco
+  intermedio, bloque existente y herramientas de página no insertan contenido.
+  El editor deshabilitado durante un guardado demorado tampoco inserta.
+- Claro/oscuro a 1280/420 px: crear, escribir y guardar después de código.
+  El fondo de página fuera del editor permite continuar y un pointercancel
+  impide la inserción. La revisión principal no registró errores de navegador
+  ni solicitudes externas.
+
+Evidencia ignorada en `output/playwright/append-paragraph-20261026/`: `setup.cjs`,
+`review.cjs`, `lower-space.cjs`, resultados JSON/salidas completas y capturas por
+tema/ancho. La preparación se ajustó para esperar el editor habilitado, comparar
+el documento canónico del CLI, excluir widgets GapCursor del conteo y ubicar el
+clic vacío fuera de los controles iniciales de una Note vacía. Los intentos
+previos no se cuentan como aceptación. No se repitieron suites históricas ni
+aceptación nativa; `refine-notion-note-editor` queda 8/8, pendiente de sync/archivo.
+
+## Acciones agrupadas en la cabecera — 26/10/2026
+
+El botón `…` reemplaza los tres iconos independientes y Archive de Note normal.
+El menú muestra Export, External resources, Attachments y Archive/Restore con
+icono/texto; conserva las condiciones de disponibilidad y explica Export cuando
+requiere guardar. Los paneles anteriores siguen montados y sus campos se
+conservan. Flechas/Home/End recorren acciones habilitadas, Enter abre el panel,
+Escape retorna a `…` y el clic exterior cierra. Archive/Restore usa el handler,
+guardia del borrador y revisión esperada existentes. Footer y Archive de Task
+conservan su variante previa.
+
+`npm run build` aprobó contratos, catálogo de **83 SVG locales** (se agregaron
+Ellipsis y Undo), Svelte/TypeScript con cero errores/advertencias y bundle, con la
+advertencia de tamaño de Vite anterior. La sesión Chromium headless propia
+aprobó **43 comprobaciones principales y 6 de compatibilidad**, usando UI de
+producción → CLI Rust real → SQLite sintético:
+
+- Un solo disparador, cuatro filas con nombres/iconos, teclado, foco y cierre.
+- Exportación JSON real dentro del corpus sintético, destino conservado al
+  reabrir, apertura de recursos/adjuntos sin acciones por abrir/cerrar y Note
+  intacta por el uso del menú. Cero errores de navegador/solicitudes externas.
+- Export deshabilitado con motivo visible y omisión por teclado; Cancel conserva
+  borrador; Discard archiva la versión guardada; Save and continue guarda antes
+  de archivar. Restore conserva documento y cada operación respeta su revisión.
+- Menú/panel/foco dentro del viewport claro/oscuro a 1280 y 420 px; revisión de
+  capturas. Note nueva no ofrece Archive y conserva requisitos de guardado;
+  Task mantiene Export al pie y Archive en su cabecera.
+
+Evidencia ignorada en `output/playwright/note-actions-20261026/`: `setup.cjs`,
+`review.cjs`, `compatibility.cjs`, JSON/salidas y cuatro capturas del menú. La
+preparación final usa título/destino de exportación únicos y espera la respuesta
+real de archivo/restauración antes de consultar SQLite; los intentos previos
+fallidos por esas condiciones del harness no se cuentan como aceptación.
+No se repitieron suites históricas ni aceptación nativa. El cambio queda 9/9,
+con deltas pendientes de sincronización/archivo.

@@ -1,12 +1,182 @@
 # Verificación de las tres variantes ASCII
 
-Esta revisión documenta la versión de tres escenas preservada en `2d43a66`.
-El experimento posterior combina la fauna: ver
-[evidencia actual](verification-mixed-ocean.md). Los resultados siguientes son
-históricos y no se vuelven a contar como pruebas nuevas.
+La pausa histórica por pérdida de foco del panel fue modificada para Home visible
+junto a Side peek; ver [verificación del seguimiento](verification-ascii-side-peek.md).
+
+La versión de tres escenas de `2d43a66` volvió a estar activa por preferencia
+del usuario el26/10/2026. El experimento mixto se descartó; su
+[evidencia](verification-mixed-ocean.md) se conserva como antecedente.
 
 Fecha: 26/10/2026. Cambio: `add-random-ascii-cover-scenes`. Implementado y
 verificado localmente; deltas pendientes de sincronización/archivo.
+
+## Shark depth and habitat follow-up
+
+Seguimiento26/10/2026: un tercer tiburón usa la misma geometría/articulación,
+con escala base46 frente a84/65, opacidad aproximada0,38–0,44, mayor profundidad
+y ruta propia lenta en la zona alta central. Conserva los índices/poses de los
+cuatro animales originales. El fondo añade tres bandas ASCII de luz ondulante
+y un relieve rocoso tenue recortado en la esquina inferior derecha; celdas
+preparadas por tamaño y atlas/tiempo activo existentes, sin otro reloj o recurso.
+
+Doce pruebas puras aprobaron: las once existentes y una sobre el tercer tiburón,
+menor/tenue/más profundo y con posición continua, en0–180s y1000/420px. Build
+aprobado con0 diagnósticos Svelte y aviso previo de bundle conservado. Doce
+casos visuales de escenas ×temas ×anchos aprobaron estabilidad, paletas y resize
+con repintado inmediato; capturas amplias/estrechas revisadas.
+
+Diecinueve observaciones adicionales: diez comparaciones exactas de las cuatro
+poses originales en0/8/24/42/180s; ocho combinaciones temas/anchos/DPR1/2 con
+malla compartida, tiburón nuevo dibujado primero, grilla idéntica, relieve
+confinado al borde y render original exacto al retirar sólo las adiciones;
+una de luz animada, composición estable a tiempo fijo y geometría cacheada.
+Siete módulos de koi/medusas/selector/reloj/componente conservan su hash y las
+ocho capturas koi/medusas son idénticas al seguimiento anterior de cuadrícula.
+
+Nueve muestras de fundido no vacías y seis direcciones medidas por separado:
+Canvas aislado1000×288/DPR1,80 muestras, tiburones p50=3,1ms/p95=3,3ms;
+p95 máximo de fundido=6,1ms. No acredita120Hz físicos. Sin errores de navegador,
+requests externos o aceptación nativa nueva; no se repite la regresión histórica
+de App/Rust. Evidencia local ignorada: `output/playwright/shark-habitat-20261026/`.
+
+## Shared grid follow-up
+
+Seguimiento26/10/2026: koi y medusas reciben la misma cuadrícula de tiburones:
+líneas de0,5px cada12px/refuerzo60px, tinta de la portada y opacidad por tema.
+Canvas preparado por tamaño/DPR/tema/tinta, compuesto detrás de fauna/ambiente;
+sin trazado por frame o nuevos relojes. Tiburones conserva su implementación.
+
+Build aprobado con0 diagnósticos Svelte y el aviso previo de bundle. Once
+pruebas existentes aprobaron; doce combinaciones de escenas ×temas ×1000/420px
+aprobaron estabilidad, paletas y repintado inmediato durante resize; capturas
+revisadas. Dieciséis combinaciones koi/medusas ×temas ×anchos ×DPR1/2 verifican
+grillas pixel idénticas a la de tiburones, respuesta a tinta distinta y bitmap
+estable; al ocultar solamente la grilla, fauna/ambiente coinciden píxel a píxel
+con el baseline inmediato anterior. Nueve muestras de fundido no vacías.
+Sin errores de navegador o requests externos; sin aceptación nativa nueva.
+Canvas aislado1000×288/DPR1: p95 koi2,2ms/medusas3,1ms; no acredita120Hz físicos
+ni vuelve a medir todas las direcciones de fundido. Evidencia local ignorada:
+`output/playwright/ascii-grid-20261026/`.
+
+## Coral and light follow-up
+
+Seguimiento26/10/2026: dos corales ASCII en abanico en las esquinas inferiores,
+ramificados y con balanceo lento; dos rayos tenues en estrecho/tres en amplio,
+diagonales y con pérdida gradual de intensidad. Geometría preparada por tamaño,
+atlas por tema/DPR, mismo tiempo activo, sin reloj/listener o recurso nuevo.
+
+Build aprobado con0 diagnósticos Svelte y aviso previo de bundle conservado.
+Once pruebas existentes y doce casos visuales de tres escenas ×dos temas ×
+1000/420px aprobaron estabilidad, resize no vacío y paletas; capturas revisadas.
+Veintiuna observaciones: ocho koi pixel idénticas al baseline inmediato, ocho
+medusas con píxeles ambientales añadidos y cobertura alfa conservada (tolerancia
+1/255), una de estabilidad/movimiento del ambiente y cuatro de geometría finita,
+contraste secundario, caché estable entre frames y centro despejado.
+Nueve muestras de transición no vacías y seis direcciones de fundido aprobadas.
+Canvas aislado1000×288/DPR1,80 muestras: medusas p50=2,8ms/p95=3,1ms;
+p95 máximo de fundido=6,3ms. No demuestra cadencia física120Hz. Sin errores de
+navegador ni requests externos; modelos de fauna, selector/reloj y preferencias
+conservados. Sin nueva aceptación nativa ni regresión histórica de App/Rust.
+Evidencia local ignorada: `output/playwright/jelly-coral-20261026/`.
+
+## Jellyfish habitat follow-up
+
+Seguimiento26/10/2026: cinco medusas secundarias en ancho amplio/tres en estrecho,
+radio aproximado25–32px/16–21px y opacidad0,30–0,42. El mismo método de campana,
+lóbulos y tentáculos dibuja primero las secundarias y después las principales.
+Diez burbujas y36 partículas cian/violeta (5/18 en estrecho) usan un atlas local
+y el mismo tiempo activo; no hay otro RAF, temporizador o listener.
+
+Once pruebas existentes aprobaron. Doce combinaciones visuales de las tres
+escenas, dos temas y1000/420px aprobaron bitmap estable, resize y paletas; se
+revisaron capturas amplias/estrechas. Nueve muestras del fundido aprobaron.
+
+Diecinueve observaciones adicionales: ocho comparaciones de koi idénticas a la
+versión que gustó al usuario; ocho de medusas con fondo añadido y cobertura de
+las principales conservada (tolerancia alfa1/255); dos trazas de instancia real
+que verifican el mismo método de dibujo para5/3 secundarias menores/tenues y
+4/3 principales con opacidad1, más geometría finita a0/8/42/180s; una observación
+de ambiente estable al mismo tiempo y animado al avanzar tiempo.
+
+Dibujo aislado de80 muestras a1000×288/DPR1: medusas p50=2,2ms/p95=2,5ms. Las
+seis direcciones de fundido se midieron separadamente; p95 máximo=4,6ms en
+koi→medusas. Son tiempos Canvas aislados, no aceptación física120Hz. Build
+aprobado con0 diagnósticos Svelte y aviso previo de bundle conservado. Sin
+errores de navegador o requests externos. Koi, tiburones, selector/reloj y
+preferencias se conservan; no se repitió la suite histórica de App o pantalla
+nativa. Evidencia privada/ignorada en `output/playwright/jelly-habitat-20261026/`.
+
+## Readable background koi follow-up
+
+Seguimiento26/10/2026: los peces de fondo usan el mismo método de geometría,
+manchas, aletas y cola que los protagonistas. Ocho secundarios en ancho amplio/
+cinco en estrecho, longitudes aproximadas67–90px/42–56px y opacidad0,32–0,46,
+más el fundido de bordes. El grupo secundario y el principal comparten campo y
+atlas, pintados en dos pasadas; no hay otro renderer por pez ni reloj.
+
+Once pruebas existentes y12 casos visuales actuales aprobaron estabilidad,
+paletas, resize y ambos temas/1000/420px. Se revisaron capturas amplias y
+estrechas para comprobar legibilidad y profundidad. Diecisiete observaciones de
+preservación/ambiente y nueve muestras del fundido aprobaron de nuevo. Dos
+observaciones de la instancia real verifican que el mismo método koi recibe
+primero8/5 poses pequeñas con opacidad reducida y luego3/2 principales con
+opacidad1; las poses muestreadas a0/8/42/180s son finitas.
+
+Las ocho comparaciones de medusas siguen idénticas al baseline. Los casos koi
+conservan la cobertura alfa principal con tolerancia1/255. Algas/burbujas,
+selector, reloj, tiburones y preferencias se conservan. No hubo errores de
+navegador o requests externos. Build aprobado con0 diagnósticos Svelte y aviso
+previo de tamaño del bundle. Sin suites históricas de App o inspección nativa.
+
+Dibujo aislado a1000×288/DPR1: koi p50=1,8ms/p95=2,1ms; fundido
+p50=3,7ms/p95=4,1ms. No acredita120Hz físicos. Evidencia privada/ignorada en
+`output/playwright/background-koi-20261026/`. El apartado siguiente registra
+la primera versión del ambiente, con peces de tres caracteres, ya reemplazada.
+
+## Koi habitat follow-up
+
+Seguimiento26/10/2026: sólo koi recibe peces pequeños lejanos, algas ASCII
+ondulantes y burbujas ascendentes. Densidad amplia14/7/12 y estrecha8/4/6,
+paleta secundaria y dibujo anterior a los peces principales. Usa semilla y
+tiempo activo existentes; no añade listeners, RAF o temporizadores propios.
+
+- Once pruebas existentes de escenas/océano aprobaron, sin añadir una suite
+  unitaria para esta presentación reversible.
+- Doce combinaciones visuales de tres escenas ×dos temas ×1000/420px aprobaron
+  bitmap estable/no vacío y resize con repintado inmediato. Capturas revisadas.
+- Nueve muestras del fundido aprobaron, con el ambiente dentro de la capa koi.
+- Diecisiete observaciones adicionales: ocho comparaciones de medusas idénticas
+  a la versión previa; ocho de koi con3.037–6.258 píxeles de fondo añadidos sin
+  reducir cobertura alfa (tolerancia1/255); una de estabilidad al mismo tiempo
+  y movimiento del ambiente al avanzar tiempo.
+- Sin errores de navegador o requests externos. Build aprobado,0 diagnósticos
+  Svelte, aviso previo de bundle conservado. Tiburones/selector/reloj/componente
+  permanecen sin cambios en este seguimiento.
+
+Dibujo aislado de80 muestras a1000×288/DPR1: koi p50=1,2ms/p95=1,5ms y fundido
+p50=3,3ms/p95=3,6ms. No acredita120Hz físicos. Evidencia privada/ignorada en
+`output/playwright/koi-habitat-20261026/`. No se repitió la suite histórica de App
+ni se inspeccionó pantalla nativa o datos personales.
+
+## Restoration follow-up
+
+Este apartado registra el retorno previo al enriquecimiento del fondo koi.
+
+Se restauraron los tres renderizadores desde `2d43a66` y se retiraron el módulo
+mixto y su prueba específica. Los siete archivos de renderer/selector/geometría/
+reloj/componente coinciden byte a byte con el checkpoint. App/style siguen
+idénticos a `fd4f436`: se conserva la corrección del scrollbar horizontal y los
+demás ajustes del shell.
+
+Las once pruebas existentes de escenas/océano aprobaron. Revisión headless
+actual:12 combinaciones (tres escenas, dos temas,1000/420px),9 muestras del
+fundido y bitmap estable/no vacío durante resize, sin errores de navegador o
+requests externos. Capturas amplias/estrechas y fundido revisados. Build aprobado
+con0 errores/advertencias Svelte; el aviso anterior de tamaño del bundle sigue.
+Evidencia nueva en `output/playwright/restored-ascii-20261026/`.
+
+No se repitieron las suites históricas de App ni se inspeccionó pantalla nativa.
+Las cifras/casos siguientes corresponden a la implementación inicial de variantes.
 
 ## Method
 

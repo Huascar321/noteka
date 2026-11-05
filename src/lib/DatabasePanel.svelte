@@ -22,14 +22,15 @@
   let templates = $state<Template[]>([]), templateCursor = $state<string | null>(null);
   let editingTemplate = $state<Template | null>(null), expectedCollectionRevision = $state(1);
   let error = $state(''), message = $state(''), recovery = $state(''), busy = $state(false);
+  let refreshController: AbortController | undefined;
   function clearResults() { records = []; recordCursor = null; recordOffset = undefined; groups = []; resultsReady = false; matchingCount = 0; }
   function working(value: boolean) { busy = value; onbusy(value); }
   function report(e: unknown) { return e instanceof OperationError ? `${e.detail.code}: ${e.message}` : e instanceof Error ? e.message : String(e); }
   $effect(() => onerror(error));
   export function discardPending() { mode = null; error = ''; recovery = ''; onpending(false); }
   function copyBuffer() { recovery = JSON.stringify({ mode, collection_id: current?.collection.id, title, json: jsonInput, entity_id: entityId, expected_revision: mode === 'view' ? editingView?.revision : expectedRevision, layout: mode === 'view' ? bufferLayout : undefined, view_id: editingView?.id, template_id: editingTemplate?.id, expected_collection_revision: expectedCollectionRevision }, null, 2); }
-  async function listTemplates(c: string, cursor?: string) {
-    const page = await operate<Contract['templates']>({ operation: 'template.list', input: { collection_id: c, cursor, limit: 50 } }, workspace);
+  async function listTemplates(c: string, cursor?: string, signal?: AbortSignal) {
+    const page = await operate<Contract['templates']>({ operation: 'template.list', input: { collection_id: c, cursor, limit: 50 } }, workspace, { signal });
     templates = cursor ? [...templates, ...page.items] : page.items; templateCursor = page.next_cursor ?? null;
   }
   async function moreTemplates() { if (!current || busy) return; working(true); try { await listTemplates(current.collection.id, templateCursor ?? undefined); } catch (e) { error = report(e); } finally { working(false); } }
@@ -43,23 +44,25 @@
       onpending(true);
     });
   }
-  async function list(cursor?: string) {
-    const page = await operate<Contract['collections']>({ operation: 'collection.list', input: { cursor, limit: 50 } }, workspace);
+  async function list(cursor?: string, signal?: AbortSignal) {
+    const page = await operate<Contract['collections']>({ operation: 'collection.list', input: { cursor, limit: 50 } }, workspace, { signal });
     collections = cursor ? [...collections, ...page.items] : page.items; collectionCursor = page.next_cursor ?? null;
   }
-  async function query(cursor?: string, bundle = current, selectedId = viewId, temporary = temporaryLayout) {
+  async function query(cursor?: string, bundle = current, selectedId = viewId, temporary = temporaryLayout, signal?: AbortSignal) {
     if (!bundle) return;
     const config = temporary ? { ...(bundle.views.find(v => v.id === selectedId)?.config ?? {}), group_by: undefined, calendar: undefined } : undefined;
-    const page = await operate<DatabasePage>({ operation: 'database.query', input: { collection_id: bundle.collection.id, view_id: !temporary && selectedId ? selectedId : undefined, layout: temporary ?? undefined, config, limit: 50, cursor } }, workspace);
+    const page = await operate<DatabasePage>({ operation: 'database.query', input: { collection_id: bundle.collection.id, view_id: !temporary && selectedId ? selectedId : undefined, layout: temporary ?? undefined, config, limit: 50, cursor } }, workspace, { signal });
     current = { ...bundle, properties: page.properties }; pageConfig = page.config; layout = page.layout; groups = page.groups; matchingCount = page.matching_count;
     records = page.records.items; recordCursor = page.records.next_cursor ?? null; recordOffset = cursor; resultsReady = true;
   }
   export async function refreshPanel() {
     if (busy) return;
+    refreshController?.abort();
+    const controller = refreshController = new AbortController();
     working(true); error = '';
-    try { await list(); if (current) { const bundle = await operate<CollectionBundle>({ operation: 'collection.get', input: { id: current.collection.id } }, workspace); await query(undefined, bundle); await listTemplates(bundle.collection.id); } }
-    catch (e) { clearResults(); error = report(e); }
-    finally { working(false); }
+    try { await list(undefined, controller.signal); if (current) { const bundle = await operate<CollectionBundle>({ operation: 'collection.get', input: { id: current.collection.id } }, workspace, { signal: controller.signal }); await query(undefined, bundle, undefined, undefined, controller.signal); await listTemplates(bundle.collection.id, undefined, controller.signal); } }
+    catch (e) { if (!controller.signal.aborted) { clearResults(); error = report(e); } }
+    finally { if (refreshController === controller) refreshController = undefined; working(false); }
   }
   async function choose(c: Collection) {
     await onguard(async () => {
@@ -135,7 +138,7 @@
     catch (e) { clearResults(); error = report(e); }
     finally { working(false); }
   }
-  onMount(() => { void refreshPanel(); return () => onpending(false); });
+  onMount(() => { void refreshPanel(); return () => { refreshController?.abort(); onpending(false); }; });
 </script>
 
 <section class="database-panel" aria-label="Local collections">

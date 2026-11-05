@@ -143,6 +143,8 @@ pub struct NoteFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub favorite: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub page_locked: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<NoteSource>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub goal: Option<GoalFields>,
@@ -234,6 +236,7 @@ pub struct NoteSource {
 pub enum TaskState {
     #[default]
     Todo,
+    Doing,
     Done,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]

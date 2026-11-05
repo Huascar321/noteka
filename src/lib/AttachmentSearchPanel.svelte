@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
+  import { onDestroy, untrack } from 'svelte';
   import { operate } from './api';
   import { AttachmentReader, type AttachmentCriteria, type AttachmentReadState } from './attachment-search';
   import type { AttachmentTextLocator, Contract, IndexedExtractor } from './contracts.generated';
+  import { RefreshCoordinator } from './refresh-coordinator';
 
   let { workspace }: { workspace: string } = $props();
   let query = $state('');
@@ -10,11 +11,13 @@
   let jobId = $state('');
   let attachmentId = $state('');
   let view = $state<AttachmentReadState>({ page: null, pageNumber: 0, busy: false, error: null });
-  const reader = new AttachmentReader(input => operate<Contract['attachment_search']>({ operation: 'extraction.search', input }, workspace), next => { view = next; });
+  const reader = new AttachmentReader((input, signal) => operate<Contract['attachment_search']>({ operation: 'extraction.search', input }, workspace, { signal }), next => { view = next; });
   const criteria = (): AttachmentCriteria => ({ query, extractor, job_id: jobId, attachment_id: attachmentId });
-  const reset = () => reader.edit();
-  export function refreshPanel() { return reader.search(criteria()); }
-  onDestroy(() => reader.dispose());
+  const refresh = new RefreshCoordinator(() => !view.busy, () => reader.search(criteria()), () => {});
+  const reset = () => { refresh.cancelPending(); reader.edit(); };
+  export function refreshPanel() { return refresh.request(); }
+  $effect(() => { if (!view.busy) untrack(() => refresh.notifyReady()); });
+  onDestroy(() => { refresh.dispose(); reader.dispose(); });
 
   function locatorTitle(locator: AttachmentTextLocator) {
     if (locator.kind === 'utf8_bytes') return `UTF-8 · lines ${locator.line_start}–${locator.line_end}`;
@@ -27,7 +30,7 @@
 </script>
 
 <div class="attachment-search" aria-label="Attachment search">
-  <form class="search-form" onsubmit={(event) => { event.preventDefault(); void refreshPanel(); }}>
+  <form class="search-form" onsubmit={(event) => { event.preventDefault(); void reader.search(criteria()); }}>
     <label>Attachment text<input aria-label="Attachment text" bind:value={query} oninput={reset} placeholder="1–16 terms · up to 256 UTF-8 bytes" /></label>
     <label>Extractor<select aria-label="Attachment extractor" bind:value={extractor} onchange={reset}>
       <option value="">All extractors</option><option value="utf8_text">UTF-8 text</option><option value="pdfium_text">PDF universal (PDFium)</option><option value="pdf_text">PDF textual</option><option value="xlsx_cells">Celdas XLSX</option><option value="image_ocr">Image OCR (inferred)</option><option value="pdfkit_text">PDFKit (texto seleccionable)</option><option value="paddle_ocr">PDF OCR universal (PaddleOCR)</option><option value="pdf_ocr">PDF OCR (inferido)</option>

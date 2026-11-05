@@ -5,6 +5,12 @@ Moverla a otra columna actualiza su estado. El botón **Mover proyecto**, visibl
 al pasar el puntero o enfocar la tarjeta, ofrece la misma elección con teclado:
 estado y posición. Escape/Cancelar cierra el diálogo sin guardar.
 
+Durante el arrastre, una etiqueta sigue al puntero, la columna destino se resalta
+y una línea indica la inserción delante de otra tarjeta. Escape o soltar fuera
+del tablero cancela el gesto. Puede iniciarse desde toda la tarjeta, incluso sus
+relaciones; un clic sin arrastrar abre el elemento correspondiente. La validación del arrastre físico nativo sigue
+pendiente, según la evidencia enlazada abajo.
+
 El orden se guarda en `board_order`; los estados se validan en Rust. El adaptador
 conserva el payload completo y actualiza únicamente orden/estado mediante
 `changes.preview` y `changes.apply`, con revisiones esperadas, receipt y lote
@@ -17,4 +23,6 @@ y deshabilita el movimiento. Active y Planned conservan sus consultas. El orden
 del origen importado es un snapshot; los movimientos posteriores son locales.
 
 [ADR0040](decisions/0040-atomic-project-board-movement.md) y
-[alcance de revisión](verification-project-board-movement.md).
+[alcance de revisión](verification-project-board-movement.md). El ajuste de
+Tauri del 28/10/2026 está descrito en [verificación nativa](verification-native-project-dragging.md),
+con el drop físico completo todavía pendiente de confirmar.

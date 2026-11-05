@@ -55,7 +55,7 @@ export function primaryPalette(value: string, theme: Theme): Record<string, stri
   const color = normalizeColor(value) ?? DEFAULT_PRIMARY_COLOR;
   const background = theme === 'dark' ? '#191919' : '#ffffff';
   const surface = theme === 'dark' ? '#202020' : '#f7f7f5';
-  // Icons/focus require 3:1; links and text on buttons require at least 4.5:1.
+  // Icons/focus require 3:1; links target 4.5:1. Primary buttons use white text in CSS.
   let accent = readable(color, surface, 3.1, theme);
   const selectionAmount = theme === 'dark' ? 0.22 : 0.12;
   const contrastTarget = theme === 'dark' ? '#ffffff' : '#000000';

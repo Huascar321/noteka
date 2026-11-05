@@ -1,7 +1,37 @@
 # Verificación del océano ASCII combinado y lateral
 
-Fecha: 26/10/2026. Cambio: `combine-ascii-ocean-life`. Implementado y verificado
-localmente; deltas pendientes de sincronización/archivo.
+Fecha: 26/10/2026. Cambio: `combine-ascii-ocean-life`. Registro histórico del
+experimento, descartado para la portada por decisión del usuario. Se restauraron
+[las tres variantes](verification-ascii-cover-scenes.md) y se conserva el arreglo
+del lateral. Su delta final sólo modifica el lateral; no retirar las variantes.
+
+## Reduced density follow-up
+
+El usuario aprobó reducir saturación después de revisar la escena original.
+La versión probada mostraba dos tiburones, dos koi y dos medusas principales,
+más dos peces ambientales muy pequeños/tenues. Figuras cercanas alrededor del20%
+menores, profundidad de fondo más discreta y centros de recorrido separados.
+
+Seis pruebas focalizadas de `tests/mixed-ocean-scene.mjs` aprobaron: cantidades,
+fondo tenue, geometría/orden/semilla, escala estrecha, continuidad y muestreo de
+diez minutos con tres semillas sin ternas de centros agrupados. El criterio de
+agrupación usa diferencias menores a18% del ancho y25% de la altura entre los
+tres pares; no afirma ausencia de colisiones de siluetas.
+
+Veinte casos visuales nuevos aprobaron en claro/oscuro,1000/420px y tiempos
+0/8/24/42/80: bitmap repetible y no vacío, paletas presentes, repintado al resize
+y orden global real de pintura. Capturas amplias/estrechas revisadas. p95 aislado
+de dibujo:2,1ms a1000×288/DPR1,2,0ms/DPR2;1,4/1,5ms a420×230. Build aprobado con
+cero errores/advertencias Svelte; aviso previo del tamaño del bundle conservado.
+Sin errores de navegador o requests externos. No se repitieron las suites
+históricas de App/ciclo de vida, cuyo código permanece intacto. Evidencia nueva
+en `output/playwright/relaxed-ocean-20261026/`. Lo que sigue registra la primera
+composición de11/9 animales, anterior a este seguimiento.
+
+Noteka ya estaba ejecutándose con Vite; se volvió a mostrar su instancia nativa
+existente al frente, conservando la sesión. La activación se confirmó por PID y
+aplicación en primer plano, sin inspeccionar pantalla ni afirmar aceptación
+visual nativa.
 
 ## Checkpoint and method
 

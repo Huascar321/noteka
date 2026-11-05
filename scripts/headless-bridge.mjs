@@ -73,7 +73,27 @@ async function control(step,input) {
     case 'rich':return data('entity.create',{kind:'note',title:'Bloques enriquecidos',document:JSON.parse(readFileSync('tests/fixtures/rich-document.json','utf8'))});
     case 'archived_project': {const project=await data('entity.create',{kind:'project',title:'Proyecto relacionado'});const relation=await data('relation.add',{source_id:input.id,target_id:project.id,kind:'project',expected_revision:input.revision});await data('entity.archive',{id:project.id,expected_revision:1});return relation;}
     case 'check_export':return JSON.parse(readFileSync(join(base,'ui-export/manifest.json'),'utf8'));
-    case 'home_seed':return sql(db=>{db.exec('BEGIN');try{for(const [k,kind] of ['task','note','project','tag','person'].entries()){for(let i=0;i<(['task','project'].includes(kind)?102:51);i++){const payload=kind==='task'?(i<51?{state:'todo',inbox:true,due_date:input.date}:{state:'done'}):kind==='project'?{state:i<51?'doing':'planned'}:kind==='tag'?{classification:'topic'}:{};db.prepare("INSERT INTO entities VALUES (?,?,?,1,NULL,'2026-10-01T12:00:00.000000Z','2026-10-01T12:00:00.000000Z',?)").run(`00000000-0000-4000-8000-${String(k*1000+i).padStart(12,'0')}`,kind,`Home synthetic ${kind} ${String(i).padStart(2,'0')} título largo para verificar ajuste y controles visibles`,JSON.stringify(payload));}}db.exec('COMMIT');return true;}catch(e){db.exec('ROLLBACK');throw e;}});
+    case 'home_seed':return sql(db=>{db.exec('BEGIN');try{for(const [k,kind] of ['task','note','project','tag','person'].entries()){for(let i=0;i<(['task','project'].includes(kind)?102:51);i++){const payload=kind==='task'?(i<51?{state:'todo',inbox:true,due_date:input.date}:{state:'done'}):kind==='project'?{state:i<51?'doing':'planned'}:kind==='tag'?{classification:'topic'}:{};db.prepare("INSERT INTO entities VALUES (?,?,?,1,NULL,'2026-10-01T12:00:00.000000Z','2026-10-01T12:00:00.000000Z',?)").run(`00000000-0000-4000-8000-${String(k*1000+i).padStart(12,'0')}`,kind,`Home synthetic ${kind} ${String(i).padStart(2,'0')} título largo para verificar ajuste y controles visibles`,JSON.stringify(payload));}}for(let i=0;i<51;i++){const taskId=`00000000-0000-4000-8000-${String(i).padStart(12,'0')}`,projectId=`00000000-0000-4000-8000-${String(2000+i).padStart(12,'0')}`;db.prepare("INSERT INTO relations VALUES (?,?,?,?)").run(`10000000-0000-4000-8000-${String(i).padStart(12,'0')}`,taskId,projectId,'project');}db.exec('COMMIT');return true;}catch(e){db.exec('ROLLBACK');throw e;}});
+    case 'refresh_benchmark_seed':return sql(db=>{
+      const total=Number(input.total);if(![1000,8000].includes(total))throw new Error('Corpus inválido');
+      const taskEnd=total*0.3,noteEnd=total*0.8,projectEnd=total*0.85,tagEnd=total*0.9;
+      const id=i=>`00000000-0000-4000-8000-${String(i).padStart(12,'0')}`;
+      const entity=db.prepare("INSERT INTO entities VALUES (?,?,?,1,NULL,'2026-10-12T12:00:00.000000Z','2026-10-12T12:00:00.000000Z',?)");
+      const doc=db.prepare('INSERT INTO documents VALUES (?,3,?)'),relation=db.prepare('INSERT INTO relations VALUES (?,?,?,?)');
+      db.exec('BEGIN');try{
+        for(let i=0;i<total;i++){
+          const kind=i<taskEnd?'task':i<noteEnd?'note':i<projectEnd?'project':i<tagEnd?'tag':'person';
+          const payload=kind==='task'?{state:i%4?'todo':'done',inbox:i%2===0,due_date:'2026-10-12'}:kind==='note'?{inbox:i%2===0}:kind==='project'?{state:['planned','doing','ongoing','done','on_hold'][i%5]}:kind==='tag'?{classification:['area','resource','topic'][i%3]}:{};
+          entity.run(id(i),kind,`Synthetic ${kind} ${i}`,JSON.stringify(payload));
+          if(kind==='note')doc.run(id(i),JSON.stringify({schema_version:3,blocks:[{id:'body',type:'paragraph',content:[{type:'text',text:'synthetic content '.repeat(20)}]}]}));
+        }
+        let links=0;for(let i=0;i<noteEnd;i++){
+          for(const target of [projectEnd+i%(tagEnd-projectEnd),projectEnd+(i+1)%(tagEnd-projectEnd)])relation.run(id(total+links++),id(i),id(target),'tag');
+          if(i<taskEnd)for(const target of [noteEnd+i%(projectEnd-noteEnd),noteEnd+(i+1)%(projectEnd-noteEnd)])relation.run(id(total+links++),id(i),id(target),'project');
+        }
+        db.exec('COMMIT');return {entities:total,relations:links};
+      }catch(e){db.exec('ROLLBACK');throw e;}
+    });
     case 'roundtrip':await data('workspace.backup',{destination:join(base,'backup')});return data('workspace.restore',{backup:join(base,'backup'),destination:join(base,'restored')});
     case 'record':record=input;return true;
     case 'close_confirmed':case 'finish': {const result=step==='finish'?input:record;if(!result)throw new Error('Cierre sin resultado');results.push({transport:'headless-cli-not-native-ipc',theme,phase,...result});writeFileSync(join(root,'results.json'),JSON.stringify(results,null,2));return result;}

@@ -16,7 +16,7 @@
   const queue = new ReadQueue(2);
   let reader: HomeReader | undefined;
   onMount(() => {
-    reader = new HomeReader('projects_active', queue, query => operate<HomePage>({ operation: 'home.query', input: query }, workspace), state => readState = state, 100, true);
+    reader = new HomeReader('projects_active', queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => readState = state, 100, true);
     void reader.load();
     window.addEventListener('keydown', refreshKeydown, true);
     return () => { reader?.dispose(); window.removeEventListener('keydown', refreshKeydown, true); };

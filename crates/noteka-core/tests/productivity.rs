@@ -53,6 +53,130 @@ fn has(page: &Value, entity: &Value) -> bool {
 }
 
 #[test]
+fn note_page_lock_is_optional_typed_and_cas_preserves_the_original() {
+    let f = Fixture::new("UTC");
+    let document = json!({"schema_version":2,"blocks":[{"id":"stable","type":"paragraph","content":[{"type":"text","text":"Keep this original"}]}]});
+    let note = f.ok("entity.create", json!({"kind":"note","title":"Lock metadata","payload":{"favorite":true,"icon":"notebook"},"document":document}));
+    assert!(note["payload"].get("page_locked").is_none());
+    let before_schema: i64 = f
+        .db()
+        .query_row("PRAGMA user_version", [], |r| r.get(0))
+        .unwrap();
+    let locked = f.ok(
+        "entity.update",
+        json!({"id":note["id"],"expected_revision":1,"payload":{"page_locked":true}}),
+    );
+    assert_eq!(locked["payload"]["page_locked"], true);
+    assert_eq!(locked["payload"]["favorite"], true);
+    assert_eq!(locked["payload"]["icon"], "notebook");
+    assert_eq!(locked["document"], document);
+    assert_eq!(locked["revision"], 2);
+    for bad in [json!("true"), json!(0), json!([]), json!({})] {
+        error(
+            f.call(
+                "entity.update",
+                json!({"id":note["id"],"expected_revision":2,"payload":{"page_locked":bad}}),
+            ),
+            "validation_error",
+        );
+        assert_eq!(f.ok("entity.get", json!({"id":note["id"]})), locked);
+    }
+    error(
+        f.call(
+            "entity.update",
+            json!({"id":note["id"],"expected_revision":1,"payload":{"page_locked":false}}),
+        ),
+        "revision_conflict",
+    );
+    assert_eq!(f.ok("entity.get", json!({"id":note["id"]})), locked);
+    let unlocked = f.ok(
+        "entity.update",
+        json!({"id":note["id"],"expected_revision":2,"payload":{"page_locked":false}}),
+    );
+    assert_eq!(unlocked["payload"]["page_locked"], false);
+    let absent = f.ok(
+        "entity.update",
+        json!({"id":note["id"],"expected_revision":3,"payload":{"page_locked":null}}),
+    );
+    assert!(absent["payload"].get("page_locked").is_none());
+    let after_schema: i64 = f
+        .db()
+        .query_row("PRAGMA user_version", [], |r| r.get(0))
+        .unwrap();
+    assert_eq!(before_schema, after_schema);
+    error(
+        f.call(
+            "entity.create",
+            json!({"kind":"task","title":"Not a Note","payload":{"page_locked":true}}),
+        ),
+        "validation_error",
+    );
+}
+
+#[test]
+fn note_page_lock_roundtrips_backup_export_and_keeps_relations() {
+    let f = Fixture::new("UTC");
+    let note = f.create("note", "Locked original", json!({"page_locked":true}));
+    let project = f.create("project", "Context", json!({}));
+    f.ok("relation.add", json!({"source_id":note["id"],"target_id":project["id"],"kind":"project","expected_revision":1}));
+    let original = f.ok("entity.get", json!({"id":note["id"]}));
+    let relations = f.ok("relation.list", json!({"entity_id":note["id"]}));
+    let export = f._temp.path().join("export-lock");
+    f.ok(
+        "document.export",
+        json!({"id":note["id"],"destination":export,"format":"json"}),
+    );
+    let exported: Value =
+        serde_json::from_slice(&std::fs::read(export.join("entity.json")).unwrap()).unwrap();
+    assert_eq!(exported["payload"]["page_locked"], true);
+    let backup = f._temp.path().join("lock-backup");
+    let restored = f._temp.path().join("lock-restored");
+    f.ok("workspace.backup", json!({"destination":backup}));
+    f.ok(
+        "workspace.restore",
+        json!({"backup":backup,"destination":restored}),
+    );
+    let read = execute_json(
+        json!({"workspace":restored,"command":{"operation":"entity.get","input":{"id":note["id"]}}}),
+        "test",
+    );
+    assert!(read.ok, "{:?}", read.error);
+    assert_eq!(read.data.unwrap(), original);
+    let read = execute_json(
+        json!({"workspace":restored,"command":{"operation":"relation.list","input":{"entity_id":note["id"]}}}),
+        "test",
+    );
+    assert!(read.ok, "{:?}", read.error);
+    assert_eq!(read.data.unwrap(), relations);
+}
+
+#[test]
+fn note_page_lock_preserves_unknown_payloads_and_omitted_metadata() {
+    let f = Fixture::new("UTC");
+    let note = f.create("note", "Future metadata", json!({"page_locked":true}));
+    let payload = json!({"page_locked":true,"future":{"keep":[1,2,3]}});
+    f.db()
+        .execute(
+            "UPDATE entities SET payload=?1 WHERE id=?2",
+            rusqlite::params![payload.to_string(), note["id"].as_str().unwrap()],
+        )
+        .unwrap();
+    let updated = f.ok(
+        "entity.update",
+        json!({"id":note["id"],"expected_revision":1,"title":"Updated title"}),
+    );
+    assert_eq!(updated["payload"], payload);
+    error(
+        f.call(
+            "entity.update",
+            json!({"id":note["id"],"expected_revision":2,"payload":{"page_locked":false}}),
+        ),
+        "validation_error",
+    );
+    assert_eq!(f.ok("entity.get", json!({"id":note["id"]})), updated);
+}
+
+#[test]
 fn task_dates_priority_completion_and_atomic_rejections() {
     let f = Fixture::new("America/La_Paz");
     let p = f.create(

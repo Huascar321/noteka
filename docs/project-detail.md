@@ -19,9 +19,12 @@ usa cuando el resumen canónico acredita total cero.
 
 La cabecera muestra relaciones de contexto reales. Tasks y Notes se presentan
 aparte, mediante workflow.query/context y el cursor compartido anterior. Tasks
-se agrupa por sus estados locales To Do/Done; un estado no reconocido permanece
-visible como no disponible. Done empieza plegado. Notes muestra sus títulos,
-iconos y tipos existentes; Goals/Milestones continúan en relaciones de contexto.
+ofrece las vistas List y Board. List agrupa por los estados locales
+To Do/Doing/Done, usa un checkbox real para completar/reabrir y deja Done
+plegado; un estado no reconocido permanece visible como no disponible. Board muestra las columnas To Do/Doing/Done con tarjetas
+de título y vencimiento, conteo por columna y New task por columna. Notes muestra
+sus títulos, iconos y tipos existentes; Goals/Milestones continúan en relaciones
+de contexto.
 
 Cargar más relaciones acumula IDs únicos para ambas secciones. Mientras existe
 cursor, los mensajes de vacío hablan sólo de las relaciones cargadas. Los
@@ -29,11 +32,21 @@ contadores de grupo pertenecen a esa página acumulada; el progreso es el resume
 independiente del núcleo. Los errores no se presentan como ausencia de registros.
 
 New/New task/New note preparan captura vinculada al mismo proyecto sin guardarla.
-Exigen resolver cambios del proyecto antes de capturar; las filas abren sus
-originales con Guardar/Descartar/Cancelar. Nav abre Projects o Dashboard local.
-No se agregan vistas Board/Calendar de Tasks ni un editor de documento de Project.
+New task desde una columna del Board preselecciona To Do/Doing/Done y conserva el
+ContextLink del proyecto. Exigen resolver cambios del proyecto antes de capturar;
+las filas abren sus originales con Guardar/Descartar/Cancelar. Nav abre Projects o
+Dashboard local.
+
+El Board permite mover una tarjeta a otra columna con arrastre o con el selector
+de estado de la tarjeta. Cada movimiento relee la revisión, actualiza `state` por
+`entity.update` con CAS y refresca el tablero y el progreso del proyecto. El orden
+dentro de una columna es determinista por vencimiento, título e ID; no se persiste
+un orden manual. No se agregan comentarios, filtros, orden manual, automatizaciones,
+Calendar ni un editor de documento de Project.
 
 El Project utiliza el grupo Recursos externos de las [herramientas compartidas](page-tools.md).
-Sin cambios Rust, contratos, SQLite, documentos ni datos personales.
+El cambio de estado usa el payload existente; no hay migración, documento nuevo ni
+datos personales en Git.
 
-Ver [revisión y límites](verification-project-detail-tools.md).
+Ver [revisión y límites](verification-project-detail-tools.md) y
+[verificación del Board](verification-project-task-board.md).

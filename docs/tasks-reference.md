@@ -8,15 +8,17 @@ en otra línea. Las herramientas son actualizar, abrir listado, opciones y crear
 
 ## Vistas
 
-La vista inicial es **Active Projects (In Progress)**: tareas pendientes de
-proyectos locales Doing/Ongoing, no archivados. Active Projects también admite
-Planned. Estas definiciones locales no acreditan paridad con todos los filtros
-internos de Notion. El modelo actual de tarea conserva sólo todo/done.
+La vista inicial es **Today**: tareas pendientes de proyectos locales
+Doing/Ongoing, no archivados, agrupadas por proyecto. La tab **All Active
+Projects** también admite Planned. Estas definiciones locales no acreditan
+paridad con todos los filtros internos de Notion. El modelo actual de tarea
+conserva todo/doing/done; `doing` cuenta como pendiente y `done` como completada.
 
-Today conserva vencimiento hasta el día civil. Week usa la semana ISO de
-vencimiento; Month su año/mes civil. Scheduled tiene vencimiento asignado y
-No Due carece de él. No se derivan estas vistas de planned_date ni se asignan
-fechas al crear. Inbox, All y Done mantienen sus reglas anteriores.
+Week usa la semana ISO de vencimiento; Month su año/mes civil. Scheduled tiene
+vencimiento asignado y No Due carece de él. No se derivan estas vistas de
+planned_date ni se asignan fechas al crear. Inbox, All y Done mantienen sus
+reglas anteriores. El núcleo conserva `tasks_today` con vencimiento hasta el día
+civil para CLI/MCP; la tab visual Today ya no consulta esa vista.
 
 Recurring y Active Content siguen pendientes. Cobertura, contexto de consulta y
 reglas se consultan en Opciones de vista y en el footer; los conteos de grupo son

@@ -3,7 +3,6 @@
   import { operate } from './api';
   import AsciiShark from './AsciiShark.svelte';
   import SectionIcon from './SectionIcon.svelte';
-  import AppIcon from './AppIcon.svelte';
   import ScrollOutline from './ScrollOutline.svelte';
   import HomeTaskSection from './HomeTaskSection.svelte';
   import HomeNoteSection from './HomeNoteSection.svelte';
@@ -11,17 +10,19 @@
   import HomeTagSection from './HomeTagSection.svelte';
   import HomeGoalSection from './HomeGoalSection.svelte';
   import HomePersonSection from './HomePersonSection.svelte';
+  import HomeWeather from './HomeWeather.svelte';
   import { HomeReader, type HomeReadState } from './home-reads';
   import { ReadQueue } from './embedded-reads';
+  import { captureRefreshFocus, restoreRefreshFocus } from './refresh-focus';
   import { readCover, saveCover, type CoverMode } from './home-cover';
   import type { HomeGroup, HomeView, EntityKind, ContextLink, HomePage } from './contracts.generated';
-  let { workspace, active = true, visible = active, blocked = false, error = '', onopen, oncreate, onnavigate }: {
-    workspace: string; active?: boolean; visible?: boolean; blocked?: boolean; error?: string; onopen: (id: string) => Promise<void>;
+  let { workspace, active = true, visible = active, animateAlongsideSidePeek = false, blocked = false, searchOpen = false, error = '', onopen, oncreate, onnavigate }: {
+    workspace: string; active?: boolean; visible?: boolean; animateAlongsideSidePeek?: boolean; blocked?: boolean; searchOpen?: boolean; error?: string; onopen: (id: string) => Promise<void>;
     oncreate: (kind: EntityKind, context?: ContextLink, seed?: Record<string, unknown>) => Promise<void>;
     onnavigate: (kind: EntityKind | 'goals') => Promise<void>;
   } = $props();
   const sections: { id: EntityKind; title: string; icon: string; views: [HomeView, string][]; pending: string; hint: string }[] = [
-    { id: 'task', title: 'Tasks', icon: 'task', views: [['tasks_projects_in_progress','Active Projects (In Progress)'],['tasks_today','Today'],['tasks_inbox','Inbox'],['tasks_week','Week'],['tasks_month','Month'],['tasks_scheduled','Scheduled'],['tasks_no_due','No Due'],['tasks_active_projects','Active Projects'],['tasks_all','All'],['tasks_done','Done']], pending: "Recurring and Active Content.", hint: "The initial view groups pending tasks by Doing/Ongoing projects. Today uses due dates through the current calendar day; My Day uses planning dates. Creating a task does not assign dates." },
+    { id: 'task', title: 'Tasks', icon: 'task', views: [['tasks_projects_in_progress','Today'],['tasks_inbox','Inbox'],['tasks_week','Week'],['tasks_month','Month'],['tasks_scheduled','Scheduled'],['tasks_no_due','No Due'],['tasks_active_projects','All Active Projects'],['tasks_all','All'],['tasks_done','Done']], pending: "Recurring and Active Content.", hint: "The initial Today view groups pending tasks by Doing/Ongoing projects. All Active Projects also includes Planned. My Day uses planning dates. Creating a task does not assign dates." },
     { id: 'note', title: 'Notes', icon: 'file-text', views: [['notes_library','Notes'],['notes_inbox','Inbox']], pending: '', hint: "Notes separates the library and categories; All keeps every page accessible." },
     { id: 'project', title: 'Projects', icon: 'project', views: [['projects_active','Active'],['projects_planned','Planned'],['projects_board','Board']], pending: "Parity with unreviewed Notion formulas/fields.", hint: "Active: Doing/Ongoing; sidebar Active Projects also includes Planned. Progress = completed / total related active tasks; no tasks does not mean 0%." },
     { id: 'tag', title: 'Tags', icon: 'tag', views: [['tags_recent','Recent'],['tags_alphabetical','A–Z'],['tags_types','Types']], pending: "Fav. and Entity type from the reference; Topic preserves its classification.", hint: "Recent sorts by tag modification, not the latest note. A–Z: Unicode order without local collation; summaries include all active notes." },
@@ -51,28 +52,33 @@
     window.addEventListener('noteka-cover-change', syncCover);
     window.addEventListener('keydown', refreshKeydown, true);
     for (const section of sections) {
-      const reader = new HomeReader(section.id === 'project' ? 'projects_board' : section.id === 'tag' ? 'tags_types' : section.views[0][0], queue, query => operate<HomePage>({ operation: 'home.query', input: query }, workspace), state => { states = { ...states, [section.id]: state }; }, section.id === 'note' || section.id === 'person' ? 10 : section.id === 'project' ? 100 : 50, true, section.id === 'person' ? { people_new: 100, people_updated: 100, people_check_ins: 100, people_birthdays: 100, people_pipeline: 100, people_active_projects: 100 } : {});
+      const reader = new HomeReader(section.id === 'project' ? 'projects_board' : section.id === 'tag' ? 'tags_types' : section.views[0][0], queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => { states = { ...states, [section.id]: state }; }, section.id === 'note' || section.id === 'person' ? 10 : section.id === 'project' ? 100 : 50, true, section.id === 'person' ? { people_new: 100, people_updated: 100, people_check_ins: 100, people_birthdays: 100, people_pipeline: 100, people_active_projects: 100 } : {});
       readers.set(section.id, reader); void reader.load();
     }
-    const goals = new HomeReader('goals_activity', queue, query => operate<HomePage>({ operation: 'home.query', input: query }, workspace), state => { states = { ...states, goals: state }; }, 10, true);
+    const goals = new HomeReader('goals_activity', queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => { states = { ...states, goals: state }; }, 10, true);
     readers.set('goals', goals); void goals.load();
     return () => { window.removeEventListener('noteka-cover-change', syncCover); window.removeEventListener('keydown', refreshKeydown, true); for (const reader of readers.values()) reader.dispose(); readers.clear(); };
   });
-  export async function refreshPanel() { await Promise.all([...readers.values()].map(r => r.load())); }
+  export async function refreshPanel() {
+    const focused = captureRefreshFocus(scrollRoot);
+    await Promise.all([...readers.values()].map(r => r.load()));
+    await tick();
+    restoreRefreshFocus(focused);
+  }
   async function load(id: string, view?: HomeView, next = false, retry = false, date?: string) {
     const reader = readers.get(id); if (!reader) return;
     const focused = document.activeElement instanceof HTMLButtonElement ? document.activeElement : null;
     const focusLabel = focused?.textContent;
     const page = reader.state.page;
-    if (retry) await reader.retry(); else await reader.load(view ?? reader.state.view, next ? page?.next_cursor ?? undefined : undefined, next ? page?.date : date ?? (view === undefined && reader.state.view === 'people_birthdays' ? page?.date : undefined));
+    if (retry) await reader.retry(); else await reader.load(view, next ? page?.next_cursor ?? undefined : undefined, next ? page?.date : date);
     await tick();
     if (focused && document.activeElement === document.body) {
-      if (focused.isConnected && !focused.disabled) focused.focus();
+      if (focused.isConnected && !focused.disabled) focused.focus({ preventScroll: true });
       else {
         const section = document.querySelector(`[data-home-section="${id}"]`);
         const replacement = [...(section?.querySelectorAll<HTMLButtonElement>('button') ?? [])].find(b => b.textContent === focusLabel && !b.disabled)
           ?? section?.querySelector<HTMLButtonElement>('.home-tabs [aria-pressed="true"]');
-        replacement?.focus();
+        replacement?.focus({ preventScroll: true });
       }
     }
   }
@@ -84,18 +90,18 @@
 
 <main bind:this={scrollRoot} class="home has-scroll-outline" aria-label="Home" aria-keyshortcuts="Meta+R Control+R F5">
   <div class="home-cover" data-cover={cover}>
-    {#if cover === 'ascii'}<AsciiShark {active} />{:else}<img class="home-cover-photo" src="/images/home-cover.png" alt="" />{/if}
+    {#if cover === 'ascii'}<AsciiShark active={visible && (!blocked || searchOpen) && (active || animateAlongsideSidePeek)} />{:else}<img class="home-cover-photo" src="/images/home-cover.png" alt="" />{/if}
     <div class="home-cover-controls" role="group" aria-label="Home cover"><button aria-pressed={cover === 'ascii'} onclick={() => changeCover('ascii')}>ASCII</button><button aria-pressed={cover === 'photo'} onclick={() => changeCover('photo')}>Photo</button></div>
   </div>
   <div class="home-content">
     {#if error}<p class="error" role="alert">{error}</p>{/if}
     {#if coverError}<p role="status">{coverError}</p>{/if}
     <div class="home-heading"><span aria-hidden="true" class="home-house"><SectionIcon section="home" size={62} /></span><h1>Home</h1></div>
-    <div class="home-weather" role="note"><span aria-hidden="true"><AppIcon name="cloud" size={35} /></span><div><strong>Weather unavailable</strong><p>Weather is not implemented. No remote queries are made; location, provider and a seven-day forecast require a separate opt-in feature.</p></div></div>
+    <HomeWeather {visible} />
     {#each sections as section}
       {@const state = states[section.id]}
       {#if section.id === 'task'}
-        <HomeTaskSection readState={state} onview={(view) => load('task', view)} onnext={() => load('task', undefined, true)} onretry={() => load('task', undefined, false, true)} {onopen} oncreate={() => oncreate('task')} ongroupcreate={(group) => createIn('task', group)} onnavigate={() => onnavigate('task')} />
+        <HomeTaskSection {workspace} onchanged={refreshPanel} readState={state} onview={(view) => load('task', view)} onnext={() => load('task', undefined, true)} onretry={() => load('task', undefined, false, true)} {onopen} oncreate={() => oncreate('task')} ongroupcreate={(group) => createIn('task', group)} onnavigate={() => onnavigate('task')} />
       {:else if section.id === 'note'}
         <HomeNoteSection readState={state} onview={(view) => load('note', view)} onnext={() => load('note', undefined, true)} onretry={() => load('note', undefined, false, true)} {onopen} oncreate={(seed) => oncreate('note', undefined, seed)} onnavigate={() => onnavigate('note')} />
       {:else if section.id === 'project'}

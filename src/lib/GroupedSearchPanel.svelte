@@ -1,20 +1,23 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { operate } from './api';
   import { GroupedTextSearch } from './grouped-text-search';
+  import { RefreshCoordinator } from './refresh-coordinator';
   import type { SearchHit } from './contracts.generated';
   let { workspace, onopen }: { workspace: string; onopen: (hit: SearchHit) => Promise<void> } = $props();
   let query = $state('');
-  const controller = new GroupedTextSearch(command => operate(command, workspace), next => { view = next; });
+  const controller = new GroupedTextSearch((command, signal) => operate(command, workspace, { signal }), next => { view = next; });
   let view = $state(controller.state);
   const json = (value: unknown) => JSON.stringify(value, null, 2);
-  export function refreshPanel() { return controller.search(query); }
-  onMount(() => () => controller.dispose());
+  const refresh = new RefreshCoordinator(() => !view.notes.busy && !view.attachments.busy, () => controller.search(query), () => {});
+  export function refreshPanel() { return refresh.request(); }
+  $effect(() => { if (!view.notes.busy && !view.attachments.busy) untrack(() => refresh.notifyReady()); });
+  onMount(() => () => { refresh.dispose(); controller.dispose(); });
 </script>
 
 <div class="grouped-search" aria-label="Consulta conjunta local">
-  <form onsubmit={event => { event.preventDefault(); void refreshPanel(); }}>
-    <label>Combined text<input aria-label="Combined text" bind:value={query} oninput={() => controller.edit()} placeholder="1–16 terms · up to 256 UTF-8 bytes" /></label>
+  <form onsubmit={event => { event.preventDefault(); void controller.search(query); }}>
+    <label>Combined text<input aria-label="Combined text" bind:value={query} oninput={() => { refresh.cancelPending(); controller.edit(); }} placeholder="1–16 terms · up to 256 UTF-8 bytes" /></label>
     <button disabled={!query.trim() || view.notes.busy || view.attachments.busy}>Search notes and attachments</button>
   </form>
   <p>Active entities and selected generations. Two independent queries; pages are not a shared snapshot and scores/cursors are not merged. For file, context or extractor filters, use the individual scopes.</p>

@@ -67,7 +67,6 @@ pub(crate) fn object(
     let mut stmt = conn.prepare(&format!("SELECT * FROM {table} WHERE {predicate}"))?;
     let names = stmt
         .column_names()
-        .iter()
         .map(|s| s.to_string())
         .collect::<Vec<_>>();
     let row = stmt

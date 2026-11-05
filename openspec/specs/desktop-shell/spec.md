@@ -889,7 +889,7 @@ Tag SHALL presentar Nav a Notes/Tags y secciones Notes/Clips de workflow/context
 
 ### Requirement: Detalle Goal con cabecera y hitos canónicos
 
-Goal SHALL presentar Status/Tag/Progress compactos, fechas editables en View details, navegación protegida y sus hitos con Target Deadline y Date Completed. El progreso MUST proceder del resumen Rust existente con carga/error/reintento/ausencia explícitos, sin inventar cero cuando falta o no hay hitos. MUST conservar el mismo editor de documento, todos sus bloques/prefijo, CRUD/CAS, acciones de hitos, proyectos originales y condiciones de PageTools; no ampliar el comportamiento del cuerpo ni escribir al abrir.
+Goal SHALL presentar Status/Tag/Progress compactos, fechas editables en View details, navegación protegida y sus hitos con Target Deadline y Date Completed. El progreso MUST proceder del resumen Rust existente con carga/error/reintento/ausencia explícitos, sin inventar cero cuando falta o no hay hitos. MUST conservar el editor de documento, todos sus bloques/prefijo, CRUD/CAS, acciones de hitos, proyectos originales y condiciones de PageTools, sin escribir al abrir. Overview, Additional Details y Journal SHALL usar bloques locales del mismo documento y conservar contenido anterior.
 
 #### Scenario: Edición y navegación preservadas
 - **WHEN** se abre un Goal y se edita estado, fechas o contenido, se abre un hito/proyecto o se prepara un hito vinculado
@@ -1006,3 +1006,239 @@ conservan como detalle cuando no hay una traducción acreditada.
 #### Scenario: Guardias conservadas
 - **WHEN** una navegación o cierre requiere resolver un borrador o falla una operación
 - **THEN** las acciones Save and continue, Discard y Cancel mantienen las guardias y el buffer, con estado de interfaz en inglés y diagnóstico disponible
+
+### Requirement: Tema de apariencia del sistema
+
+Settings SHALL ofrecer System como primera opción de Theme, junto a Dark y Light. Al seleccionar System, Noteka MUST aplicar la apariencia clara u oscura informada por el dispositivo y actualizarla mientras la aplicación esté abierta. Las opciones fijas MUST ignorar cambios del sistema. La elección SHALL persistir localmente sin cambiar datos o descartar buffers; ante fallos de almacenamiento se conserva la elección de la sesión y se informa el error. Valores anteriores de Light y Dark MUST conservarse; ante valor ausente, inválido o inaccesible se conserva el fallback oscuro.
+
+#### Scenario: Sistema cambia en tiempo real
+- **WHEN** está seleccionado System y el dispositivo cambia entre claro y oscuro
+- **THEN** la interfaz y su paleta de acento cambian al tema correspondiente sin reiniciar ni alterar ediciones
+
+#### Scenario: Tema fijo y reapertura
+- **WHEN** se selecciona Light o Dark y cambia la apariencia del dispositivo o se reabre Noteka
+- **THEN** se conserva el tema seleccionado independientemente del sistema
+
+#### Scenario: Persistencia y fallo
+- **WHEN** se selecciona System y se reabre la aplicación, o no se puede guardar la preferencia
+- **THEN** se restaura System si se guardó; ante fallo se aplica durante la sesión y se informa el error recuperable
+
+### Requirement: Selector local de relaciones por nombre
+
+El escritorio SHALL permitir seleccionar proyectos, etiquetas y personas compatibles mediante un menú buscable por nombre, sin requerir IDs. MUST identificar vínculos existentes, mostrar resultados progresivos y estados de carga, vacío y error, y permitir continuar la búsqueda sin afirmar que se agotó si quedan páginas. MUST conservar el acceso a las páginas originales y permitir desvincular relaciones existentes, incluidas las entrantes, sin eliminar entidades. Los vínculos archivados SHALL identificarse. Los controles ya representados como propiedades no se duplicarán en Relations.
+
+#### Scenario: Agregar y quitar por nombre
+- **WHEN** se busca un destino compatible y se selecciona o deselecciona
+- **THEN** se aplica la operación local correspondiente, se actualiza la página y se preservan las entidades
+
+#### Scenario: Búsqueda y cobertura
+- **WHEN** hay más páginas, un resultado tardío o un error de lectura
+- **THEN** el menú muestra resultados y cobertura progresivos, permite continuar o reintentar y no presenta una ausencia parcial como definitiva
+
+#### Scenario: Borrador y bloqueo
+- **WHEN** una página existente tiene edición pendiente y se agrega o quita una relación, o la página está bloqueada
+- **THEN** la relación se guarda independientemente sin guardar ni descartar el borrador; la página bloqueada conserva su protección
+
+#### Scenario: Guardado posterior y conflicto de revisión
+- **WHEN** se cambia una relación con un borrador pendiente y luego se guarda el contenido, o una revisión externa impide modificar la relación
+- **THEN** el guardado posterior conserva la relación usando la revisión confirmada; ante conflicto se conserva el borrador y se informa el error sin sobrescribir cambios externos
+
+#### Scenario: Teclado, conflicto y preservación
+- **WHEN** se usa teclado, se cierra el selector, hay cambio de revisión o un vínculo entrante/archivado
+- **THEN** el foco y los mensajes permiten operar o recuperarse, se respeta el control de revisión y no se descartan buffers ni se elimina la entidad vinculada
+
+### Requirement: Desplazamiento suave de rueda de mouse
+
+El escritorio SHALL suavizar los pasos verticales reconocibles de la rueda de mouse y conservar su dirección y distancia aproximada, con una preferencia local activada por defecto que permite regresar al comportamiento nativo. MUST respetar movimiento reducido y no interferir con zoom, desplazamiento horizontal, controles que administran rueda ni propagación en límites. Los eventos sin señal suficiente SHALL continuar con el comportamiento nativo; la detección no se presenta como identificación infalible del dispositivo.
+
+#### Scenario: Pasos y reversión
+- **WHEN** se desplaza una rueda reconocible o se invierte su dirección sobre un panel desplazable
+- **THEN** el contenido se mueve suavemente en la dirección indicada, acumulando pasos sin saltar fuera del panel
+
+#### Scenario: Eventos nativos y límites
+- **WHEN** se usa entrada precisa no identificada, zoom, desplazamiento horizontal, un control especial o se llega al límite
+- **THEN** se conserva la acción nativa y el panel exterior puede recibir el desplazamiento según sus reglas
+
+#### Scenario: Preferencia y movimiento reducido
+- **WHEN** se desactiva la opción o el sistema solicita movimiento reducido
+- **THEN** el desplazamiento usa el comportamiento nativo; la preferencia local se conserva y un error de guardado se informa sin descartar la elección de sesión
+
+### Requirement: Margen compacto de contenido de Home
+
+Home SHALL reservar un margen reducido junto a su indicador de secciones para aprovechar el ancho disponible. El indicador, scrollbar, contenido y borde ajustable del Side peek MUST permanecer accesibles y sin superponerse a controles, también en ventana estrecha y ambos temas.
+
+#### Scenario: Home junto a un Side peek
+- **WHEN** se muestra contenido de Home con un Side peek abierto o se modifica su ancho
+- **THEN** el margen lateral es más estrecho, el contenido utiliza el espacio recuperado y las marcas, scrollbar y borde siguen operables
+
+#### Scenario: Vista estrecha y temas
+- **WHEN** se reduce el ancho de la ventana o se cambia entre temas claro y oscuro
+- **THEN** el contenido y el indicador conservan separación, sin overflow global ni pérdida de acceso por teclado
+
+### Requirement: Animación visible junto al Side peek
+
+La portada ASCII de Home SHALL continuar animándose cuando Home esté visible junto a un Side peek, aunque el foco esté en el detalle. MUST conservar la pausa cuando la portada quede fuera de vista, la pestaña o ventana estén ocultas y la composición estática con movimiento reducido. El foco, atajos y borradores de ambos paneles MUST permanecer independientes.
+
+#### Scenario: Side peek con foco
+- **WHEN** se abre y enfoca un Side peek mientras la portada ASCII de Home permanece visible
+- **THEN** la animación continúa y el foco y atajos pertenecen al panel enfocado
+
+#### Scenario: Portada o pestaña oculta
+- **WHEN** la portada sale del área visible o se cambia a otra pestaña
+- **THEN** se suspende la animación y vuelve a avanzar cuando Home y su portada vuelven a estar visibles
+
+#### Scenario: Movimiento reducido y detalle cubierto
+- **WHEN** el sistema pide movimiento reducido, Center peek recibe el foco o Home queda cubierto por una presentación Full
+- **THEN** la portada permanece estática o suspendida, sin modificar documentos ni buffers
+
+### Requirement: Menú de acciones compartido en detalles
+
+Los detalles y borradores de Note, Task, Project, Tag, Person, Goal y Milestone SHALL presentar sus herramientas y acciones disponibles en un único menú `…` de cabecera. MUST conservar las capacidades por tipo, disponibilidad y guardias de borrador, sin duplicar el menú o ejecutar operaciones al abrirlo. Lock page SHALL limitarse a Note normal hasta que exista soporte en otros tipos.
+
+#### Scenario: Páginas y herramientas
+- **WHEN** se abre cualquier detalle o borrador y se despliega el menú
+- **THEN** aparecen las herramientas aplicables con las mismas condiciones de disponibilidad, y Archive o Restore para entidades guardadas; no se repiten las herramientas al pie
+
+#### Scenario: Teclado, tamaño y modos de detalle
+- **WHEN** se usa el menú en un panel estrecho, Side, Center o Full y se navega con teclado
+- **THEN** sus opciones y paneles se mantienen dentro del viewport y permiten apertura, navegación y cierre con retorno de foco
+
+#### Scenario: Acciones con borrador pendiente
+- **WHEN** se elige Archive o Restore con cambios pendientes
+- **THEN** se conserva la guardia para guardar, descartar o cancelar y la revisión esperada de la entidad; abrir o cerrar el menú no modifica datos
+
+### Requirement: Overview y Journal en Goals
+
+El detalle Goal SHALL ofrecer un Goal Overview editable con Additional Details desplegable y un Journal desplegable con acción para añadir entradas fechadas, usando documentos locales y guardado explícito. MUST conservar bloques y metadatos previos, identidades, versiones, guardias y revisión esperada; abrir o navegar no MUST escribir ni convertir contenido ambiguo o importado.
+
+#### Scenario: Nuevo Goal y diario
+- **WHEN** se crea un Goal, se escribe en Overview y Additional Details y se agregan entradas al Journal
+- **THEN** las secciones se guardan en el documento del Goal, se pueden volver a editar tras reabrir y los hitos y propiedades conservan su comportamiento
+
+#### Scenario: Contenido existente e importado
+- **WHEN** se abre un Goal existente con bloques anteriores o formato no reconocido
+- **THEN** sus datos no se reescriben ni descartan al abrir; el contenido interpretable permanece accesible y el formato no reconocido conserva su recuperación existente
+
+#### Scenario: Errores y cambios pendientes
+- **WHEN** se navega o se intenta guardar con cambios de Overview o Journal, o una revisión externa entra en conflicto
+- **THEN** se mantienen las guardias, la recuperación del borrador y el control de concurrencia existentes sin descartar secciones
+
+### Requirement: Proyectos relacionados en Goal
+
+Goal SHALL presentar los proyectos relacionados en una vista legible con título, estado y plazo disponibles, y acceso para abrir y vincular originales. MUST distinguir datos ausentes o no interpretables sin inventar valores, conservar relaciones y funcionar en Side peek y ventana estrecha.
+
+#### Scenario: Proyectos reales
+- **WHEN** un Goal tiene proyectos relacionados
+- **THEN** la vista muestra sus nombres, estados y plazos disponibles y permite abrir cada original
+
+#### Scenario: Lista vacía o panel estrecho
+- **WHEN** no hay proyectos o el Goal se muestra en un panel angosto
+- **THEN** se ofrece acceso a vincular proyectos guardados y las columnas permanecen accesibles
+
+### Requirement: Anchos ajustables y persistentes de paneles
+
+El menú izquierdo y Side peek SHALL permitir ajustar su ancho desde el borde con puntero y teclado, conservar el ancho local elegido y recuperarlo en la próxima apertura o inicio. MUST limitar el menú a 35% y Side peek a 65% del ancho de la ventana, también al redimensionarla. Preferencias inválidas usan defaults seguros; fallos de escritura SHALL ser recuperables sin modificar documentos.
+
+#### Scenario: Ajuste y reapertura
+- **WHEN** se arrastra un borde o se ajusta por teclado, se cierra y vuelve a abrir el panel o se reinicia la aplicación
+- **THEN** se recupera el ancho confirmado dentro de sus límites, independientemente del otro panel y sin crear revisiones de entidades
+
+#### Scenario: Límites y ventana menor
+- **WHEN** se arrastra más allá del máximo o se reduce la ventana con una preferencia mayor guardada
+- **THEN** el menú no supera 35% y Side peek no supera 65%; el ancho preferido permanece recuperable al ampliar la ventana y no hay overflow global
+
+#### Scenario: Cancelación o preferencia inaccesible
+- **WHEN** se cancela el arrastre con Escape, se pierde el puntero o falla el almacenamiento local
+- **THEN** cancelar recupera las dimensiones anteriores; un valor inválido usa fallback, un fallo de escritura se informa y la sesión sigue operable con sus borradores intactos
+
+### Requirement: Exclusión de navegación y Side peek ancho
+
+Un Side peek visible con ancho mayor al 45% de la ventana MUST ocultar el menú izquierdo. Abrir el menú en ese estado SHALL ocultar el peek sin cerrar, guardar, descartar ni recrear su editor. Reabrir ese mismo detalle SHALL recuperar el buffer y cerrar el menú. Abrir otro destino o abandonar la sesión MUST incluir los peeks ocultos en las guardias existentes.
+
+#### Scenario: Cruzar el umbral
+- **WHEN** el peek se amplía desde un ancho menor o igual a 45% hasta uno mayor con el menú abierto
+- **THEN** el menú se contrae; a 45% exacto se permite coexistencia y reducir después no abre el menú automáticamente
+
+#### Scenario: Alternancia conservadora
+- **WHEN** se abre el menú con un peek ancho visible y luego se elige ese mismo detalle desde el origen
+- **THEN** el peek se oculta y reaparece con el mismo editor, ancho, buffer e historial; al reaparecer se oculta el menú y cada panel conserva su scroll
+
+#### Scenario: Otro destino y cierre agregado
+- **WHEN** un peek oculto tiene ediciones y se elige otra entidad o se solicita cerrar pestaña, workspace o host
+- **THEN** su guardia se hace visible antes de continuar; cancelar o fallar guardar conserva el buffer y no confirma el cierre
+
+#### Scenario: Ventana o pestaña cambian
+- **WHEN** cambia el viewport o se activa una pestaña con Side peek ancho
+- **THEN** se vuelven a aplicar los límites y la exclusión sin intercambiar buffers ni persistir ocultamiento como contenido
+
+### Requirement: Movimiento reversible de Side peek
+
+Side peek SHALL expandirse y contraerse con transición breve y reversible equivalente al lateral, ajustando el espacio del origen sin escalar texto. Ocultar o animar MUST conservar la instancia del editor y retirar inmediatamente foco/atajos del contenido que se cierra. MUST omitir transición con movimiento reducido y durante el ajuste por arrastre.
+
+#### Scenario: Abrir, ocultar e invertir
+- **WHEN** se abre u oculta el peek o se invierte esa acción antes de finalizar
+- **THEN** el movimiento continúa desde la posición visible, el origen se ajusta y contenido/historial/revisiones permanecen sin writes ni lecturas por animar
+
+#### Scenario: Cierre explícito
+- **WHEN** se confirma guardar o descartar y cerrar el peek
+- **THEN** primero se resuelve la guardia, después se contrae y finalmente se libera su instancia; Cancel conserva el detalle visible
+
+#### Scenario: Movimiento reducido y arrastre
+- **WHEN** se usa movimiento reducido o se arrastra un borde
+- **THEN** el layout sigue el destino directamente sin interpolación ni pérdida de foco, selección o contenido
+
+### Requirement: Barras de desplazamiento discretas
+
+El escritorio SHALL presentar barras de desplazamiento finas y discretas, compatibles con los temas claro y oscuro, sin impedir el desplazamiento ni mostrar barras ocultas deliberadamente.
+
+#### Scenario: Superficie desplazable
+- **WHEN** se desplaza una vista vertical u horizontal con contenido desbordado
+- **THEN** la barra conserva funcionamiento nativo, con tirador vertical de 7 px de tinta, un margen transparente derecho de 2 px dentro de un canal de 10 px y canal horizontal de 8 px en motores compatibles, pista transparente y contraste adaptado al tema
+
+#### Scenario: Barra oculta intencionalmente
+- **WHEN** una superficie oculta su barra para presentar otra navegación
+- **THEN** la regla general no vuelve a mostrarla
+
+### Requirement: Actualización de vistas coordinada
+
+El escritorio SHALL actualizar las vistas visibles al recuperar foco, al activarlas o ante una solicitud manual. MUST agrupar eventos repetidos por consulta, limitar a dos las lecturas simultáneas de actualización por workspace y conservar el cupo hasta que una operación iniciada termine realmente. Los cambios confirmados por otro cliente SHALL reflejarse al siguiente refresco, sin polling continuo.
+
+#### Scenario: Ráfaga durante una lectura
+- **WHEN** llegan veinte eventos equivalentes mientras una consulta está pendiente o en curso
+- **THEN** las solicitudes previas a su inicio se agrupan y como máximo queda una consulta posterior para cambios ocurridos durante la operación; no se exceden dos lecturas físicas simultáneas por workspace
+
+#### Scenario: Navegación durante una lectura
+- **WHEN** una consulta queda en espera o termina después de cambiar vista, fecha, entidad, workspace o desmontar el panel
+- **THEN** la lectura en espera se descarta y la respuesta tardía no publica filas, estado ni error en la identidad nueva
+
+#### Scenario: Cambio confirmado por otro cliente
+- **WHEN** CLI o MCP confirma un cambio y luego se recupera el foco o se solicita actualizar
+- **THEN** la consulta vuelve a leer los originales confirmados sin escribir ni alterar revisiones
+
+### Requirement: Resultados anteriores identificados durante refrescos
+
+Home y las listas compatibles SHALL conservar sus resultados mientras se actualiza la misma consulta. Si falla MUST indicar que son anteriores y ofrecer reintento; al cambiar la identidad MUST limpiar los resultados previos. Una actualización exitosa SHALL volver a la primera página y avisar si se habían cargado páginas adicionales. MUST deshabilitar el cursor anterior durante la actualización y mientras los resultados estén sin verificar.
+
+#### Scenario: Actualización exitosa con páginas adicionales
+- **WHEN** una lista con varias páginas cargadas se actualiza por foco o por solicitud manual
+- **THEN** mantiene las filas visibles mientras consulta, publica la primera página nueva y avisa que se pueden cargar las demás nuevamente
+
+#### Scenario: Actualización fallida
+- **WHEN** falla la lectura de la misma consulta
+- **THEN** mantiene las filas anteriores identificadas como no actualizadas, presenta el error y el reintento, y no permite continuar con el cursor anterior
+
+#### Scenario: Consulta diferente
+- **WHEN** se cambia vista o fecha seleccionada mientras hay resultados o una lectura pendiente
+- **THEN** no se muestran los resultados de la identidad anterior como si correspondieran a la nueva
+
+### Requirement: Edición y tablero protegidos durante actualizaciones
+
+El escritorio MUST conservar borradores, selección e historial de edición mientras se actualiza. Si una revisión externa difiere de un borrador MUST conservar el buffer y mostrar conflicto. Projects Board MUST deshabilitar movimientos mientras sus datos estén actualizándose o no verificados, y permitirlos nuevamente sólo cuando el tablero vigente cumpla las condiciones de integridad y cobertura existentes.
+
+#### Scenario: Conflicto de edición externo
+- **WHEN** otro cliente modifica una entidad con cambios locales pendientes y la ventana recupera foco
+- **THEN** el borrador permanece intacto y se informa el conflicto sin sobrescribir ninguna revisión
+
+#### Scenario: Tablero pendiente o con error
+- **WHEN** el tablero se actualiza o falla su lectura
+- **THEN** las tarjetas anteriores pueden seguir visibles identificadas como anteriores, pero sus movimientos permanecen deshabilitados hasta obtener datos vigentes y completos

@@ -1,0 +1,20 @@
+Icona — https://icona.works/
+Source: https://github.com/komalverma22/Icona
+Revision: dd9f5217720a3f459a1f5464125701eb0d51c3a2 (imported 2026-10-26)
+
+The official website declares "MIT licensed". At this revision the upstream
+packages/icons/package.json also declares "license": "MIT"; an unmodified copy
+is preserved in third-party/icona/upstream-package.json. No standalone LICENSE
+file is supplied upstream. LICENSE.txt reproduces the standard MIT terms with
+attribution to Icona contributors; it is not represented as a copied upstream file.
+The website footer attributes copyright to Icona.
+
+Noteka selects local SVG Fill/bold variants and reuses the official Tasks
+(checklist) Jelly CSS export across nine sidebar scenes. User-group,
+user-plus, double-arrow, mirrored-sidebar and open-lock adaptations compose or
+transform the official geometry. CSS triggers and iteration counts are adapted
+for one explicit cycle. The same Jelly group transform wraps each selected
+static SVG; Tasks' original exported scene is preserved. No particles are used.
+No upstream website, fonts, brand artwork, React runtime or full icon library
+is included in the application. Historical AnimateIcons notices are retained
+separately for earlier releases; no AnimateIcons geometry is used by this catalog.

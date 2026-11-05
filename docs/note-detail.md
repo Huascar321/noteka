@@ -4,15 +4,17 @@ La Note abre su página original con icono, título editable, propiedades compac
 relaciones y cuerpo. La composición toma como referencia el detalle de Notes
 observado en Notion; los valores principales pertenecen al workspace local.
 
-- **Tag:** abre los tags locales relacionados. La flecha de edición abre las
-  relaciones existentes; guardar primero los cambios pendientes permite agregar
-  o quitar vínculos con las operaciones compartidas.
+- **Tag:** abre los tags locales relacionados. La flecha abre un selector para
+  buscar etiquetas por nombre y agregar o quitar vínculos con las operaciones
+  compartidas. En una página ya creada, los vínculos se guardan por separado y
+  dejan intactos los cambios pendientes de título, propiedades y contenido.
 - **URL:** dato del export, sólo lectura cuando está disponible. No representa
   una sincronización viva ni un nuevo campo editable.
 - **Favorite y Type:** controles locales editables. Las nueve categorías
   existentes se conservan; seleccionar Meeting o Voice no inicia audio ni ASR.
 - **Relations:** proyectos y personas reales, con acceso a sus páginas originales
-  y al editor de relaciones.
+  y selectores locales por nombre. Los vínculos archivados se identifican y
+  desvincular no elimina la página relacionada.
 
 View details conserva Inbox, procedencia, revisión y propiedades completas de
 origen. Los valores importados pueden ser anteriores a la edición local; no

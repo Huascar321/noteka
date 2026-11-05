@@ -115,7 +115,7 @@ bytes. No requiere cambiar tests, abrir un browser headed o usar perfiles person
 
 Primera plataforma: macOS Apple Silicon, con Xcode/Command Line Tools (`xcode-select -p`), Node.js >=22.12 y npm. Rust **1.99.0** está fijado en `rust-toolchain.toml`; Cargo usa SQLite incluido, no una instalación de SQLite del sistema.
 
-Versiones resueltas: Node 22.22.3, npm 10.9.8, Svelte 5.57.2, Vite 8.3.4, TypeScript 6.0.3, svelte-check 4.7.6, Tauri Rust/API 2.12.3, Tauri CLI 2.12.2, Tiptap 3.31.4, rusqlite 0.38.0 y schemars 1.2.2. TypeScript 7 no es compatible con los peer dependencies del checker elegido. `package-lock.json` y `Cargo.lock` son la referencia reproducible.
+Versiones resueltas: Node 22.22.3, npm 10.9.8, Svelte 5.57.2, Vite 8.3.4, TypeScript 6.0.3, svelte-check 4.7.6, Tauri Rust/API 2.12.3, Tauri CLI 2.12.2, Tiptap 3.31.4, rusqlite 0.41.0, SQLite incluido 3.54.1 y schemars 1.2.2. TypeScript 7 no es compatible con los peer dependencies del checker elegido. `package-lock.json` y `Cargo.lock` son la referencia reproducible. Los procesos desktop, CLI y MCP compilados con la versión anterior requieren reinicio/reemplazo para usar el motor nuevo; ver [verificación](verification-focus-refresh.md).
 
 En aarch64, el core habilita `sha2 0.10.9/asm` para usar el backend ARM SHA-256 con detección runtime/fallback portable. `sha2-asm 0.6.4` es la única adición al lock de este recorte de búsqueda; no cambia algoritmo ni formato de hashes persistentes. Hace falta tener ese código de build en la caché antes de usar `--offline --locked` (o ejecutar `cargo fetch --locked --target aarch64-apple-darwin` durante preparación). No descarga modelos ni habilita red en runtime. [Decisión y pruebas de compatibilidad](decisions/0013-explicit-attachment-index.md); evidencia medida en M1 Max, no aceptación de otras arquitecturas.
 
@@ -137,7 +137,7 @@ cargo build -p noteka-cli
 npm run tauri dev
 ```
 
-`tauri dev` inicia Vite en `127.0.0.1:1420` y el host nativo. `npm run dev` solo inicia el frontend: abrirlo en un navegador **no** crea una segunda implementación de almacenamiento; muestra una explicación al intentar operar.
+`tauri dev` inicia Vite en `127.0.0.1:1420` y el host nativo. En macOS, el host debug se abre como una app temporal mediante Launch Services para que el permiso de ubicación funcione; los sidecars se copian junto al ejecutable y el paquete se elimina al cerrar o recargar. `npm run dev` solo inicia el frontend: abrirlo en un navegador **no** crea una segunda implementación de almacenamiento; muestra una explicación al intentar operar.
 
 La app ofrece crear/abrir un workspace y entra en [Home](home.md). Campo vacío: ubicación por defecto. Otras rutas se escriben explícitamente; no se guardan notas dentro del checkout por defecto. La UI crea/edita los cinco tipos y muestra Inbox, My Day, pendientes/vencidas, proyectos activos, áreas/recursos y archivo. Dashboards consultan relaciones compartidas y capturan notas/tareas en contexto. Ver [reglas y contrato](productivity.md). Home está implementado en el cambio activo, con [verificación integrada y límites](verification-home.md); todavía no archivado.
 
@@ -178,6 +178,7 @@ npm run build
 npm run tauri build -- --no-bundle
 npm run test:headless-bridge
 npm run test:headless
+npm run test:headless-project-board
 npx --yes @fission-ai/openspec@1.14.1 validate --all --strict
 ```
 
@@ -185,7 +186,7 @@ npx --yes @fission-ai/openspec@1.14.1 validate --all --strict
 
 ### UI sin ocupar la pantalla (predeterminado)
 
-`npm run test:headless` construye el frontend de producción y CLI Rust, inicia un puente HTTP **sólo de pruebas**, en loopback y puerto efímero, y usa Playwright CLI **0.1.22** con `headless: true`, sin perfil personal. No inicia Tauri ni toma capturas del escritorio. El navegador llama al CLI real sobre SQLite/adjuntos sintéticos; no simula entidades, reglas ni persistencia. Ejecuta las mismas aserciones DOM que el recorrido nativo en seis sesiones (main/reopen/restored por tema), más teclado real de Playwright e intercalados de apertura/captura reteniendo sólo transporte. Conserva bases, backups, resultados y capturas del browser fuera del checkout, en `NOTEKA_TEST_TMP` o el temporal del sistema, con raíz canónica para admitir TMPDIR enlazado de macOS. `test:headless-bridge` comprueba aislamiento de origen/rutas/symlinks, temporal enlazado y bloqueo del runner nativo sin consentimiento; requiere CLI construido.
+`npm run test:headless-project-board` usa el mismo puente y recorre el detalle de Project sintético: abre List/Board, mueve una tarea por selector y arrastre, comprueba el checkbox de List y prepara New task por columna. `npm run test:headless` construye el frontend de producción y CLI Rust, inicia un puente HTTP **sólo de pruebas**, en loopback y puerto efímero, y usa Playwright CLI **0.1.22** con `headless: true`, sin perfil personal. No inicia Tauri ni toma capturas del escritorio. El navegador llama al CLI real sobre SQLite/adjuntos sintéticos; no simula entidades, reglas ni persistencia. Ejecuta las mismas aserciones DOM que el recorrido nativo en seis sesiones (main/reopen/restored por tema), más teclado real de Playwright e intercalados de apertura/captura reteniendo sólo transporte. Conserva bases, backups, resultados y capturas del browser fuera del checkout, en `NOTEKA_TEST_TMP` o el temporal del sistema, con raíz canónica para admitir TMPDIR enlazado de macOS. `test:headless-bridge` comprueba aislamiento de origen/rutas/symlinks, temporal enlazado y bloqueo del runner nativo sin consentimiento; requiere CLI construido.
 
 Las solicitudes HTTP del contexto del browser se limitan al origen local y se bloquean service workers. En macOS, cada proceso CLI corre bajo `sandbox-exec (deny network*)`; en otras plataformas no se afirma sandbox OS. npm/npx pueden necesitar red para tooling o browser inicial, no para operar contenido. Node 22 informa que `node:sqlite` es experimental; se usa exclusivamente para inyección de fixtures/fallos de prueba.
 
@@ -194,6 +195,8 @@ Las solicitudes HTTP del contexto del browser se limitan al origen local y se bl
 ### Host nativo (sólo con autorización de pantalla)
 
 `test:native` necesita ventana real macOS y **puede tomar foco**. Está bloqueado salvo `NOTEKA_NATIVE_SCREEN=1`; no ejecutar ese opt-in sin autorización explícita del usuario para usar la pantalla. No se programa automáticamente como sustituto de headless.
+
+Para verificar sólo la pérdida y recuperación de foco con una ventana temporal y workspace sintético, sin capturas, usar `NOTEKA_NATIVE_SCREEN=1 node scripts/native-focus-refresh-smoke.mjs` con la misma autorización. El equipo debe estar desbloqueado; el script no opera sobre el workspace personal.
 
 ```sh
 # Únicamente después de acordar el uso de pantalla:
@@ -326,7 +329,7 @@ Requieren `NOTEKA_TEST_TMP` externo y binarios/helper preparados por perfil. En 
 ## Entidades, documentos y relaciones
 
 - `note`: inbox booleano default true y documento v1/v2/v3. Registros creados por plantilla quedan fuera de Inbox. `person`: payload `{}`. Otras entidades todavía no tienen bloques.
-- `task`: state todo/done, priority low/normal/high, planned_date/due_date civiles opcionales e inbox booleano.
+- `task`: state todo/doing/done, priority low/normal/high, planned_date/due_date civiles opcionales e inbox booleano.
 - `project`: state planned/doing/done/ongoing/on_hold, purpose y start_date/end_date opcionales.
 - `tag`: exige `{classification: "area" | "resource" | "topic"}`; área/recurso son los mismos IDs de tag.
 - Título: trim, no vacío, máximo 4.096 bytes. Tipo/ID inmutables. Instantes UTC y zona IANA del workspace obtenida del entorno, o `UTC` si no se puede detectar.

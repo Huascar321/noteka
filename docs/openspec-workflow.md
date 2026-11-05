@@ -1,19 +1,139 @@
 # Cómo desarrollar Noteka con OpenSpec
 
-Seguimiento 26/10/2026: checkpoint local `2d43a66` preserva todo el avance y el
+Seguimiento 04/11/2026: `add-project-task-board` agrega `doing` a las tareas y
+List/Board al detalle de Project, con columnas To Do/Doing/Done, tarjetas con
+vencimiento, New task por columna y movimiento por arrastre/selector con CAS.
+Home y workflows tratan doing como pendiente; sin migración. Build, pruebas Rust
+focales y seis checks headless aprobados; Calendar/comentarios/orden manual fuera.
+[Guía](project-detail.md), [ADR0058](decisions/0058-task-status-and-project-board.md)
+y [evidencia](verification-project-task-board.md). Delta pendiente de sync/archivo.
+
+Seguimiento 03/11/2026: `merge-task-view-tabs` consolida Today con las tareas
+pendientes de proyectos Doing/Ongoing, retira la tab duplicada Active Projects
+(In Progress) y renombra Active Projects a All Active Projects. La página Tasks
+conserva Recurring/Active Content deshabilitados y el núcleo mantiene
+`tasks_today` por vencimiento para CLI/MCP. Build, check y validación OpenSpec
+estricta aprobados; la suite headless/nativa queda pendiente de ejecución.
+[Evidencia](verification-task-tabs.md). Delta pendiente de sync/archivo.
+
+Seguimiento 02/11/2026: `enhance-search-liquid-glass` aplica vidrio líquido al
+diálogo de búsqueda: tinte 72%/60%, `blur(22px) saturate(1.45)`, radial/sheen,
+borde luminoso y capas de vidrio en campo, fila activa y pie. Chromium/WebKit y
+ventana nativa verificados; fallback sólido con transparencia reducida. Build y
+OpenSpec estricto aprobados. [Evidencia](verification-search-liquid-glass.md).
+Delta pendiente de sync/archivo.
+
+Seguimiento 02/11/2026: `improve-search-popup-interaction` mantiene la animación
+ASCII de Home con la búsqueda abierta y cierra el popup con clic en el backdrop;
+Escape y Close se conservan. Chromium/WebKit y ventana nativa (clic externo)
+verificados; build y OpenSpec estricto aprobados.
+[Evidencia](verification-search-popup-interaction.md). Delta pendiente de
+sync/archivo.
+
+Seguimiento 28/10/2026: `upgrade-bundled-sqlite` actualiza el motor incluido a
+3.54.1 sin migración; `coordinate-window-refresh` coordina lecturas y evita
+repeticiones de foco sin sondeo. Las pruebas focales y mediciones sintéticas se
+documentan en [verificación](verification-focus-refresh.md), con sus fallos
+anteriores y límites. La actualización de SQLite está archivada sin deltas de
+spec; la prueba de foco físico macOS y la concurrencia app/CLI/MCP pasaron con
+datos sintéticos. El cambio de refresco sincronizó tres requisitos de
+`desktop-shell` y está archivado con 8/8 tareas. Ver
+[ADR0057](decisions/0057-workspace-refresh-coordination.md).
+
+Seguimiento26/10: `unify-sidebar-jelly-motion` aplica Jelly de Tasks a los nueve
+accesos laterales mediante una receta CSS compartida, conservando curva,
+reposo, cancelaciones y geometría. El usuario posteriormente pide ralentizar de700
+a1000ms, con limpieza a1050ms. La primera revisión tuvo seis checks de generación
+y140 headless; el ajuste posterior aprobó build, siete checks de generación y146
+headless Chromium/WebKit. Ver [guía](icons.md) y
+[verificación](verification-sidebar-jelly.md); delta pendiente de sync/archivo.
+
+Corrección26/10: `fix-primary-button-text-color` completado1/1. Texto y atajos
+blancos en botones primarios compartidos, conservando fondos y estados. Build y
+30 comprobaciones headless del CSS de producción en ambos temas aprobados.
+[Preferencias](settings.md); delta pendiente de sync/archivo, sin cambios de datos.
+
+Seguimiento26/10: `replace-ui-icons-with-icona` reemplaza el set por Icona local
+Fill/bold,85 claves y nueve escenas CSS oficiales diferidas. Conserva imágenes,
+colores y movimiento explícito/reducido; retira dependencia AnimateIcons.
+Build/generación reproducible, Chromium/WebKit y UI headless de producción
+verificados. [Guía](icons.md), [ADR0055](decisions/0055-local-icona-fill-bold.md) y
+[evidencia/límites](verification-icona.md). Delta pendiente de sync/archivo;
+sin nueva aceptación nativa ni cambios de dominio.
+
+Corrección visual 26/10: `fix-pending-task-mark-color` completado 1/1. El guion
+pendiente compartido es blanco; fondo y completadas conservados. Build y revisión
+headless del CSS en ambos temas aprobados; delta pendiente de sync/archivo.
+
+Seguimiento 26/10/2026: `add-note-page-lock` implementa preferencia opcional Rust
+y Lock page/Locked/Re-lock, con apertura temporal por instancia y guardias de
+borrador. Build, tres pruebas Rust nuevas y 79 comprobaciones headless aprobadas;
+la regresión core conserva seis fallos previos confirmados en HEAD (326 pasan,
+16 ignorados). Deltas pendientes de sync/archivo, sin aceptación nativa nueva.
+[Evidencia](verification-page-lock.md), [ADR0054](decisions/0054-note-page-lock.md).
+
+Seguimiento26/10/2026: tiburón de fondo menor/tenue con malla compartida, luz
+ondulante y relieve rocoso en un solo borde. Build,12 pruebas puras,12 casos
+visuales,19 observaciones de preservación/modelo/ambiente,9 muestras de fundido
+y seis direcciones medidas aprobaron; ocho capturas koi/medusas idénticas.
+Deltas pendientes de sync/archivo; sin aceptación nativa nueva.
+[Evidencia](verification-ascii-cover-scenes.md).
+
+Seguimiento26/10/2026: koi y medusas comparten la cuadrícula tenue de tiburones.
+Build,11 pruebas existentes,12 casos visuales,16 comparaciones de grilla y
+preservación en ambos temas/1000/420px/DPR1/2, y9 muestras de fundido aprobaron.
+Deltas pendientes de sync/archivo; sin aceptación nativa nueva.
+[Evidencia](verification-ascii-cover-scenes.md).
+
+Seguimiento26/10/2026: medusas secundarias del mismo modelo, burbujas y partículas
+cian/violeta, con profundidad y mismo reloj. Corales en abanico en las esquinas
+inferiores y rayos tenues desde arriba completan los bordes con centro despejado.
+Build,11 pruebas existentes,12 casos visuales,21 observaciones de preservación/ambiente/caché,9 muestras de
+fundido y medición de seis direcciones aprobaron; koi idéntico en ocho casos.
+Deltas pendientes de sync/archivo, sin aceptación nativa nueva.
+[Evidencia](verification-ascii-cover-scenes.md).
+
+Seguimiento26/10/2026: koi secundarios más legibles con el mismo modelo de los
+grandes, menor escala/opacidad,8 en ancho amplio/5 en estrecho y dos pasadas de
+campo/atlas reutilizados. Build,11 pruebas existentes,12 casos visuales,
+17 observaciones de preservación/ambiente,2 de modelo compartido y9 muestras de
+fundido aprobaron. Deltas pendientes de sync/archivo; sin aceptación nativa nueva.
+[Evidencia](verification-ascii-cover-scenes.md).
+
+Seguimiento26/10/2026: `add-random-ascii-cover-scenes` incorpora sólo al fondo koi
+peces pequeños, algas y burbujas ASCII, con densidad/contraste secundarios y reloj
+compartido. Once pruebas existentes,12 casos visuales,9 muestras de fundido,
+17 observaciones de preservación/ambiente y build aprobaron. Sin nueva aceptación
+nativa. Deltas siguen pendientes de sync/archivo. [Evidencia](verification-ascii-cover-scenes.md).
+
+Retorno26/10/2026: el usuario descartó la mezcla; se restauran las tres escenas
+de `2d43a66` con42s activos y fundido1,4s, conservando el arreglo del lateral.
+En ese retorno siete módulos coincidían con el checkpoint, App/style con `fd4f436`;11 pruebas,
+12 casos visuales,9 muestras de fundido y build aprobaron. El delta final de
+`combine-ascii-ocean-life` sólo modifica el lateral y conserva los requisitos
+de `add-random-ascii-cover-scenes`. Deltas pendientes de sync/archivo.
+[Evidencia actual](verification-ascii-cover-scenes.md).
+
+Antecedente visual descartado26/10/2026: `combine-ascii-ocean-life` redujo la composición a
+seis figuras principales (2/2/2) y dos peces ambientales tenues, con tamaños menores,
+profundidad de fondo más discreta y rutas separadas. Seis pruebas focalizadas,
+20 casos visuales nuevos y build aprobaron; no se repiten las suites anteriores.
+[Evidencia actual](verification-mixed-ocean.md). Deltas siguen pendientes de sync/archivo.
+
+Antecedente descartado26/10/2026: checkpoint local `2d43a66` preserva todo el avance y el
 ASCII alternado. `combine-ascii-ocean-life` implementado/verificado localmente en
 `codex/combined-ascii-ocean`: escena mixta con profundidad global por individuo y
 lateral sin overflow horizontal, con scroll vertical/resize operativos. Build,
 16 pruebas puras, 37 checks de App, 20 casos visuales y12 comparaciones pixel
 idénticas de la API original aprobaron. Sin aceptación nativa nueva. Deltas
-pendientes: aplicar primero `add-random-ascii-cover-scenes` y después el combinado,
-que retira la alternancia anterior. Meeting Notes0/19 intacto.
+pendientes: el alcance final conserva el lateral y vuelve a la alternancia,
+sin retirar sus requisitos. Meeting Notes0/19 intacto.
 [Guía](ascii-cover-scenes.md) y [evidencia](verification-mixed-ocean.md).
 
 Actualización 26/10/2026: `resize-workspace-panels` y
-`add-random-ascii-cover-scenes` implementados/verificados localmente; deltas
-pendientes de sincronización/archivo. Anchos con arrastre/teclado y memoria local,
-caps 35%/65%, exclusión de Side mayor a 35% sin perder el editor, transición
+`add-random-ascii-cover-scenes` implementados/verificados localmente; paneles
+sincronizado/archivado el 27/10 y el delta ASCII sigue pendiente. Anchos con arrastre/teclado y memoria local,
+caps 35%/65%, exclusión de Side mayor a 35% sin perder el editor (actualizada a 45% el 27/10/2026), transición
 reversible y movimiento reducido. Indicador más compacto, rail24/paso14. Portada
 con tres variantes locales: tiburones conservados, koi y medusas; semilla efímera,
 42s activos y fundido1,4s. Build, 16 pruebas puras, 71 checks de App y 12 casos
@@ -39,6 +159,19 @@ contextual y los tres grupos de herramientas en la cabecera. Build y 59 checks
 headless aprobados sobre SQLite sintético; sin aceptación nativa nueva.
 [Guía](note-editor.md), [evidencia](verification-note-editor.md).
 `add-local-meeting-notes` sigue propuesto 0/19.
+
+Seguimiento del hover de Notes del 26/10: controles visibles sobre ambos márgenes a
+la altura real del bloque, con entrada directa y cambio de fila, acotados al
+panel propio y sin activar huecos/popovers. Build y 82 comprobaciones headless
+focalizadas aprobados en claro/oscuro y 420 px; documento/IDs/revisión intactos.
+El clic en el espacio inferior crea un párrafo con foco o reutiliza el final
+vacío; build y otras 74 comprobaciones headless aprobaron, incluidos undo/redo,
+save/reopen, selección/controles/bloqueo, ambos temas y 420 px.
+Otro seguimiento agrupa las cuatro acciones de cabecera de Note en `…`, con
+iconos/texto, teclado, paneles y guardias existentes. Build y 49 comprobaciones
+headless aprobaron, incluidos ambos temas/420 px, archivo/restauración y Task.
+`refine-notion-note-editor` queda 9/9, pendiente de sincronización/archivo.
+[Evidencia](verification-note-editor.md).
 
 Actualización 25/10/2026: `fix-ascii-resize-flicker`, archivado 2/2, corrige la desaparición de
 los animales durante resize: repintado en el mismo callback y reloj continuo.

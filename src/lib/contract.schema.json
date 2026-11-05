@@ -4939,6 +4939,12 @@
             }
           ]
         },
+        "page_locked": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
         "source": {
           "anyOf": [
             {
@@ -9022,6 +9028,7 @@
     "TaskState": {
       "enum": [
         "todo",
+        "doing",
         "done"
       ],
       "type": "string"

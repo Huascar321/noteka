@@ -1,0 +1,54 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { splitGoalDocument, composeGoalDocument, goalHasContent } from '../src/lib/goal-document.ts';
+const id = '00000000-0000-4000-8000-000000000001';
+const paragraph = (id, text = '') => ({ id, type: 'paragraph', content: text ? [{ type: 'text', text }] : [] });
+const doc = { schema_version: 3, blocks: [paragraph('old', 'Texto importado'), { id: 'view', type: 'collection_view', attrs: { collection_id: 'col', view_id: 'view' }, content: [] }] };
+test('old document is retained without modifications', () => {
+  const original = structuredClone(doc);
+  const sections = splitGoalDocument(doc);
+  assert.deepEqual(sections.legacy, doc.blocks);
+  assert.equal(sections.marker, null);
+  assert.deepEqual(doc, original);
+  assert.equal(goalHasContent(sections.legacy), true);
+  assert.equal(goalHasContent([paragraph('empty')]), false);
+});
+test('sections survive recomposition and edits with version and original blocks', () => {
+  const p = splitGoalDocument(doc);
+  p.overview = [paragraph('overview', 'Propósito')]; p.details = [paragraph('details', 'Detalles')]; p.journal = [paragraph('journal', 'Primera entrada')];
+  const combined = composeGoalDocument(doc, p, id);
+  const parts = splitGoalDocument(combined);
+  assert.equal(parts.marker, id);
+  assert.deepEqual(parts.legacy, doc.blocks);
+  assert.deepEqual(parts.overview, p.overview);
+  assert.deepEqual(parts.details, p.details);
+  assert.deepEqual(parts.journal, p.journal);
+  parts.journal.push(paragraph('next', 'Segunda entrada'));
+  const next = composeGoalDocument(combined, parts, id);
+  assert.equal(next.schema_version, 3);
+  assert.deepEqual(splitGoalDocument(next), parts);
+});
+test('damaged delimiters remain original content rather than discarded or guessed', () => {
+  const p = splitGoalDocument(doc); p.overview = [paragraph('overview', 'A')]; p.journal = [paragraph('journal', 'B')];
+  const edited = composeGoalDocument(doc, p, id);
+  edited.blocks[2].content[0].text = 'Altered heading';
+  const parts = splitGoalDocument(edited);
+  assert.equal(parts.marker, null);
+  assert.deepEqual(parts.legacy, edited.blocks);
+  const other = '00000000-0000-4000-8000-000000000002';
+  const next = composeGoalDocument(edited, { ...parts, overview: [paragraph('new', 'new')], details: [], journal: [paragraph('new-journal')] }, other);
+  assert.deepEqual(splitGoalDocument(next).legacy, edited.blocks);
+});
+test('older two-section markers reopen without treating overview as details', () => {
+  const p = splitGoalDocument(doc);
+  p.overview = [paragraph('overview', 'Existing overview')]; p.details = []; p.journal = [paragraph('journal', 'Existing log')];
+  const prior = composeGoalDocument(doc, p, id);
+  prior.blocks = prior.blocks.filter(block => !block.id.startsWith('noteka-goal-details-v1-'));
+  const restored = splitGoalDocument(prior);
+  assert.deepEqual(restored.legacy, doc.blocks);
+  assert.deepEqual(restored.overview, p.overview);
+  assert.deepEqual(restored.details, []);
+  assert.deepEqual(restored.journal, p.journal);
+  restored.details = [paragraph('details', 'Added later')];
+  assert.deepEqual(splitGoalDocument(composeGoalDocument(prior, restored, id)), restored);
+});

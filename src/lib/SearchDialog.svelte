@@ -52,7 +52,7 @@
   });
 </script>
 
-<dialog bind:this={dialog} class="context-search" aria-labelledby="context-search-title" oncancel={(event) => { event.preventDefault(); onclose(); }} onkeydown={keydown}>
+<dialog bind:this={dialog} class="context-search" aria-labelledby="context-search-title" oncancel={(event) => { event.preventDefault(); onclose(); }} onclick={(event) => { if (event.target === dialog) onclose(); }} onkeydown={keydown}>
   <h2 class="sr-only" id="context-search-title">{mode === 'new' ? "Open in a new tab" : "Search workspace"}</h2>
   <div class="context-search-input"><AppIcon name="search" size={21} /><input bind:this={input} bind:value={query} aria-label="Search workspace" role="combobox" aria-expanded="true" aria-controls="context-search-results" aria-activedescendant={selected ? `search-result-${searchState.selected}` : undefined} autocomplete="off" placeholder="Search your workspace…" maxlength="256" /><button class="icon-button" aria-label="Close search" title="Close (Esc)" onclick={onclose}><AppIcon name="close" size={16} /></button></div>
   <div class="context-search-filters"><button class:active={filters} aria-expanded={filters} onclick={() => { filters = !filters; }}>Filters{kind || archived || related ? ' · activos' : ''}</button><span>{mode === 'new' ? "Open in new tab" : "Local search"}</span></div>

@@ -1,7 +1,7 @@
 # Página Notes
 
 La entrada Notes del menú abre una página amplia con breadcrumb Home → Notes,
-icono propio sobre título, Nav, accesos Inbox/Fav/All/Tags y New Note. Las ocho
+icono propio sobre título, Nav, accesos Inbox/Fav/All/Tags y el botón New. Las ocho
 pestañas son Notes, Inbox, Fav., Clips, Voice, Journal, Meetings y All. Notes es
 la vista inicial; sus reglas son las de la [biblioteca local](notes-reference.md).
 All conserva todas las notas activas, incluidas páginas de otras bases importadas.
@@ -22,15 +22,15 @@ El contador adicional de notas se conserva en Home, fuera de esta variante.
 
 Cada sección carga diez filas y mantiene su propia vista, cursor, carga y error.
 Load more acumula originales únicos y desaparece al terminar. Load more y
-New page textuales responden en toda la fila. El botón New Note con borde
-conserva su tamaño. La cobertura queda dentro de Opciones de vista.
+New page textuales responden en toda la fila. La acción de creación queda en el
+botón New de la barra de vistas. La cobertura queda dentro de Opciones de vista.
 
 Actualizar una sección sólo vuelve a leer esa sección. ⌘R en macOS, Ctrl+R en
 Windows/Linux o F5 actualiza ambas conservando sus vistas y sin recargar el
 WebView. No inicia consultas si hay diálogo/bloqueo, composición o repetición;
 las páginas inactivas no ejecutan ese atajo. Al salir se descartan lecturas tardías.
 
-New Note/New page/New preparan un borrador mediante las guardias existentes.
+New/New page preparan un borrador mediante las guardias existentes.
 Crear desde Clips/Voice/Journal/Meetings preselecciona el tipo; Inbox/Fav. su marca.
 No hay escritura hasta guardar. Voice clasifica notas; no graba ni transcribe.
 Abrir una nota, relación o última nota conserva el editor y breadcrumb compartidos.

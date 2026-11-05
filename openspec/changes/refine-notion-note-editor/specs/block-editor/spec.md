@@ -26,14 +26,21 @@ selección al operar y permitir escribir barras literales sin convertirlas en bl
 
 La Note normal SHALL mostrar controles laterales sólo por hover, foco explícito
 de teclado o arrastre, para insertar debajo, convertir, duplicar, mover y quitar.
+El hover SHALL abarcar la altura real del bloque y ambos márgenes horizontales
+visibles de su propio panel de Note, sin extenderse a huecos verticales,
+superficies superpuestas u otros paneles.
 SHALL ofrecer arrastre interno y botones accesibles: mover conserva IDs y
 duplicar los renueva también en hijos. MUST preservar atributos, referencias,
 prefijos importados, undo/redo, revisión y guardado explícito compartido, sin
 descargar originales externos.
 
 #### Scenario: Hover independiente del foco de escritura
-- **WHEN** el editor conserva el foco y el puntero entra en un bloque, cruza hacia sus controles o sale hacia otro lugar
-- **THEN** se muestran los controles del bloque bajo el puntero, siguen utilizables al cruzar hacia ellos y se ocultan al salir; el espacio vacío bajo el párrafo no cuenta como hover y el foco/escritura por sí solos no los muestran
+- **WHEN** el editor conserva el foco y el puntero entra en un bloque, cruza hacia sus controles o se mueve lateralmente por la misma altura dentro del panel
+- **THEN** se muestran y conservan los controles de ese bloque, también sobre ambos márgenes; se ocultan al salir de esa franja o panel, y el espacio vacío bajo el párrafo y el foco/escritura por sí solos no los muestran
+
+#### Scenario: Entrada desde un margen y cambio de fila
+- **WHEN** el puntero entra directamente por un margen a la altura de un bloque y luego pasa verticalmente a otro bloque, un hueco, un popover u otro panel
+- **THEN** aparecen los controles del bloque de esa fila sin hover previo sobre su contenido; cambian al otro bloque o se ocultan en el hueco, popover u otro panel, también después de scroll o resize
 
 #### Scenario: Acceso explícito por teclado
 - **WHEN** se invocan acciones del bloque mediante su atajo sin hover
@@ -50,3 +57,25 @@ descargar originales externos.
 #### Scenario: Inserción y cancelación
 - **WHEN** se abre el selector de vista o adjunto y se cancela sin insertar
 - **THEN** no se añade contenido ni se importa un archivo, y la selección original permanece recuperable
+
+### Requirement: Continuación desde el espacio inferior de Notes
+
+La Note normal SHALL permitir continuar escribiendo mediante un clic primario
+sin modificadores en el espacio vacío debajo del último bloque dentro de su
+panel. SHALL insertar un párrafo al final y enfocar el cursor dentro de él, o
+reutilizar el párrafo final si está vacío sin añadir otro. MUST conservar bloques,
+IDs, formato previo, undo/redo y guardado explícito; arrastrar una selección,
+usar controles, pulsar dentro de bloques o entre ellos y operar con el editor
+deshabilitado MUST NOT insertar un párrafo.
+
+#### Scenario: Continuar después de contenido
+- **WHEN** se hace clic en el espacio inferior de una Note que termina en texto, código, lista, encabezado u otro bloque admitido
+- **THEN** se añade exactamente un párrafo al final con ID propio y cursor listo para escribir texto sin heredar el tipo del bloque previo; undo/redo y guardar/reabrir conservan contenido e identidades
+
+#### Scenario: Reutilizar un final vacío
+- **WHEN** la Note está vacía o ya termina en un párrafo vacío y se pulsa repetidamente en el espacio inferior
+- **THEN** se enfoca ese párrafo sin acumular bloques vacíos ni modificar la revisión guardada sólo por enfocarlo
+
+#### Scenario: Respeto del contexto de interacción
+- **WHEN** se selecciona texto arrastrando hacia el espacio inferior, se usa clic secundario/modificado, se pulsa un control, un bloque, un hueco intermedio u otro panel, o el editor está deshabilitado
+- **THEN** no se inserta contenido por ese gesto; temas claro/oscuro y ancho estrecho conservan la misma regla

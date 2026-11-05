@@ -6,11 +6,13 @@
     icon,
     color = null,
     size = 38,
+    disabled = false,
     onchange,
   }: {
     icon?: string | null;
     color?: string | null;
     size?: number;
+    disabled?: boolean;
     onchange: (value: { icon: string; color: string | null }) => void;
   } = $props();
   let open = $state(false);
@@ -18,11 +20,14 @@
   const current = $derived(visualIconName(icon));
   const currentColor = $derived(iconColor(color) ?? null);
   function choose(name: string) {
+    if (disabled) return;
     onchange({ icon: name, color: currentColor });
   }
   function paint(value: string | null) {
+    if (disabled) return;
     onchange({ icon: current, color: value });
   }
+  $effect(() => { if (disabled) open = false; });
 </script>
 
 <svelte:window onkeydown={(event) => { if (event.key === 'Escape' && open) { event.preventDefault(); open = false; } }} onclick={(event) => { if (open && root && event.target instanceof Node && !root.contains(event.target)) open = false; }} />
@@ -33,6 +38,7 @@
     class="icon-trigger"
     aria-label="Choose icon and color"
     aria-expanded={open}
+    {disabled}
     onclick={() => open = !open}
     style:width={`${size + 14}px`} style:height={`${size + 14}px`}
   ><AppIcon name={current} color={currentColor ?? undefined} {size} /></button>
@@ -78,6 +84,7 @@
   .icon-picker { position: relative; flex: 0 0 auto; }
   .icon-trigger { display: grid; place-items: center; width: 58px; height: 58px; padding: 0; border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--text); }
   .icon-trigger:hover { background: var(--hover); border-color: var(--border); }
+  .icon-trigger:disabled { opacity:1; cursor:default; background:transparent; border-color:transparent; }
   .icon-panel { position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; width: 292px; padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 9px; box-shadow: 0 14px 35px #0005; }
   .icon-caption { margin: 0 0 8px; color: var(--muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
   .icon-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; margin-bottom: 15px; }

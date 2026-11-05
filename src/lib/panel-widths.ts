@@ -18,7 +18,7 @@ export function clampPanelWidth(kind: PanelKind, value: number, viewport: number
 export function effectivePanelWidth(kind: PanelKind, preferred: PanelWidths, viewport: number): number {
   return clampPanelWidth(kind, kind === 'sidebar' ? preferred.sidebar : preferred.sidePeek ?? viewport * .45, viewport);
 }
-export function sidePeekExcludesSidebar(width: number, viewport: number): boolean { return width * 100 > viewport * 35; }
+export function sidePeekExcludesSidebar(width: number, viewport: number): boolean { return width * 100 > viewport * 45; }
 export function readPanelWidths(store: () => Store): PanelWidths {
   try {
     const value = JSON.parse(store().getItem(PANEL_WIDTHS_KEY) ?? 'null');

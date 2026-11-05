@@ -255,16 +255,16 @@ impl Workspace {
         }
         let filter = match input.view {
             WorkflowView::Inbox => {
-                "kind IN ('note','task') AND coalesce(json_extract(payload,'$.inbox'),1)=1 AND (kind='note' OR coalesce(json_extract(payload,'$.state'),'todo')='todo')"
+                "kind IN ('note','task') AND coalesce(json_extract(payload,'$.inbox'),1)=1 AND (kind='note' OR coalesce(json_extract(payload,'$.state'),'todo') IN ('todo','doing'))"
             }
             WorkflowView::MyDay => {
-                "kind='task' AND coalesce(json_extract(payload,'$.state'),'todo')='todo' AND json_extract(payload,'$.planned_date')=?4"
+                "kind='task' AND coalesce(json_extract(payload,'$.state'),'todo') IN ('todo','doing') AND json_extract(payload,'$.planned_date')=?4"
             }
             WorkflowView::Pending => {
-                "kind='task' AND coalesce(json_extract(payload,'$.state'),'todo')='todo'"
+                "kind='task' AND coalesce(json_extract(payload,'$.state'),'todo') IN ('todo','doing')"
             }
             WorkflowView::Overdue => {
-                "kind='task' AND coalesce(json_extract(payload,'$.state'),'todo')='todo' AND json_extract(payload,'$.due_date')<?4"
+                "kind='task' AND coalesce(json_extract(payload,'$.state'),'todo') IN ('todo','doing') AND json_extract(payload,'$.due_date')<?4"
             }
             WorkflowView::ActiveProjects => {
                 "kind='project' AND coalesce(json_extract(payload,'$.state'),'planned') IN ('planned','doing','ongoing')"

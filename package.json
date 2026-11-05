@@ -13,6 +13,7 @@
     "contracts:check": "node scripts/contracts.mjs --check",
     "test:native": "node scripts/native-smoke.mjs",
     "test:headless": "node scripts/headless-smoke.mjs",
+    "test:headless-project-board": "node scripts/headless-project-board.mjs",
     "test:headless-bridge": "node --test tests/headless-bridge.mjs",
     "test:attachment-search": "node --experimental-strip-types --test tests/attachment-search.mjs",
     "test:headless-evidence": "node scripts/headless-evidence-smoke.mjs",
@@ -29,7 +30,6 @@
     "icons:check": "node scripts/generate-icons.mjs --check"
   },
   "dependencies": {
-    "@animateicons/vanilla": "0.1.0",
     "@tauri-apps/api": "2.12.3",
     "@tiptap/core": "3.31.4",
     "@tiptap/extension-task-item": "3.31.4",

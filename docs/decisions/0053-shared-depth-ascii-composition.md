@@ -1,6 +1,8 @@
 # ADR 0053: profundidad compartida entre animales ASCII
 
-Fecha: 26/10/2026. Estado: experimento local implementado.
+Fecha: 26/10/2026. Estado: descartada para la portada por decisión del usuario;
+se retoma [ADR0052](0052-local-ascii-scene-composition.md). El resto registra el
+experimento histórico; la corrección independiente del lateral se conserva.
 
 ## Context
 
@@ -13,8 +15,10 @@ preserva la alternancia anterior y los demás avances. La prueba vive en
 
 Una lista pura de poses por individuo comparte profundidad entre familias. Se
 dibuja del fondo al frente, con escala y opacidad ligadas a profundidad, sin
-blur ni ruido aleatorio por frame. La población se reduce de 11 a nueve animales
-en ancho estrecho y conserva las rutas/profundidad de los individuos compartidos.
+blur ni ruido aleatorio por frame. El seguimiento visual aprobado reduce el elenco
+a seis figuras principales (2 tiburones, 2 koi, 2 medusas), más dos peces pequeños
+ambientales muy tenues. Menor escala, contraste de fondo y zonas de recorrido
+separadas reducen saturación, conservando identidades/rutas al cambiar el ancho.
 
 El renderer del océano expone ambiente y dibujo por actor, manteniendo API y
 geometría anteriores. Koi/medusas reutilizan atlas y una superficie de señal con

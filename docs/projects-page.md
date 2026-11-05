@@ -4,7 +4,7 @@ El registro individual usa ahora el [detalle de Project](project-detail.md), con
 propiedades compactas, progreso del núcleo y secciones Tasks/Notes relacionadas.
 
 Projects del menú lateral abre una página amplia con breadcrumb Home → Projects,
-icono propio sobre título, Nav, By Tag/By People y New Project. Active es la vista
+icono propio sobre título, Nav, By Tag/By People y el botón New. Active es la vista
 inicial, con grupos Doing y Ongoing y filas con contexto, pendientes, vencidas y
 progreso calculados desde originales locales.
 
@@ -33,7 +33,7 @@ referidos conservan sus páginas originales y los tipados abren su sección can�
 
 ## Captura y lectura
 
-New Project/New preparan Planned. New page en Doing/Ongoing/Done/On Hold/Planned
+New prepara Planned. New page en Doing/Ongoing/Done/On Hold/Planned
 prepara ese estado. En By Tag/People prepara Planned con el vínculo al grupo;
 Sin tag/persona no añade una relación. Las guardias existentes protegen el
 borrador y no hay escritura hasta guardar.

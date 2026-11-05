@@ -10,9 +10,9 @@ class NotesTextReader {
   private lifetime = new ReadLifetime();
   private disposed = false;
   private committed: SearchQuery | null = null;
-  private read: (input: SearchQuery) => Promise<SearchPage>;
+  private read: (input: SearchQuery, signal: AbortSignal) => Promise<SearchPage>;
   private changed: (state: NotesReadState) => void;
-  constructor(read: (input: SearchQuery) => Promise<SearchPage>, changed: (state: NotesReadState) => void) { this.read = read; this.changed = changed; }
+  constructor(read: (input: SearchQuery, signal: AbortSignal) => Promise<SearchPage>, changed: (state: NotesReadState) => void) { this.read = read; this.changed = changed; }
   private publish(state: NotesReadState) { this.state = state; this.changed(state); }
   edit() { if (this.disposed) return; this.lifetime.begin(); this.committed = null; this.publish(emptyNotes()); }
   search(query: string) { if (this.disposed || this.state.busy || !query.trim()) return Promise.resolve(); return this.load({ query, archived: false, limit: 20 }, 1); }
@@ -20,7 +20,7 @@ class NotesTextReader {
   private async load(input: SearchQuery, pageNumber: number) {
     const { token, signal } = this.lifetime.begin(); this.committed = { ...input }; this.publish({ page: null, pageNumber: 0, busy: true, error: null });
     try {
-      const page = await notesPool.run(() => { signal.throwIfAborted(); return this.read(input); }, signal);
+      const page = await notesPool.run(() => { signal.throwIfAborted(); return this.read(input, signal); }, signal);
       if (!this.lifetime.current(token)) return;
       if (page.items.length > 20) throw new Error("Entity page is too large. Search again.");
       this.publish({ page, pageNumber, busy: false, error: null });
@@ -40,10 +40,10 @@ export class GroupedTextSearch {
   private query = '';
   private disposed = false;
   private changed: (state: GroupedSearchState) => void;
-  constructor(call: (command: Request['command']) => Promise<unknown>, changed: (state: GroupedSearchState) => void) {
+  constructor(call: (command: Request['command'], signal: AbortSignal) => Promise<unknown>, changed: (state: GroupedSearchState) => void) {
     this.changed = changed;
-    this.notes = new NotesTextReader(input => call({ operation: 'search.query', input }) as Promise<SearchPage>, notes => this.publish({ ...this.state, notes }));
-    this.attachments = new AttachmentReader(input => call({ operation: 'extraction.search', input }) as Promise<import('./contracts.generated').AttachmentSearchPage>, attachments => this.publish({ ...this.state, attachments }));
+    this.notes = new NotesTextReader((input, signal) => call({ operation: 'search.query', input }, signal) as Promise<SearchPage>, notes => this.publish({ ...this.state, notes }));
+    this.attachments = new AttachmentReader((input, signal) => call({ operation: 'extraction.search', input }, signal) as Promise<import('./contracts.generated').AttachmentSearchPage>, attachments => this.publish({ ...this.state, attachments }));
   }
   private publish(state: GroupedSearchState) { this.state = state; this.changed(state); }
   edit() { this.query = ''; this.notes.edit(); this.attachments.edit(); }

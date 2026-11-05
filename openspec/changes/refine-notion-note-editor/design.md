@@ -35,19 +35,32 @@ implementar otros módulos de Notion o la propuesta Meeting Notes.
    de contenido notifican cambios; estado visual, selección y hover son efímeros.
 7. Por ajuste solicitado durante la implementación, PageTools de Note normal se
    ubica en la barra superior. El mismo componente conserva paneles montados y
-   disponibilidad; su variante header usa panel flotante acotado al viewport,
-   Escape con foco al icono y cierre exterior sin borrar formularios. Los demás
+   disponibilidad; su variante header agrupa los tres accesos y Archive/Restore
+   bajo un botón `…`, con icono/texto por fila, flechas/Home/End, Escape y foco
+   al disparador. Elegir una herramienta abre su panel flotante acotado al viewport;
+   cierre exterior/Escape conservan formularios. Archive/Restore llama al mismo
+   handler protegido por la guardia del borrador y revisión esperada. Los demás
    detalles conservan la ubicación anterior.
 8. Los seguimientos retiraron los controles inferiores redundantes sólo de Note.
    El diálogo compartido conserva handlers, bloqueo y foco inicial en Cancel;
    cambia el orden DOM a Cancel/Discard/Save and continue, añade 24px sobre las
    acciones y usa close/Trash2/Save del catálogo local. El botón primario mantiene
    alineación derecha si el ancho obliga a envolver la fila.
-9. Por pedido posterior, los controles laterales siguen el hover real del bloque,
-   no la selección ni el foco de escritura. El puntero se valida contra el DOM y
-   los límites del bloque; un puente de 3px permite alcanzar los controles sin
-   perderlos. Se actualiza al mover puntero, desplazar/editar y perder foco de
-   ventana; el foco explícito de teclado y el arrastre mantienen acceso operativo.
+9. Los controles laterales siguen la franja horizontal del bloque, incluidos los
+   márgenes de su propio panel de Note; la selección y el foco de escritura no
+   los activan. Se valida la superficie visible bajo el puntero y se proyecta su
+   coordenada horizontal sobre el editor para resolver el bloque. Su altura real
+   excluye huecos entre bloques y el vacío inferior. Popovers, otros paneles y
+   controles superpuestos no amplían el hover. Se actualiza al mover el puntero,
+   desplazar/editar y perder foco de ventana; teclado y arrastre conservan acceso.
+10. El fondo vacío bajo el último bloque de Note permite continuar con un párrafo.
+    Un clic primario sin modificadores debe empezar y terminar en ese espacio;
+    arrastrar una selección, usar controles o pulsar dentro de bloques no inserta.
+    Se comprueban contenedores vacíos del propio panel y el borde inferior del
+    último nodo real. Un párrafo final vacío se enfoca sin mutar el documento;
+    cualquier otro final recibe un párrafo nuevo con ID e historial compartidos,
+    sin heredar formato de código/lista/encabezado ni ejecutar guardado automático.
+    El evento pertenece a la instancia y se retira al desmontarla.
 
 ## Risks / Trade-offs
 
@@ -65,3 +78,5 @@ implementar otros módulos de Notion o la propuesta Meeting Notes.
 No cambia formato ni esquema. Deshacer las modificaciones de presentación revierte
 la experiencia; los documentos guardados siguen siendo v1/v2/v3 compatibles.
 Verificar compilación y flujo en sesión headless propia; no usar pantalla nativa.
+
+Seguimiento 27/10/2026: `unify-page-actions-menu` extiende el menú de acciones superior a los otros tipos de detalle, sin cambiar su composición de contenido ni extender el bloqueo de Note.

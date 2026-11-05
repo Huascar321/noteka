@@ -1397,6 +1397,7 @@ export interface NoteFields {
   inbox?: boolean;
   milestone?: MilestoneFields | null;
   note_type?: NoteType | null;
+  page_locked?: boolean | null;
   source?: NoteSource | null;
 }
 export interface OcrRegionPage {
@@ -2066,7 +2067,7 @@ export interface TaskFields {
   inbox?: boolean;
   planned_date?: string | null;
   priority?: "low" | "normal" | "high";
-  state?: "todo" | "done";
+  state?: "todo" | "doing" | "done";
 }
 export interface Template {
   collection_id: string;

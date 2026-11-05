@@ -11,7 +11,10 @@ use rusqlite::{
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
+    cell::{Cell, RefCell},
+    collections::HashMap,
     path::{Path, PathBuf},
+    rc::{Rc, Weak},
     sync::OnceLock,
     time::{Duration, Instant},
 };
@@ -237,6 +240,26 @@ pub(crate) fn busy(reason: &str) -> CoreError {
 pub(crate) struct Budget<'a> {
     conn: &'a Connection,
     deadline: Instant,
+    progress: Rc<ProgressState>,
+    progress_id: u64,
+}
+struct ProgressState {
+    deadlines: RefCell<Vec<(u64, Instant)>>,
+    next_id: Cell<u64>,
+}
+thread_local! {
+    // Connection and its budgets are !Sync. Nested budgets share one handler;
+    // SQLite interrupts when any active deadline on the connection expires.
+    static ACTIVE_BUDGETS: RefCell<HashMap<usize, Weak<ProgressState>>> = RefCell::new(HashMap::new());
+}
+unsafe extern "C" fn progress_deadline_callback(context: *mut std::ffi::c_void) -> std::ffi::c_int {
+    // SAFETY: all active Budget guards own the Rc; the last one unregisters the
+    // callback before freeing it. The callback never re-enters SQLite.
+    std::panic::catch_unwind(|| {
+        let state = unsafe { &*context.cast::<ProgressState>() };
+        let now = Instant::now();
+        i32::from(state.deadlines.try_borrow().map_or(true, |deadlines| deadlines.iter().any(|(_, deadline)| now >= *deadline)))
+    }).unwrap_or(1)
 }
 impl<'a> Budget<'a> {
     pub fn new(conn: &'a Connection) -> Result<Self> {
@@ -244,8 +267,32 @@ impl<'a> Budget<'a> {
     }
     pub fn with_duration(conn: &'a Connection, duration: Duration) -> Result<Self> {
         let deadline = Instant::now() + duration;
-        conn.progress_handler(1000, Some(move || Instant::now() >= deadline))?;
-        Ok(Self { conn, deadline })
+        // rusqlite 0.41 requires &mut Connection to replace hooks, but Noteka's
+        // read transactions hold an immutable connection reference. No other
+        // code installs this hook. Guards share one callback per handle, borrow
+        // the connection for their whole lifetime and unregister before the
+        // callback context is freed.
+        let handle = unsafe { conn.handle() };
+        let (progress, first) = ACTIVE_BUDGETS.with(|active| {
+            let mut active = active.borrow_mut();
+            if let Some(progress) = active.get(&(handle as usize)).and_then(Weak::upgrade) {
+                (progress, false)
+            } else {
+                let progress = Rc::new(ProgressState { deadlines: RefCell::new(Vec::new()), next_id: Cell::new(0) });
+                active.insert(handle as usize, Rc::downgrade(&progress));
+                (progress, true)
+            }
+        });
+        let progress_id = progress.next_id.get();
+        progress.next_id.set(progress_id.checked_add(1).ok_or_else(|| busy("progress_sequence_exhausted"))?);
+        progress.deadlines.borrow_mut().push((progress_id, deadline));
+        if first {
+            let context = Rc::as_ptr(&progress).cast_mut().cast();
+            // SAFETY: the live Connection owns the handle and is !Sync; the Rc
+            // allocation remains stable until the last guard unregisters it.
+            unsafe { rusqlite::ffi::sqlite3_progress_handler(handle, 1000, Some(progress_deadline_callback), context); }
+        }
+        Ok(Self { conn, deadline, progress, progress_id })
     }
     pub fn check(&self) -> Result<()> {
         if Instant::now() >= self.deadline {
@@ -263,7 +310,9 @@ impl<'a> Budget<'a> {
             .clamp(1, 5000) as u32)
     }
     pub fn map(&self, mut e: CoreError) -> CoreError {
-        if e.details["sqlite_interrupt"] == true && Instant::now() >= self.deadline {
+        let now = Instant::now();
+        let expired = self.progress.deadlines.borrow().iter().any(|(_, deadline)| now >= *deadline);
+        if e.details["sqlite_interrupt"] == true && expired {
             e.code = ErrorCode::WorkspaceBusy;
             e.details["reason"] = json!("execution_deadline");
         }
@@ -272,7 +321,18 @@ impl<'a> Budget<'a> {
 }
 impl Drop for Budget<'_> {
     fn drop(&mut self) {
-        let _ = self.conn.progress_handler(0, None::<fn() -> bool>);
+        let empty = {
+            let mut deadlines = self.progress.deadlines.borrow_mut();
+            deadlines.retain(|(id, _)| *id != self.progress_id);
+            deadlines.is_empty()
+        };
+        if empty {
+            // SAFETY: the borrowed connection and Rc are both alive, and no
+            // callback can run concurrently on this !Sync connection.
+            let handle = unsafe { self.conn.handle() };
+            unsafe { rusqlite::ffi::sqlite3_progress_handler(handle, 0, None, std::ptr::null_mut()); }
+            ACTIVE_BUDGETS.with(|active| { active.borrow_mut().remove(&(handle as usize)); });
+        }
     }
 }
 fn part(h: &mut Sha256, bytes: &[u8]) {
@@ -327,7 +387,6 @@ pub(crate) fn base_hash(conn: &Connection, budget: &Budget<'_>) -> Result<String
         let mut stmt = conn.prepare(&format!("SELECT * FROM {table} ORDER BY {order}"))?;
         let names = stmt
             .column_names()
-            .iter()
             .map(|s| s.to_string())
             .collect::<Vec<_>>();
         for name in &names {

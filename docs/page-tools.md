@@ -16,19 +16,17 @@ su tipo de entidad.
 
 ## Interacción
 
-En Notes normales, desde el 26/10/2026 los tres iconos están en la barra superior,
-junto al estado de guardado, y abren paneles flotantes acotados al viewport. No se
-repiten debajo del cuerpo. Task, Goal, Milestone y demás detalles conservan la
-ubicación anterior. Ver [editor contextual](note-editor.md).
+Desde el 27/10/2026 todos los detalles y borradores usan el botón `…` en la
+barra superior, junto al estado de guardado. Las herramientas aplicables y
+Archive/Restore aparecen en el menú; no se repiten al pie. Lock page se limita
+a Notes normales. Ver [editor contextual](note-editor.md) y
+[verificación](verification-page-actions-menu.md).
 
-Los iconos abren sus paneles; abrirlos no exporta, vincula, inicia Picker,
-encola extracción ni ejecuta lectores. No hay un icono por subacción.
-
-El nombre aparece al pasar el cursor y al enfocar con teclado. Tab/Shift+Tab
-recorren botones disponibles y controles del panel; Enter/Espacio activan los
-botones. Escape o Cerrar devuelve foco al disparador. aria-controls/expanded
-relacionan botón y panel. Los grupos no disponibles indican su razón y los
-paneles ocultos no entran en el recorrido de foco.
+Seleccionar una herramienta abre su panel flotante; abrirlo no exporta, vincula,
+inicia Picker, encola extracción ni ejecuta lectores. Las opciones no disponibles
+indican su razón. Flechas, Home y End recorren el menú; Enter/Espacio activan y
+Escape devuelve foco al botón. Los paneles ocultos no entran en el recorrido de
+foco y los paneles y el menú se ajustan al viewport.
 
 Los formularios y lectores permanecen montados al cerrar el grupo, conservando
 campos, resultados y operaciones iniciadas. Cerrar no cancela un trabajo de

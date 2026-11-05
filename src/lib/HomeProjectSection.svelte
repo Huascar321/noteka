@@ -5,8 +5,10 @@
   import HomeProjectCard from './HomeProjectCard.svelte';
   import TaskPageProjectRow from './TaskPageProjectRow.svelte';
   import { homeGroupLabel, type HomeReadState } from './home-reads';
+  import HomeReadStatus from './HomeReadStatus.svelte';
   import type { HomeView, HomeGroup, ProjectState } from './contracts.generated';
   import { boardIsComplete, moveProject, type ProjectPlacement } from './project-board';
+  import { slidingTabs } from './sliding-tabs';
   let { workspace, active = true, readState, onview, onnext, onretry, onopen, oncreate, onnavigate, onmoved, pageMode = false, standalone = false, ongroupcreate }: {
     pageMode?: boolean; standalone?: boolean; ongroupcreate?: (group: HomeGroup) => Promise<void>;
     workspace: string; active?: boolean; onmoved: () => Promise<void>;
@@ -29,43 +31,61 @@
   const relationView = $derived(readState?.view === 'projects_by_tag' || readState?.view === 'projects_by_people');
   let optionsOpen = $state(false);
   let root: HTMLElement;
+  let board = $state<HTMLElement>();
   let alive = true;
   let moving = $state(false);
   let draggedId = $state<string | null>(null);
   let destination = $state<{ state: ProjectState; beforeId: string | null } | null>(null);
+  let pointer: { id: number; projectId: string; x: number; y: number; started: boolean } | null = null;
+  let ghost = $state<{ x: number; y: number; title: string } | null>(null);
+  let suppressClick = false;
   let dialogId = $state<string | null>(null);
   let dialogState = $state<ProjectState>('planned');
   let beforeId = $state<string | null>(null);
   let moveError = $state('');
   let message = $state('');
   const titleId = $props.id();
-  const available = $derived(active && boardIsComplete(page) && !readState?.busy);
+  const available = $derived(active && boardIsComplete(page) && !readState?.busy && !readState?.stale);
   const dialogProject = $derived(page?.items.find(row => row.entity.id === dialogId));
   const dialogPeers = $derived(page?.items.filter(row => row.metadata.state === dialogState && row.entity.id !== dialogId) ?? []);
   onDestroy(() => { alive = false; });
-  $effect(() => { if (!active || readState?.view !== 'projects_board') { draggedId = null; destination = null; dialogId = null; } });
+  $effect(() => { if (!active || readState?.view !== 'projects_board') { endDrag(); dialogId = null; } });
   function modal(node: HTMLDialogElement) {
     const previous = document.activeElement as HTMLElement | null;
     node.showModal(); node.querySelector<HTMLElement>('[data-cancel]')?.focus();
     return { destroy() { if (previous?.isConnected) previous.focus(); else root?.querySelector<HTMLButtonElement>('h2 button, .home-tabs [aria-pressed="true"]')?.focus(); } };
   }
-  function endDrag() { draggedId = null; destination = null; }
-  function startDrag(id: string, event: DragEvent) {
-    if (!available || moving || (event.target instanceof Element && event.target.closest('.project-card-context'))) { event.preventDefault(); return; }
-    draggedId = id; moveError = ''; message = '';
-    if (event.dataTransfer) { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('application/x-noteka-project', id); }
+  function endDrag() { pointer = null; draggedId = null; destination = null; ghost = null; }
+  function startPointer(id: string, event: PointerEvent) {
+    if (!available || moving || pointer || event.button !== 0 || event.pointerType === 'touch') return;
+    pointer = { id: event.pointerId, projectId: id, x: event.clientX, y: event.clientY, started: false };
   }
-  function dragOver(state: ProjectState, before: string | null, event: DragEvent) {
-    if (!draggedId || !available || moving) return;
-    event.preventDefault(); event.stopPropagation();
-    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
-    destination = { state, beforeId: before };
+  function movePointer(event: PointerEvent) {
+    if (!pointer || event.pointerId !== pointer.id) return;
+    if (!available || moving || event.buttons !== 1) { endDrag(); return; }
+    if (!pointer.started && Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) < 6) return;
+    if (!pointer.started) { pointer.started = true; draggedId = pointer.projectId; moveError = ''; message = ''; }
+    event.preventDefault();
+    const title = page?.items.find(row => row.entity.id === pointer?.projectId)?.entity.title ?? 'Project';
+    ghost = { x: event.clientX, y: event.clientY, title };
+    const target = document.elementFromPoint(event.clientX, event.clientY);
+    const column = target?.closest<HTMLElement>('.project-column[data-project-state]');
+    if (!column || !board?.contains(column)) { destination = null; return; }
+    const state = column.dataset.projectState as ProjectState;
+    const card = target?.closest<HTMLElement>('.project-card[data-project-id]');
+    destination = { state, beforeId: card && column.contains(card) ? card.dataset.projectId ?? null : null };
   }
-  async function drop(state: ProjectState, before: string | null, event: DragEvent) {
-    if (!draggedId || !available || moving) return;
-    event.preventDefault(); event.stopPropagation();
-    const id = draggedId; endDrag(); await savePlacement({ id, state, beforeId: before });
+  function finishPointer(event: PointerEvent) {
+    if (!pointer) { if (suppressClick) window.setTimeout(() => { suppressClick = false; }, 0); return; }
+    if (event.pointerId !== pointer.id) return;
+    const id = pointer.projectId, started = pointer.started, target = destination;
+    endDrag();
+    if (!started) return;
+    suppressClick = true;
+    window.setTimeout(() => { suppressClick = false; }, 0);
+    if (target && available && !moving) void savePlacement({ id, ...target });
   }
+  function cancelClick(event: MouseEvent) { if (suppressClick) { event.preventDefault(); event.stopPropagation(); suppressClick = false; } }
   function openMove(id: string) {
     if (!available || moving || !page) return;
     const row = page.items.find(item => item.entity.id === id); if (!row) return;
@@ -93,17 +113,16 @@
   function create(state: ProjectState = 'planned') { return oncreate({ state }); }
 </script>
 
-<svelte:window onkeydown={(event) => { if (event.key === 'Escape' && root?.contains(document.activeElement)) optionsOpen = false; }} />
+<svelte:window onpointermove={movePointer} onpointerup={finishPointer} onpointercancel={endDrag} onblur={endDrag} onclickcapture={cancelClick} onkeydown={(event) => { if (event.key === 'Escape') { if (pointer?.started) suppressClick = true; endDrag(); if (root?.contains(document.activeElement)) optionsOpen = false; } }} />
 
 <section class="home-section home-tasks home-projects" class:task-page-projects={pageMode} class:tasks-page-section={standalone} data-home-section="project" aria-label="Projects" aria-busy={readState?.busy ?? true} bind:this={root}>
   {#if standalone}
     <header class="tasks-page-heading"><span class="tasks-page-emblem" aria-hidden="true"><SectionIcon section="project" size={68} /></span><h1>Projects</h1></header>
     <nav class="tasks-page-nav" aria-label="Projects quick navigation"><details><summary>Nav</summary>{#each displayedViews as view}<button disabled={moving} onclick={() => void onview(view.id)}>{view.label}</button>{/each}</details><span aria-hidden="true">|</span><button aria-pressed={readState?.view === 'projects_by_tag'} disabled={moving} onclick={() => void onview('projects_by_tag')}>By Tag</button><span aria-hidden="true">|</span><button aria-pressed={readState?.view === 'projects_by_people'} disabled={moving} onclick={() => void onview('projects_by_people')}>By People</button></nav>
   {:else}<header><h2><span class="task-heading-icon project-heading-icon" aria-hidden="true"><SectionIcon section="project" size={31} /></span><button onclick={() => void onnavigate()}>Projects</button></h2></header>{/if}
-  {#if !pageMode || standalone}<div class="task-capture"><button disabled={moving} onclick={() => void create()} aria-label="Create in Projects"><SectionIcon section="project" size={16} />New Project</button></div>{/if}
   <div class="task-view-toolbar">
-    <div class="home-tabs task-view-tabs" role="group" aria-label="Projects views">{#each displayedViews as view}<button class:active={readState?.view === view.id} aria-pressed={readState?.view === view.id} disabled={moving} onclick={() => void onview(view.id)}><AppIcon name={view.icon} size={16} /><span>{view.label}</span></button>{/each}</div>
-    <div class="task-view-actions">
+    <div class="home-tabs task-view-tabs" use:slidingTabs role="group" aria-label="Projects views">{#each displayedViews as view}<button class:active={readState?.view === view.id} aria-pressed={readState?.view === view.id} disabled={moving} onclick={() => void onview(view.id)}><AppIcon name={view.icon} size={16} /><span>{view.label}</span></button>{/each}</div>
+    <div class="task-view-actions"><HomeReadStatus state={readState} updating />
       <button class="task-icon-action" aria-label="Refresh Projects" title="Refresh Projects" disabled={readState?.busy || moving} onclick={() => void onview()}><AppIcon name="refresh" size={16} /></button>
       {#if !standalone}<button class="task-icon-action" aria-label="Open Projects list" title="Open Projects list" onclick={() => void onnavigate()}><AppIcon name="expand" size={16} /></button>{/if}
       <button class="task-icon-action" aria-label="Projects view options" aria-expanded={optionsOpen} title="View options" onclick={() => optionsOpen = !optionsOpen}><AppIcon name="sliders" size={16} /></button>
@@ -111,8 +130,9 @@
     </div>
   </div>
   {#if optionsOpen}<div class="task-view-options"><p>Active: Doing and Ongoing. Planned: planned projects. Board: all five statuses. Projects archived locally or in their imported source are excluded; general search keeps source-archived imports accessible.</p>{#if pageMode}<p>Deadlines: incomplete projects with an end date, sorted by that date. Completed: Done status. Dates are not derived from tasks.</p>{/if}{#if standalone}<p>On Hold: paused projects. By Tag and By People group all five statuses by local links; a project may appear in several groups. Groups and counts cover loaded projects. New page in a relation group prepares Planned with that link.</p>{/if}<p>Progress uses related local tasks: completed / total, rounded to one decimal place. Overdue: pending tasks due before the workspace calendar day. Goal references open their imported pages.</p>{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}
-  {#if readState?.busy}<p role="status" class="task-read-status">Loading Projects…</p>{/if}
+  {#if readState?.busy && !page}<p role="status" class="task-read-status">Loading Projects…</p>{/if}
   {#if readState?.error}<p class="error" role="alert">Read failed: {readState.error}</p><button onclick={() => void onretry()}>Retry Projects</button>{/if}
+  <HomeReadStatus state={readState} />
   {#if page}
     {#if page.unavailable_count}<p class="home-unavailable">{page.unavailable_count} projects with uninterpretable metadata for this view.</p>{/if}
     {#if readState?.view === 'projects_board' && !boardIsComplete(page)}<p class="home-unavailable">To move cards, the board must show all its projects (up to 100) with available metadata.</p>{/if}
@@ -148,17 +168,17 @@
           {#each page.items.filter(row => !definitions.some(c => c.state === row.metadata.state)) as row (row.entity.id)}<TaskPageProjectRow item={row} {onopen} />{/each}
         {/if}
       </div>
-    {:else}<div class="project-board" class:project-is-dragging={draggedId !== null} role="region" aria-label="Projects board" aria-busy={moving}>
+    {:else}<div bind:this={board} class="project-board" class:project-is-dragging={draggedId !== null} role="region" aria-label="Projects board" aria-busy={moving}>
       {#each columns as column (column.state)}
-      <!-- svelte-ignore a11y_no_noninteractive_element_interactions (Native drop region has an equivalent keyboard Move dialog.) -->
-      <section class="project-column" class:project-column-destination={destination?.state === column.state && destination.beforeId === null} data-project-state={column.state} aria-label={column.label} ondragover={(event) => dragOver(column.state, null, event)} ondrop={(event) => void drop(column.state, null, event)}>
+      <section class="project-column" class:project-column-destination={destination?.state === column.state} data-project-state={column.state} aria-label={column.label}>
         <h3><span class="project-state-pill"><span class="project-state-dot" aria-hidden="true"></span>{column.label}</span></h3>
-        <div class="project-column-cards">{#each page.items.filter(row => row.metadata.state === column.state) as row (row.entity.id)}<HomeProjectCard item={row} {onopen} movable={available} {moving} dragging={draggedId === row.entity.id} dropBefore={destination?.beforeId === row.entity.id} onmove={() => openMove(row.entity.id)} onstartdrag={(event) => startDrag(row.entity.id, event)} onenddrag={endDrag} onover={(event) => dragOver(column.state, row.entity.id, event)} ondropcard={(event) => void drop(column.state, row.entity.id, event)} />{/each}</div>
+        <div class="project-column-cards">{#each page.items.filter(row => row.metadata.state === column.state) as row (row.entity.id)}<HomeProjectCard item={row} {onopen} movable={available} {moving} dragging={draggedId === row.entity.id} dropBefore={destination?.beforeId === row.entity.id} onmove={() => openMove(row.entity.id)} onpointerstart={(event) => startPointer(row.entity.id, event)} onclickcapture={cancelClick} />{/each}</div>
         <button class="project-new-card" disabled={moving} onclick={() => void create(column.state)} aria-label={`New page in ${column.label}`}><AppIcon name="plus" size={16} />New page</button>
       </section>{/each}
       {#if page.items.some(row => !definitions.some(c => c.state === row.metadata.state))}<section class="project-column" aria-label="Status unavailable"><h3>Unavailable</h3>{#each page.items.filter(row => !definitions.some(c => c.state === row.metadata.state)) as row (row.entity.id)}<HomeProjectCard item={row} {onopen} />{/each}</section>{/if}
     </div>{/if}
-    {#if page.next_cursor}<footer class="section-row-footer"><button class="section-row-action" disabled={readState?.busy || moving} onclick={() => void onnext()}><AppIcon name="arrow-down" size={15} />Load more</button></footer>{/if}
+    {#if ghost}<div class="project-drag-ghost" aria-hidden="true" style:left={`${ghost.x + 12}px`} style:top={`${ghost.y + 12}px`}>{ghost.title}</div>{/if}
+    {#if page.next_cursor}<footer class="section-row-footer"><button class="section-row-action" disabled={readState?.busy || readState?.stale || moving} onclick={() => void onnext()}><AppIcon name="arrow-down" size={15} />Load more</button></footer>{/if}
   {/if}
   {#if dialogId && dialogProject}
     <dialog use:modal class="modal project-move-dialog" aria-labelledby={titleId} oncancel={(event) => { event.preventDefault(); if (!moving) dialogId = null; }}>

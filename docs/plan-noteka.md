@@ -1,10 +1,110 @@
+> Actualización 4/11/2026: `add-project-task-board` agrega `doing` a las tareas y List/Board al detalle de Project. Board tiene columnas To Do/Doing/Done, tarjetas con vencimiento, New task por columna y movimiento por arrastre o selector con CAS. El núcleo trata doing como pendiente; no hay migración. Calendar, comentarios y orden manual quedan fuera. Ver [guía](project-detail.md), [ADR0058](decisions/0058-task-status-and-project-board.md) y [verificación](verification-project-task-board.md).
+>
+> Actualización 29/10/2026: `fix-native-project-board-dragging` usa puntero e indica el destino; las pruebas sintéticas de Chromium/WebKit pasaron, pero el arrastre completo en Tauri/macOS sigue sin confirmarse. Ver [verificación](verification-native-project-dragging.md).
+>
+> Actualización 28/10/2026: `coordinate-window-refresh` coordina lecturas por workspace, conserva resultados anteriores durante actualizaciones compatibles y protege borradores y Board; el foco físico macOS y escrituras concurrentes app/CLI/MCP pasaron con datos sintéticos. Sus tres requisitos se sincronizaron y el cambio se archivó con 8/8 tareas. Ver [ADR0057](decisions/0057-workspace-refresh-coordination.md) y [verificación](verification-focus-refresh.md).
+>
+> Actualización 28/10/2026: `upgrade-bundled-sqlite` actualiza el motor incluido a 3.54.1 sin migración y está archivado sin deltas de spec; las limitaciones de la suite amplia y las mediciones sintéticas constan en [verificación](verification-focus-refresh.md). Los procesos anteriores necesitan reinicio/reemplazo.
+>
+> Actualización 28/10/2026: `fix-native-project-board-dragging` desactiva la captura de arrastre de Tauri y protege los drops externos; el flujo de navegador pasó con datos sintéticos, pero el drop nativo completo aún no se pudo confirmar. Ver [verificación](verification-native-project-dragging.md).
+>
+> Actualización 28/10/2026: `align-task-block-editor` extiende a Task la escritura contextual de bloques de Notes, conservando documentos opcionales y guardado explícito. Las menciones históricas que mantienen la presentación anterior de Task describen etapas previas. Ver [guía](task-page-content.md).
+>
+> Actualización 26/10/2026: `add-home-weather` implementa clima optativo con Open-Meteo, ubicación actual en macOS sin selección manual y caché local; pendiente de verificación nativa de red y archivo. Ver [verificación](verification-home-weather.md). Las menciones históricas de clima pendiente describen etapas anteriores.
+
 # Noteka: plan de producto, arquitectura y desarrollo
 
 Fecha de referencia: **11 de octubre de 2026**, zona `America/La_Paz`.
 
 Este documento está escrito para una persona o IA que no participó de las conversaciones originales. Contiene el objetivo del producto, las decisiones tomadas, una arquitectura propuesta, requisitos, fases y criterios para continuar. Los chats son antecedentes; no hacen falta para ejecutar el plan.
 
-**Experimento combinado al 26/10/2026:** el commit local `2d43a66` conserva todo
+**Jelly lateral al26/10/2026:** el usuario elige el mismo rebote de Tasks para
+Home, Tasks, Notes, Projects, Tags, Goals, People, Search y Collections. Una receta
+CSS compartida, mismos keyframes/intensidad y ciclo ralentizado de700 a1000ms por
+pedido posterior del usuario; limpieza a1050ms y figuras/SVG estáticos intactos.
+Sin cambios de navegación, reproductor, datos o dependencias.
+Ver [guía](icons.md) y [evidencia](verification-sidebar-jelly.md).
+`unify-sidebar-jelly-motion` queda pendiente de sync/archivo.
+
+**Texto de acciones al26/10/2026:** botones primarios y atajos en blanco por
+elección del usuario, conservando fondo/hover/estados de la paleta. Build y30
+checks headless en ambos temas aprobados; sin cambios de dominio o datos.
+Ver [Settings](settings.md) y el cambio `fix-primary-button-text-color`, pendiente de sync/archivo.
+
+**Iconografía al26/10/2026:** `replace-ui-icons-with-icona` sustituye el catálogo
+AnimateIcons por85 claves locales Icona:53 Fill y32 bold, con equivalentes
+documentados. Nueve escenas CSS oficiales al clic lateral, un ciclo de700ms y
+restauración exacta/cancelación a750ms. Sin React, dependencia nueva, CDN,
+migración o modificación de entidades. Imágenes y colores conservados. Build,
+catálogo/movimiento Chromium y WebKit y UI de producción headless verificados;
+sin nueva aceptación nativa. [Guía](icons.md), [ADR0055](decisions/0055-local-icona-fill-bold.md)
+y [evidencia](verification-icona.md). Delta pendiente de sincronización/archivo.
+
+**Profundidad y ambiente de tiburones al26/10/2026:** tercer tiburón menor/tenue
+con la misma malla, profundidad mayor y ruta propia; cuatro actores originales
+conservados. Luz ondulante ASCII y relieve rocoso tenue en una sola esquina,
+con atlas/tiempo activo/fundido existentes. Build,12 pruebas puras,12 casos
+visuales,19 observaciones de preservación/modelo/ambiente,9 muestras de fundido
+y seis direcciones medidas aprobaron. Ocho capturas koi/medusas idénticas.
+Sin cambios de dominio/preferencias ni nueva aceptación nativa.
+[Evidencia](verification-ascii-cover-scenes.md).
+
+**Cuadrícula común al26/10/2026:** koi y medusas incorporan la misma grilla tenue
+de tiburones, preparada por tamaño/DPR/tema/tinta y detrás de fauna/ambiente.
+Build,11 pruebas existentes,12 casos visuales,16 comparaciones de grilla y
+preservación en ambos temas/1000/420px/DPR1/2, y9 muestras de fundido aprobaron.
+Sin cambios de dominio/preferencias ni nueva aceptación nativa.
+[Evidencia](verification-ascii-cover-scenes.md).
+
+**Ambiente de medusas al26/10/2026:** cinco secundarias en ancho amplio/tres en
+estrecho reutilizan campana/lóbulos/tentáculos, con escala y contraste de fondo.
+Burbujas y partículas cian/violeta comparten tiempo activo, fundido y resize;
+dos corales en abanico en las esquinas inferiores y rayos tenues desde arriba
+completan los bordes sin ocupar el centro. Sin otro reloj ni mezcla de fauna.
+Build,11 pruebas existentes,12 casos visuales,21 observaciones de preservación/
+ambiente/caché y9 muestras de fundido aprobaron en el último seguimiento;
+se midieron las seis direcciones de fundido. Koi idéntico en ocho comparaciones.
+Sin nueva aceptación nativa ni cambios de dominio/preferencias.
+[Guía](ascii-cover-scenes.md) y [evidencia](verification-ascii-cover-scenes.md).
+
+**Koi del fondo legibles al26/10/2026:** ocho secundarios en ancho amplio/cinco
+en estrecho usan el mismo modelo, manchas, aletas y cola que los grandes, con
+longitud aproximada67–90px/42–56px y opacidad menor. Dos pasadas reutilizan campo
+y atlas; protagonistas pintados al final. Algas/burbujas y las tres escenas con
+42s/fundido1,4s se conservan. Build,11 pruebas existentes,12 casos visuales,
+17 observaciones de preservación/ambiente,2 de modelo compartido y9 muestras de
+fundido aprobaron. Sin nueva aceptación nativa o cambios de dominio/preferencias.
+[Guía](ascii-cover-scenes.md), [evidencia](verification-ascii-cover-scenes.md).
+
+**Ambiente de koi al26/10/2026:** seguimiento de `add-random-ascii-cover-scenes`:
+pececitos lejanos, algas ASCII ondulantes y burbujas ascendentes, sólo detrás de
+los koi principales. Densidad/contraste secundarios y menores en420px; atlas
+reutilizado, mismo tiempo activo y fundido. Once pruebas existentes,12 casos
+visuales,9 muestras de transición,17 observaciones de preservación/ambiente y
+build aprobaron. Sin cambios de tiburones/medusas, datos, preferencias, reloj o
+dependencias ni aceptación nativa nueva. [Guía](ascii-cover-scenes.md) y
+[evidencia](verification-ascii-cover-scenes.md).
+
+**Tres escenas restauradas al26/10/2026:** el usuario descartó la mezcla y pidió
+volver a las variantes de `2d43a66`: tiburones, koi y medusas por separado,
+42s activos por escena, inicio/orden aleatorios y fundido1,4s. En ese retorno,
+siete módulos coincidían con el checkpoint y App/style conservan el arreglo del scrollbar.
+Retirados módulo mixto/prueba específica;11 pruebas existentes,12 casos visuales,
+9 muestras de fundido y build aprobaron. El delta final de `combine-ascii-ocean-life`
+sólo modifica el lateral; no elimina los requisitos de variantes de
+`add-random-ascii-cover-scenes`. Deltas pendientes de sync/archivo, sin nuevos
+datos/preferencias o aceptación nativa visual. [Guía](ascii-cover-scenes.md) y
+[evidencia](verification-ascii-cover-scenes.md).
+
+**Antecedente descartado — ajuste de densidad al26/10/2026:** seguimiento de
+`combine-ascii-ocean-life`: seis figuras principales (2 tiburones,2 koi,2 medusas),
+dos peces ambientales discretos, tamaños menores y rutas más separadas. Fondo
+con escala/contraste más bajos y elenco estable al cambiar el ancho. Seis pruebas
+focalizadas y20 casos visuales nuevos aprobaron; build sin diagnósticos Svelte,
+sin nueva aceptación nativa de apariencia. Los checkpoints anteriores permanecen.
+[Guía](ascii-cover-scenes.md) y [evidencia](verification-mixed-ocean.md).
+
+**Antecedente descartado — experimento combinado al26/10/2026:** el commit local `2d43a66` conserva todo
 el avance anterior y las tres escenas ASCII. `combine-ascii-ocean-life`, en
 `codex/combined-ascii-ocean`, reemplaza la alternancia por fauna simultánea con
 profundidad/escala/contraste por individuo: 11 animales, nueve en estrecho. Orden
@@ -21,7 +121,7 @@ y [evidencia/límites](verification-mixed-ocean.md).
 **Paneles y portada al 26/10/2026:** `resize-workspace-panels` y
 `add-random-ascii-cover-scenes` implementados y verificados localmente. Menú y
 Side peek ajustables con mouse/teclado y memoria local, máximos 35%/65% de ventana.
-Side mayor a 35% excluye al menú; alternar los oculta conservando editor e
+Side mayor a 45% excluye al menú (umbral actualizado el 27/10/2026); alternar los oculta conservando editor e
 historial. Movimiento reversible de 260ms y reducido inmediato. Indicador ahora
 de 24px con paso de 14px y marcas de 2px. ASCII alterna tiburones, koi
 naranja/blanco y medusas cian/violeta: inicio/orden aleatorios estables, 42s
@@ -29,7 +129,7 @@ activos por escena y fundido de 1,4s. Render local propio, referencias atribuida
 pausas y repintado inmediato conservados. Build y 16 pruebas puras aprobados;
 71 checks de App, 12 combinaciones visuales y nueve muestras de fundido headless.
 Sin cambios de Rust/contratos/dependencias/datos ni aceptación nativa nueva.
-Deltas pendientes de sync/archivo; Meeting Notes sigue 0/19.
+`resize-workspace-panels` sincronizado y archivado el 27/10; el delta ASCII sigue pendiente. Meeting Notes sigue 0/19.
 [Paneles](panel-widths.md), [escenas](ascii-cover-scenes.md),
 [evidencia de paneles](verification-panel-widths.md) y
 [evidencia ASCII](verification-ascii-cover-scenes.md).
@@ -59,8 +159,31 @@ Meeting Notes sigue propuesto 0/19. Deltas pendientes de sincronización/archivo
 Seguimientos del mismo día: ayudas inferiores redundantes retiradas de Note;
 diálogo de salida Cancel/Discard/Save and continue con iconos y separación.
 Catálogo local 79 SVG, build y 29 comprobaciones focalizadas aprobados.
-Otro seguimiento limita los controles laterales al hover del bloque, conservando
-teclado explícito y arrastre; build y 25 comprobaciones headless aprobados.
+El seguimiento inicial limitó los controles laterales al hover del bloque,
+conservando teclado explícito y arrastre; build y 25 comprobaciones headless
+aprobados. El pedido posterior extiende esa franja a ambos márgenes de su propio
+panel, conservando altura real y exclusión de huecos/popovers/otros paneles.
+Build y 82 comprobaciones headless focalizadas aprobados, incluidos código,
+scroll/resize, temas claro/oscuro y 420 px; documento/IDs/revisión intactos.
+El siguiente ajuste permite continuar con un párrafo al pulsar el espacio
+inferior de Note, reutilizando un párrafo final vacío. Build y 74 comprobaciones
+headless focalizadas aprobados: foco/escritura, cinco tipos de final, repetición,
+selección/controles/bloqueo, undo/redo, save/reopen, ambos temas y 420 px. Cambio
+8/8; deltas aún pendientes de sincronización/archivo.
+Seguimiento de cabecera: `…` agrupa Export/External resources/Attachments y
+Archive/Restore con icono/texto, teclado y paneles/campos/guardias conservados.
+Build y 49 comprobaciones headless aprobaron, incluidos archivo/restauración,
+ambos temas/420 px, Note nueva y compatibilidad de Task. Catálogo 83 SVG; cambio
+9/9, pendiente de sincronización/archivo y sin aceptación nativa nueva.
+
+**Bloqueo de Notes al 26/10/2026:** `add-note-page-lock` agrega page_locked
+opcional validado en Rust, Lock page en `…` y Locked/Re-lock con apertura temporal
+por instancia. Guardias de borrador y protección de título/cuerpo/propiedades/
+relaciones, sin migración SQL ni operación nueva; ver ADR0054. Build, tres pruebas
+Rust nuevas y 79 comprobaciones headless aprobaron. Regresión core: 326 aprobadas,
+6 fallos heredados reproducidos en HEAD y 16 ignoradas; no se alteraron sus
+aserciones. [Evidencia y límites](verification-page-lock.md). Deltas pendientes
+de sincronización/archivo; no se acredita aceptación nativa nueva.
 
 **Corrección ASCII al 25/10/2026:** `fix-ascii-resize-flicker`, archivado **2/2**,
 corrige el bitmap
@@ -253,6 +376,14 @@ headless, sin suites ni aceptación nativa nueva. [Guía](tasks-page.md),
 [ADR0043](decisions/0043-tasks-page-and-contextual-breadcrumb.md) y
 [revisión](verification-tasks-page.md).
 
+**Tabs de Tasks al 03/11/2026:** Today agrupa las tareas pendientes de proyectos
+Doing/Ongoing y reemplaza la tab duplicada Active Projects (In Progress). La tab
+Active Projects pasa a llamarse All Active Projects e incluye también Planned.
+La página Tasks conserva Recurring/Active Content deshabilitados. El núcleo
+mantiene `tasks_today` por vencimiento para CLI/MCP; no cambian datos, contratos
+ni checkboxes. Ver [guía](tasks-page.md) y
+[verificación](verification-task-tabs.md).
+
 **Encabezado Home al 24/10/2026:** Navegación y Actualizar Home retirados.
 Actualización con ⌘R/Ctrl+R o F5 sólo en Home activo, con bloqueo ante diálogos,
 sin recarga del WebView ni cambios de datos. Compilación y revisión de código;
@@ -268,13 +399,13 @@ y 420 px; sin suites ni nueva aceptación nativa. [Guía](people-reference.md),
 [ADR0042](decisions/0042-person-metadata-and-local-gallery.md) y
 [revisión](verification-people-reference.md).
 
-**Corrección de animación lateral al 23/10/2026:** el Vite abierto devolvía
+**Antecedente de animación lateral al 23/10/2026 (sustituido por ADR0055):** el Vite abierto devolvía
 504 por una dependencia optimizada obsoleta. AnimateIcons ESM se sirve fuera del
 prebundler en dev; se conserva carga diferida en producción. Movimiento geométrico
 real y reposo acreditados en Chromium/WebKit para los ocho iconos, sin tocar datos.
 [Revisión](verification-icon-motion-dev-fix.md).
 
-**Iconos al 23/10/2026:** AnimateIcons 0.1.0, 69 SVG locales seleccionados y
+**Antecedente de iconos al 23/10/2026 (sustituido por ADR0055):** AnimateIcons 0.1.0, 69 SVG locales seleccionados y
 estáticos. Únicamente clic lateral reproduce un ciclo de 800 ms, con reproductor
 diferido, cancelación y movimiento reducido. Logos/documentos intactos, sin nueva
 API ni migración. Compilación e inspección visual aprobadas. [Guía](icons.md),
@@ -1018,3 +1149,45 @@ Autorización vigente21/10: el usuario levantó el límite de una hora; continua
 
 
 **Aclaración de portabilidad21/10:** el usuario pidió alternativas locales de PDFKit/Vision para Mac y Windows, optimizadas según plataforma y capacidades reales del hardware. Autorizó comparar candidatos en un entorno aislado, incluidos pesos OCR necesarios para el ensayo. Esto no activa modelos/proveedores en Noteka, no instala pesos LLM/embeddings ni convierte el staging `.exe` existente en soporte Windows verificado. La investigación y benchmarks se conservan fuera de Git; adopción de un motor nuevo requiere perfil/procedencia, contención, recuperación y aceptación de plataforma propios. Fase6 permanece excluida.
+
+## Actualización 27/10/2026: apariencia del sistema
+
+Settings incorpora System como primera opción de Theme y sigue cambios de apariencia en tiempo real; se preservan las elecciones fijas y el fallback oscuro. La paleta usa el tema efectivo. Validación y límites nativos en [verification-system-theme.md](verification-system-theme.md).
+
+## Actualización 27/10/2026: relaciones por nombre
+
+El selector local de relaciones permite buscar entidades compatibles por nombre, conservar borradores y desvincular sin eliminar. Usa paginación de entidades y operaciones/revisiones existentes; evidencia y límites en [verification-relation-picker.md](verification-relation-picker.md).
+
+En páginas ya creadas, las relaciones se confirman sin guardar el borrador y la revisión confirmada permite guardar el contenido después. Las páginas nuevas requieren primer guardado; ver [verification-relations-with-draft.md](verification-relations-with-draft.md).
+
+## Actualización 27/10/2026: rueda de mouse
+
+Un ajuste local activado por defecto suaviza eventos de rueda con señal discreta y permite volver al scroll nativo. La identificación es aproximada y movimiento reducido conserva el comportamiento del sistema. Ver [verification-smooth-wheel.md](verification-smooth-wheel.md) para pruebas y límites de aceptación física.
+
+## Actualización 27/10/2026: margen lateral de Home
+
+Home reserva 36 px junto al indicador en lugar de 68 px, con adaptación de títulos y acciones cuando el panel es muy estrecho. Indicador, scrollbar y ajuste de Side peek se conservan; ver [verification-home-outline-gutter.md](verification-home-outline-gutter.md).
+
+## Actualización 27/10/2026: animación junto a Side peek
+
+La portada ASCII de Home continúa animándose cuando permanece visible junto a Side peek, independientemente del foco de edición. Conserva las pausas por visibilidad, pestaña inactiva y movimiento reducido; ver [verification-ascii-side-peek.md](verification-ascii-side-peek.md).
+
+## Actualización 27/10/2026: menú de acciones de página
+
+Los detalles de Task, Project, Tag, Person, Goal y Milestone comparten el menú superior `…` de Note, con las herramientas pertinentes y Archive/Restore. Lock page sigue siendo exclusivo de Note normal. Ver [herramientas](page-tools.md) y [verificación](verification-page-actions-menu.md).
+
+## Actualización 27/10/2026: detalle de Goal
+
+Goal incorpora Overview con Additional Details, Journal desplegable con entradas fechadas y tabla de Projects relacionados. Las secciones usan bloques del mismo documento, preservan contenido anterior y guardias, sin migración ni sincronización. Ver [ADR0056](decisions/0056-goal-document-sections.md) y [verificación](verification-goal-detail-enhancement.md).
+
+## Actualización 27/10/2026: umbral de Side peek
+
+El menú izquierdo y Side peek pueden coexistir hasta el 45% del ancho de ventana; al superar ese valor se cierra el menú. Los límites máximos de panel, la preferencia guardada y las guardias existentes se mantienen. Ver [panel-widths.md](panel-widths.md).
+
+## Actualización 27/10/2026: ancho de scrollbar
+
+El canal vertical de scroll aumenta de 8 a 9 px; el horizontal permanece en 8 px, con los mismos temas y ocultaciones. Ver [verificación](verification-scrollbar-appearance.md).
+
+## Actualización 27/10/2026: separación del scrollbar
+
+Se agrega un píxel transparente a la derecha del tirador vertical y se conserva su ancho visible; canal vertical de 10 px y horizontal de 8 px en motores compatibles. Ver [verificación](verification-scrollbar-appearance.md).

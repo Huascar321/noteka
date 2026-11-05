@@ -10,11 +10,13 @@ test('caps apply at every viewport, including narrower than the preferred minimu
     assert.equal(clampPanelWidth(kind, -100, viewport), limits.min);
   }
 });
-test('exactly 35 percent may coexist; the next pixel requires exclusion', () => {
+test('exactly 45 percent may coexist; the next pixel requires exclusion', () => {
   assert.equal(sidePeekExcludesSidebar(504, 1440), false);
-  assert.equal(sidePeekExcludesSidebar(505, 1440), true);
-  assert.equal(sidePeekExcludesSidebar(147, 420), false);
-  assert.equal(sidePeekExcludesSidebar(148, 420), true);
+  assert.equal(sidePeekExcludesSidebar(647, 1440), false);
+  assert.equal(sidePeekExcludesSidebar(648, 1440), false);
+  assert.equal(sidePeekExcludesSidebar(649, 1440), true);
+  assert.equal(sidePeekExcludesSidebar(189, 420), false);
+  assert.equal(sidePeekExcludesSidebar(190, 420), true);
 });
 test('window clamp does not replace the preferred width', () => {
   const preferred = { sidebar: 480, sidePeek: 900 };

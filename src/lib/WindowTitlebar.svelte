@@ -62,7 +62,7 @@
   {#if platform === 'macos'}<div class="native-traffic-space" aria-hidden="true" data-tauri-drag-region={dragRegion}></div>{/if}
   {#if workspaceOpen}
     <button class="icon-button sidebar-toggle" aria-label={sidebarVisible ? "Collapse sidebar" : "Expand sidebar"} title={sidebarVisible ? "Collapse sidebar" : "Expand sidebar"} aria-controls="workspace-sidebar" aria-expanded={sidebarVisible} disabled={blocked} onclick={ontoggle}>
-      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+      <AppIcon name="menu" size={19} />
     </button>
   {/if}
   <div class="window-titlebar-content" data-tauri-drag-region={dragRegion}>

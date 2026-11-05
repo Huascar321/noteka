@@ -21,6 +21,12 @@ contextuales y comandos junto al cursor.
 - Seguimientos solicitados: retirar la ayuda inferior y Add paragraph de Note;
   ordenar el diálogo compartido Cancel/Discard/Save and continue, con separación
   sobre las acciones e iconos representativos a la izquierda.
+- Extender el hover de cada bloque a sus márgenes laterales dentro del panel de
+  Note: conservar los controles mientras el puntero siga a su altura.
+- Continuar escribiendo con un clic en el espacio vacío debajo del último bloque:
+  insertar un párrafo con foco, o reutilizar el párrafo final si ya está vacío.
+- Agrupar Export, External resources, Attachments y Archive/Restore en un menú
+  de cabecera `…`, con nombre e icono por acción y los mismos formularios/guardias.
 
 ## Capabilities
 

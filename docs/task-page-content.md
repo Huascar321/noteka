@@ -1,6 +1,6 @@
 # Contenido y detalle de una Task
 
-Actualizado el 24/10/2026. El detalle de Task conserva su identidad y relaciones,
+Actualizado el 28/10/2026. El detalle de Task conserva su identidad y relaciones,
 y ofrece un cuerpo enriquecido propio bajo sus propiedades.
 
 ## Cómo editar
@@ -13,10 +13,19 @@ y ofrece un cuerpo enriquecido propio bajo sus propiedades.
 4. Confirmá con **Guardar** o **⌘/Ctrl+S**. Abrir, enfocar o elegir Página vacía
    no guarda contenido ni crea un cuerpo en una Task anterior por sí solos.
 
+El cuerpo de Task comparte la interacción contextual de bloques de Notes: barra
+de formato al seleccionar texto, menú `/` filtrable, controles laterales para
+insertar, transformar, duplicar, mover y eliminar bloques, y clic debajo del
+último bloque para continuar en un párrafo. Si el último párrafo está vacío,
+se reutiliza. Los cambios permanecen en el borrador hasta guardarlos. Ver
+[editor contextual](note-editor.md) y [verificación](verification-task-block-editor.md).
+
 Status, Project y Due aparecen arriba. **View details** mantiene Inbox, prioridad,
 fecha planificada y metadatos. Project abre su original con las guardias de salida;
-su control de edición y las acciones de persona/tag reutilizan el editor actual
-de relaciones. Las relaciones se modifican con la tarea guardada.
+su control de edición y las acciones de persona/tag abren selectores locales por
+nombre. En una tarea ya creada se puede modificar un vínculo sin guardar su
+borrador; el vínculo se confirma por separado. Los vínculos existentes se pueden
+abrir o desvincular sin eliminar las páginas relacionadas.
 
 Una Lista de pasos contiene checkboxes del documento; no crea entidades Task
 hijas ni cambia automáticamente el estado o progreso de la Task. Las estructuras

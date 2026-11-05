@@ -2,8 +2,8 @@
   import AppIcon from './AppIcon.svelte';
   import { entityIcon, entityIconColor } from './entity-appearance';
   import type { Entity } from './contracts.generated';
-  let { items, hasMore = false, busy = false, error = '', createDisabled = false, onopen, oncreate, onmore, onretry }: {
-    items: Entity[]; hasMore?: boolean; busy?: boolean; error?: string; createDisabled?: boolean;
+  let { items, hasMore = false, busy = false, stale = false, notice = '', error = '', createDisabled = false, onopen, oncreate, onmore, onretry }: {
+    items: Entity[]; hasMore?: boolean; busy?: boolean; stale?: boolean; notice?: string; error?: string; createDisabled?: boolean;
     onopen: (entity: Entity) => Promise<void>; oncreate: (kind: 'note' | 'clip' | 'task') => void;
     onmore: () => void; onretry: () => void;
   } = $props();
@@ -18,6 +18,8 @@
 
 <div class="tag-contents" aria-busy={busy}>
   {#if busy}<p role="status" class="tag-context-message">Loading relations…</p>{/if}
+  {#if stale}<p role="status" class="tag-context-message">{busy ? 'Updating; showing previous results.' : 'Showing previous results; they may be out of date.'}</p>{/if}
+  {#if notice && !busy}<p role="status" class="tag-context-message">{notice}</p>{/if}
   {#if error}<p role="alert" class="error">{error}</p><button onclick={onretry}>Retry relations</button>{/if}
   {#each sections as section (section.key)}
     <section aria-label={`${section.label} for this tag`} class="tag-content-section" data-tag-notes={section.key === 'note' ? '' : undefined}>
@@ -34,5 +36,5 @@
     {#if !busy && !error && !tasks.length}<p class="tag-context-message">{hasMore ? "No Tasks in the loaded relations." : "No related Tasks."}</p>{/if}
     <button class="tag-add-row" disabled={createDisabled} onclick={() => oncreate('task')}><AppIcon name="plus" size={15} />Capture a task here</button>
   </details>
-  {#if hasMore}<div class="tag-context-footer"><span>Sections show loaded relations.</span><button disabled={busy} onclick={onmore}><AppIcon name="arrow-down" size={15} />Load more relations</button></div>{/if}
+  {#if hasMore}<div class="tag-context-footer"><span>Sections show loaded relations.</span><button disabled={busy || stale} onclick={onmore}><AppIcon name="arrow-down" size={15} />Load more relations</button></div>{/if}
 </div>

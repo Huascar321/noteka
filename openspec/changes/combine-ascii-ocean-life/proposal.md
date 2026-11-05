@@ -2,14 +2,14 @@
 
 ## Why
 
-El usuario quiere probar tiburones, koi y medusas juntos, con tamaños, contraste y profundidad variados, y retirar el scrollbar horizontal del menú. El estado anterior de tres escenas alternadas quedó preservado en el commit local `2d43a66` antes de este experimento.
+Después de probar la composición mixta y reducir su densidad, el usuario prefiere las tres escenas que transicionan periódicamente. Se restaura esa portada desde `2d43a66` y se conserva la corrección del scrollbar horizontal desarrollada durante el experimento.
 
 ## What Changes
 
-- Una composición ASCII continua con las tres familias presentes, ordenadas por profundidad entre especies y con escalas/opacidades distintas.
-- Conservar las siluetas y nado existentes, el reloj activo, las pausas, Photo/ASCII y el repintado durante resize; retirar la alternancia de 42s de la presentación activa.
-- Corregir el overflow horizontal del lateral en su origen sin perder el borde de resize, foco ni scroll vertical.
-- Trabajo local en `codex/combined-ascii-ocean`; checkpoint previo recuperable. Sin publicación.
+- Restaurar tiburones, koi y medusas como escenas separadas, con inicio/orden aleatorios,42s activos y fundido1,4s, exactamente como en el checkpoint.
+- Retirar el módulo mixto y sus pruebas específicas de la ruta activa; el primer experimento permanece en el historial `fd4f436`.
+- Conservar el cuerpo vertical separado del borde interior del lateral, sus anchos recordados y todas las mejoras de editor/peeks/indicador.
+- Mantener reloj, pausas, Photo/ASCII, formato de preferencia y datos.
 
 ## Capabilities
 
@@ -19,8 +19,8 @@ Ninguna.
 
 ### Modified Capabilities
 
-- `desktop-shell`: composición mixta sustituye las variantes alternadas del cambio previo `add-random-ascii-cover-scenes`; profundidad compartida y lateral sin desborde.
+- `desktop-shell`: lateral sin overflow horizontal, con scroll vertical y resize operativos. El ASCII vuelve al comportamiento del cambio `add-random-ascii-cover-scenes`; este delta no lo sustituye ni retira sus requisitos.
 
 ## Impact
 
-Compositor/poses Canvas, APIs de dibujo por actor, estilos del lateral, pruebas y documentación. No cambia Rust, SQLite, contratos, dependencias o preferencias. La referencia koi/Kurage y su atribución siguen siendo las ya revisadas. El checkpoint conserva todos los avances locales previos; no representa una nueva validación de la totalidad de aquel código.
+Restauración acotada de los tres renderizadores y retiro del módulo mixto inactivo, pruebas/documentación coherentes y corrección del lateral preservada. Sin Rust, SQLite, contratos, dependencias o preferencias nuevas. Los pasos anteriores de tareas/evidencia registran el experimento realizado; el alcance final conserva sólo la corrección del lateral y el retorno explícito de la portada.

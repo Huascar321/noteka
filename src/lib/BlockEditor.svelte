@@ -43,6 +43,15 @@
     editor.commands.focus('start');
     if (pageStyle) editor.view.focus();
   }
+  export function appendGoalLog(date: string) {
+    if (disabled || !editor) return;
+    starterChosen = true;
+    editor.chain().focus('end').command(({ tr }) => { closeHistory(tr); return true; }).insertContent([
+      { type: 'heading', attrs: { id: crypto.randomUUID(), level: 3 }, content: [{ type: 'text', text: `Goal log · ${date}` }] },
+      { type: 'paragraph', attrs: { id: crypto.randomUUID() } },
+    ]).focus('end').run();
+    editor.view.focus();
+  }
   function startBody(kind: 'empty' | 'checklist' | 'notes') {
     if (disabled || !editor || !canStartBody(editor)) return;
     if (kind === 'empty') { focusStart(); return; }
@@ -211,15 +220,19 @@
   function updateHoveredBlock() {
     if (!pageStyle || !editor || disabled || draggingId || dragCandidate) return;
     const target = lastPointer && document.elementFromPoint(lastPointer.x, lastPointer.y);
-    // Keep the path from the block into its controls usable, without treating
-    // the editor's empty minimum-height area as a hovered block.
+    // Keep the controls usable, and let the block's row span its own page pane.
+    // Only the horizontal coordinate is projected: vertical gaps stay inactive.
     if (target && shell.querySelector('.block-handle-group')?.contains(target)) return;
-    if (!lastPointer || !target || !editor.view.dom.contains(target)) { pointerBlockId = null; return; }
-    const hit = editor.view.posAtCoords({ left: lastPointer.x, top: lastPointer.y });
+    const surface = shell.closest('main.editor') ?? shell;
+    const page = shell.closest('.page') ?? shell;
+    if (!lastPointer || !target || (target !== surface && !page.contains(target)) || target.closest('.editor-popover')) { pointerBlockId = null; return; }
+    const editorRect = editor.view.dom.getBoundingClientRect();
+    const left = Math.max(editorRect.left, Math.min(lastPointer.x, editorRect.right - 1));
+    const hit = editor.view.posAtCoords({ left, top: lastPointer.y });
     const block = hit && topLevelBlock(editor.state.doc, hit.pos);
     const dom = block && editor.view.nodeDOM(block.pos);
     const rect = dom instanceof HTMLElement ? dom.getBoundingClientRect() : null;
-    if (!block || !rect || lastPointer.y < rect.top || lastPointer.y > rect.bottom || lastPointer.x < rect.left || lastPointer.x > rect.right) { pointerBlockId = null; return; }
+    if (!block || !rect || lastPointer.y < rect.top || lastPointer.y > rect.bottom) { pointerBlockId = null; return; }
     if (blockMenu && block.node.attrs.id !== handle?.id) { pointerBlockId = null; return; }
     pointerBlockId = block.node.attrs.id;
     if (!blockMenu) placeHandle(block.pos);
@@ -482,14 +495,52 @@
     }
     document.addEventListener('scroll', viewportChanged, true);
     window.addEventListener('resize', viewportChanged);
+    const writingSurface = shell.closest<HTMLElement>('main.editor') ?? shell;
+    const page = shell.closest('.page.note-detail, .page.task-detail');
+    const body = shell.closest('.note-document, .task-document');
+    const editorSurface = shell.querySelector('.editor-surface');
+    let blankPointer: { x: number; y: number } | null = null;
+    function isBlankBelowLast(event: MouseEvent) {
+      if (!pageStyle || !editor || disabled || !editor.isEditable || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey || event.defaultPrevented) return false;
+      // Accept only empty containers in this page, never controls or block content.
+      if (![writingSurface, page, body, shell, editorSurface, element, editor.view.dom].includes(event.target as Element)) return false;
+      const last = editor.state.doc.lastChild;
+      const dom = last && editor.view.nodeDOM(editor.state.doc.content.size - last.nodeSize);
+      return dom instanceof HTMLElement && event.clientY > dom.getBoundingClientRect().bottom;
+    }
+    function blankSpaceDown(event: PointerEvent) {
+      blankPointer = event.isPrimary && isBlankBelowLast(event) ? { x: event.clientX, y: event.clientY } : null;
+    }
+    function cancelBlankPointer() { blankPointer = null; }
+    function continueBelowLast(event: MouseEvent) {
+      const start = blankPointer;
+      blankPointer = null;
+      if (!start || !editor || !isBlankBelowLast(event) || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 5) return;
+      event.preventDefault();
+      starterChosen = true;
+      closeMenus(false); picker = false; pickerRange = null;
+      const { doc } = editor.state;
+      const last = doc.lastChild;
+      if (last?.type.name === 'paragraph' && last.content.size === 0) {
+        editor.chain().setTextSelection(doc.content.size - 1).scrollIntoView().run();
+      } else {
+        editor.chain().command(({ tr }) => { closeHistory(tr); return true; })
+          .insertContentAt(doc.content.size, { type: 'paragraph' })
+          .setTextSelection(doc.content.size + 1).unsetAllMarks().scrollIntoView().run();
+      }
+      editor.view.focus();
+    }
+    writingSurface.addEventListener('pointerdown', blankSpaceDown, true);
+    writingSurface.addEventListener('pointercancel', cancelBlankPointer, true);
+    writingSurface.addEventListener('click', continueBelowLast);
     document.addEventListener('pointermove', hoverBlock);
     document.addEventListener('pointerleave', clearHover);
     window.addEventListener('blur', clearHover);
     shell.addEventListener('dragover', dragOver);
     shell.addEventListener('drop', dropBlock);
-    return () => { generation++; document.removeEventListener('scroll', viewportChanged, true); window.removeEventListener('resize', viewportChanged); document.removeEventListener('pointermove', hoverBlock); document.removeEventListener('pointerleave', clearHover); window.removeEventListener('blur', clearHover); shell.removeEventListener('dragover', dragOver); shell.removeEventListener('drop', dropBlock); editor?.destroy(); };
+    return () => { generation++; document.removeEventListener('scroll', viewportChanged, true); window.removeEventListener('resize', viewportChanged); writingSurface.removeEventListener('pointerdown', blankSpaceDown, true); writingSurface.removeEventListener('pointercancel', cancelBlankPointer, true); writingSurface.removeEventListener('click', continueBelowLast); document.removeEventListener('pointermove', hoverBlock); document.removeEventListener('pointerleave', clearHover); window.removeEventListener('blur', clearHover); shell.removeEventListener('dragover', dragOver); shell.removeEventListener('drop', dropBlock); editor?.destroy(); };
   });
-  $effect(() => { editor?.setEditable(!disabled, false); if (disabled) { bubble = null; pageMenu = null; blockMenu = false; panel = null; handle = null; } });
+  $effect(() => { editor?.setEditable(!disabled, false); editor?.view.dom.setAttribute('aria-readonly', String(disabled)); if (disabled) { bubble = null; pageMenu = null; blockMenu = false; panel = null; handle = null; } });
   $effect(() => {
     if (!editor || !pageStyle) return;
     const dom = editor.view.dom;
@@ -600,6 +651,5 @@
   {#if slash && !pageStyle}<div class="slash-menu" role="toolbar" aria-label="Block commands">{#each blocks as block}<button disabled={disabled} onclick={() => command(block.command, true)}>{block.label}</button>{/each}<button onclick={() => slash = false}>Cancel /</button></div>{/if}
   {#if !pageStyle}
     <button class="add-paragraph" disabled={disabled} onclick={() => editor?.chain().focus('end').insertContentAt(editor.state.doc.content.size, { type: 'paragraph' }).run()}><AppIcon name="plus" size={14} />Add paragraph</button>
-    <small class="editor-hint">/ for blocks · ⌘Z to undo</small>
   {/if}
 </div>

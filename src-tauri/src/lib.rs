@@ -4,6 +4,32 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{Emitter, Manager};
 
 struct Pending(AtomicBool);
+#[cfg(target_os = "macos")]
+unsafe extern "C" {
+    fn noteka_current_location(context: *mut std::ffi::c_void, callback: extern "C" fn(*mut std::ffi::c_void, *const std::ffi::c_char));
+}
+
+#[tauri::command]
+async fn weather_current_location() -> Result<Value, String> {
+    #[cfg(target_os = "macos")]
+    {
+        tauri::async_runtime::spawn_blocking(|| {
+            extern "C" fn callback(context: *mut std::ffi::c_void, json: *const std::ffi::c_char) {
+                let sender = unsafe { Box::from_raw(context.cast::<std::sync::mpsc::Sender<String>>()) };
+                let result = if json.is_null() { String::new() } else { unsafe { std::ffi::CStr::from_ptr(json) }.to_string_lossy().into_owned() };
+                let _ = sender.send(result);
+            }
+            let (sender, receiver) = std::sync::mpsc::channel::<String>();
+            unsafe { noteka_current_location(Box::into_raw(Box::new(sender)).cast(), callback); }
+            let raw = receiver.recv().map_err(|_| "Location unavailable.".to_owned())?;
+            let value: Value = serde_json::from_str(&raw).map_err(|_| "Location unavailable.".to_owned())?;
+            if let Some(error) = value.get("error").and_then(Value::as_str) { return Err(error.to_owned()); }
+            Ok(value)
+        }).await.map_err(|_| "Location unavailable.".to_owned())?
+    }
+    #[cfg(not(target_os = "macos"))]
+    { Err("Current location is not available on this platform.".to_owned()) }
+}
 #[cfg(feature = "native-smoke")]
 mod smoke;
 #[tauri::command]
@@ -54,6 +80,9 @@ async fn google_preview(file_id: String) -> Result<Value, String> {
 }
 
 fn external_url_allowed(url: &str) -> bool {
+    if url == "https://open-meteo.com/" {
+        return true;
+    }
     [
         "https://docs.google.com/",
         "https://drive.google.com/",
@@ -90,6 +119,7 @@ pub fn run() {
             close_confirmed,
             google_pick,
             google_preview,
+            weather_current_location,
             open_external
         ])
         .on_window_event(|window, event| {
@@ -108,6 +138,7 @@ pub fn run() {
             close_confirmed,
             google_pick,
             google_preview,
+            weather_current_location,
             open_external,
             smoke::smoke_control
         ])
@@ -149,7 +180,7 @@ mod tests {
     use super::external_url_allowed;
 
     #[test]
-    fn external_urls_are_limited_to_google_drive_hosts() {
+    fn external_urls_are_limited_to_allowed_destinations() {
         assert!(external_url_allowed(
             "https://docs.google.com/spreadsheets/d/x"
         ));
@@ -159,5 +190,7 @@ mod tests {
         ));
         assert!(!external_url_allowed("https://example.com/"));
         assert!(!external_url_allowed("http://docs.google.com/"));
+        assert!(external_url_allowed("https://open-meteo.com/"));
+        assert!(!external_url_allowed("https://open-meteo.com.evil.example/"));
     }
 }

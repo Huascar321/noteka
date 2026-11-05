@@ -2,17 +2,20 @@
   import { onMount } from 'svelte';
   import AppIcon from './AppIcon.svelte';
   import PrimaryColorPicker from './PrimaryColorPicker.svelte';
-  import type { Theme } from './theme';
+  import type { ThemePreference } from './theme';
 
-  let { workspace, theme, themeError, primaryColor, primaryColorError, onprimarycolorchange, blocked, onthemechange, onworkspacechange, onclose }: {
+  let { workspace, theme, themeError, smoothWheel, smoothWheelError, onsmoothwheelchange, primaryColor, primaryColorError, onprimarycolorchange, blocked, onthemechange, onworkspacechange, onclose }: {
     workspace: string;
-    theme: Theme;
+    theme: ThemePreference;
     themeError: string;
+    smoothWheel: boolean;
+    smoothWheelError: string;
+    onsmoothwheelchange: (enabled: boolean) => void;
     primaryColor: string;
     primaryColorError: string;
     onprimarycolorchange: (color: string) => void;
     blocked: boolean;
-    onthemechange: (theme: Theme) => void;
+    onthemechange: (theme: ThemePreference) => void;
     onworkspacechange: () => void;
     onclose: () => void;
   } = $props();
@@ -22,8 +25,9 @@
     { id: 'workspace', label: 'General', group: 'Workspace', icon: 'settings', title: 'Workspace', description: "Manage your workspace." },
   ] as const;
   const items = [
-    { id: 'theme', section: 'preferences', terms: 'preferences appearance theme light dark' },
+    { id: 'theme', section: 'preferences', terms: 'preferences appearance theme system light dark' },
     { id: 'primary-color', section: 'preferences', terms: 'preferences appearance primary accent color colour custom hue saturation lightness blue violet pink orange green teal' },
+    { id: 'smooth-wheel', section: 'preferences', terms: 'preferences interaction mouse wheel smooth scrolling scroll movement' },
     { id: 'path', section: 'workspace', terms: "workspace general location path" },
     { id: 'change-workspace', section: 'workspace', terms: "workspace general change open another" },
   ] as const;
@@ -86,19 +90,29 @@
     {#if visibleSections.length}
       <header class="settings-page-header"><h2 id="settings-page-title">{current.title}</h2><p>{current.description}</p></header>
       {#if active === 'preferences'}
-        <section class="settings-group" aria-labelledby="settings-appearance-title">
+        {#if visible('primary-color') || visible('theme')}<section class="settings-group" aria-labelledby="settings-appearance-title">
           <h3 id="settings-appearance-title">Appearance</h3>
           {#if visible('primary-color')}
             <div class="settings-primary-color"><h4>Primary color</h4><p>Choose an accent for Noteka. Shades adapt to your theme for readability.</p><PrimaryColorPicker color={primaryColor} error={primaryColorError} onchange={onprimarycolorchange} /></div>
           {/if}
           {#if visible('theme')}
             <div class="settings-row settings-theme-row">
-              <div><label for="settings-theme">Theme</label><p id="settings-theme-description">Light or dark, as you prefer.</p></div>
-              <select id="settings-theme" aria-label="Theme" aria-describedby={themeError ? 'settings-theme-description settings-theme-error' : 'settings-theme-description'} value={theme} onchange={(event) => onthemechange(event.currentTarget.value as Theme)}><option value="dark">Dark</option><option value="light">Light</option></select>
+              <div><label for="settings-theme">Theme</label><p id="settings-theme-description">Follow your system or choose light or dark.</p></div>
+              <select id="settings-theme" aria-label="Theme" aria-describedby={themeError ? 'settings-theme-description settings-theme-error' : 'settings-theme-description'} value={theme} onchange={(event) => onthemechange(event.currentTarget.value as ThemePreference)}><option value="system">System</option><option value="dark">Dark</option><option value="light">Light</option></select>
               {#if themeError}<p id="settings-theme-error" class="settings-error" role="status">{themeError}</p>{/if}
             </div>
           {/if}
-        </section>
+        </section>{/if}
+        {#if visible('smooth-wheel')}
+          <section class="settings-group" aria-labelledby="settings-interaction-title">
+            <h3 id="settings-interaction-title">Interaction</h3>
+            <div class="settings-row settings-scroll-row">
+              <div><label for="settings-smooth-wheel">Smooth mouse scrolling</label><p id="settings-smooth-wheel-description">Soften mouse wheel steps. Turn off to use system scrolling.</p></div>
+              <input id="settings-smooth-wheel" type="checkbox" checked={smoothWheel} aria-describedby={smoothWheelError ? 'settings-smooth-wheel-description settings-smooth-wheel-error' : 'settings-smooth-wheel-description'} onchange={event => onsmoothwheelchange(event.currentTarget.checked)} />
+              {#if smoothWheelError}<p id="settings-smooth-wheel-error" class="settings-error" role="status">{smoothWheelError}</p>{/if}
+            </div>
+          </section>
+        {/if}
       {:else}
         <section class="settings-group" aria-labelledby="settings-workspace-title">
           <h3 id="settings-workspace-title">General</h3>

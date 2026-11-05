@@ -123,7 +123,7 @@ fn read_row(r: &Row<'_>, day: &str, tz: chrono_tz::Tz) -> rusqlite::Result<ReadR
                     r.get(10)?,
                     Some(if task { "todo" } else { "planned" }),
                     if task {
-                        &["todo", "done"]
+                        &["todo", "doing", "done"]
                     } else {
                         &["planned", "doing", "ongoing", "done", "on_hold"]
                     },
@@ -365,7 +365,7 @@ fn matches_view(row: &ReadRow, view: HomeView, day: &str, timezone: chrono_tz::T
     };
     match view {
         TasksToday => {
-            if state(&["todo"])? {
+            if state(&["todo", "doing"])? {
                 if bad(m, "due_date") {
                     None
                 } else {
@@ -376,16 +376,16 @@ fn matches_view(row: &ReadRow, view: HomeView, day: &str, timezone: chrono_tz::T
             }
         }
         TasksInbox => {
-            if state(&["todo"])? {
+            if state(&["todo", "doing"])? {
                 m.inbox
             } else {
                 Some(false)
             }
         }
         TasksDone => state(&["done"]),
-        TasksActiveProjects | TasksProjectsInProgress => state(&["todo"]),
+        TasksActiveProjects | TasksProjectsInProgress => state(&["todo", "doing"]),
         TasksWeek | TasksMonth | TasksScheduled | TasksNoDue => {
-            if !state(&["todo"])? {
+            if !state(&["todo", "doing"])? {
                 return Some(false);
             }
             if bad(m, "due_date") {

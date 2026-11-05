@@ -16,7 +16,7 @@
   const queue = new ReadQueue(2);
   let reader: HomeReader | undefined;
   onMount(() => {
-    reader = new HomeReader('people_contacts', queue, query => operate<HomePage>({ operation: 'home.query', input: query }, workspace), state => readState = state, 10, true);
+    reader = new HomeReader('people_contacts', queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => readState = state, 10, true);
     void reader.load();
     window.addEventListener('keydown', refreshKeydown, true);
     return () => { reader?.dispose(); window.removeEventListener('keydown', refreshKeydown, true); };
@@ -27,8 +27,7 @@
     const label = focused?.textContent;
     const page = reader.state.page;
     if (retry) await reader.retry();
-    else await reader.load(view ?? reader.state.view, next ? page?.next_cursor ?? undefined : undefined,
-      next ? page?.date : date ?? (view === undefined && reader.state.view === 'people_birthdays' ? page?.date : undefined));
+    else await reader.load(view, next ? page?.next_cursor ?? undefined : undefined, next ? page?.date : date);
     await tick();
     if (focused && document.activeElement === document.body) {
       const replacement = [...(root?.querySelectorAll<HTMLButtonElement>('button') ?? [])].find(button => button.textContent === label && !button.disabled)

@@ -1,6 +1,14 @@
 # Home local
 
-Home es una proyección de originales, no una entidad/documento ni colecciones espejo. El núcleo publica `home.query` y la CLI `home query`; la interfaz no calcula filtros o resúmenes. SQLite sigue en **v7**, documentos v1/v2/v3 y formatos futuros se conservan. No usa LLM, Internet, fotos remotas ni modelos descargados.
+> Estado 28/10/2026: el workspace usa esquema SQLite v20. Los números v7 y
+> límites históricos de las secciones antiguas de esta guía describen el cierre
+> inicial de Home; ver el plan general y la [verificación actual](verification-focus-refresh.md).
+
+Home es una proyección de originales, no una entidad/documento ni colecciones espejo. El núcleo publica `home.query` y la CLI `home query`; la interfaz no calcula filtros o resúmenes. El workspace usa esquema SQLite **v20**, y los documentos v1/v2/v3 y formatos futuros se conservan. Las vistas locales no usan LLM, Internet, fotos remotas ni modelos descargados. El clima es una función externa optativa independiente, descrita abajo.
+
+## Clima optativo
+
+Set location solicita directamente la ubicación actual en macOS y pide permiso al sistema. Apple puede recibir coordenadas para identificar la localidad y Open-Meteo las recibe para el pronóstico. No hay selección manual; en Windows y Linux se informa que la ubicación automática todavía no está implementada. La ubicación activada y el último pronóstico se guardan en localStorage de la aplicación, no en SQLite ni backups del workspace. Las ciudades fijas guardadas anteriormente se ignoran hasta activar la ubicación actual. Disable elimina los datos guardados. Home muestra condiciones actuales, hoy y los siete días siguientes en la zona horaria local; vuelve a consultar la ubicación al abrir y cada hora. Si falla la red o el permiso, conserva el último resultado e indica su hora y un error recuperable. Los íconos locales representan los códigos meteorológicos con movimiento sutil; la condición actual distingue día y noche cuando el proveedor lo indica. Las animaciones se pausan al ocultar Home o la ventana y respetan movimiento reducido. La atribución visible se presenta como enlace Open-Meteo. El servicio alojado gratuito de Open-Meteo es para uso no comercial y requiere atribución; su disponibilidad no está garantizada.
 
 ## Contrato y límites
 
@@ -20,8 +28,8 @@ Todas excluyen principales archivadas y conservan contexto archivado. Todo orden
 
 | Vista / UI | Selección | Orden previo al ID | Presentación |
 | --- | --- | --- | --- |
-| tasks_today / Today | todo, due_date <= día | due_date asc, created_at asc | Lista |
-| tasks_inbox / Inbox | todo, inbox true | created_at asc | Grupos por proyecto |
+| tasks_today / Today (núcleo) | todo/doing, due_date <= día | due_date asc, created_at asc | Lista |
+| tasks_inbox / Inbox | todo/doing, inbox true | created_at asc | Grupos por proyecto |
 | tasks_all / All | Todas | created_at asc | Grupos por proyecto |
 | tasks_done / Done | done | updated_at desc | Grupos; menú Más vistas |
 | notes_all / Notes | Todas | updated_at desc | Lista |
@@ -29,22 +37,22 @@ Todas excluyen principales archivadas y conservan contexto archivado. Todo orden
 | projects_active / Active | doing/ongoing | doing→ongoing, título | Grupos |
 | projects_planned / Planned | planned | título | Lista |
 | projects_board / Board | Todas | planned→doing→ongoing→done→on_hold, título | Cinco columnas |
-| tags_recent / Recent | Todas | updated_at del tag desc | Lista |
+| tags_recent / Recent | Tags admisibles | actividad de origen o notas relacionadas desc | Lista |
 | tags_alphabetical / A–Z | Todas | título | Lista |
-| tags_types / Types | Todas | area→resource→topic, título | Grupos |
-| people_contacts / Contacts | Todas | título | Galería textual |
-| people_new / New | Todas | created_at desc | Galería textual |
-| people_updated / Updated | Todas | updated_at desc | Galería textual |
+| tags_types / Types | Tags admisibles | area→resource→entity→topic, título | Grupos |
+| people_contacts / Contacts | Contactos admisibles | orden de galería, título | Galería |
+| people_new / New | Contactos creados desde el último mes civil | orden de galería, título | Galería |
+| people_updated / Updated | Contactos actualizados desde el último mes civil | orden de galería, título | Galería |
 
-Today incluye vencidas, excluye futuras/sin vencimiento/done. **My Day sigue planned_date == día; Overdue sigue due_date < día**. Home Active es doing/ongoing; el workflow lateral Active Projects mantiene planned/doing/ongoing. **Topic no se renombra Entity**. Recent no ordena por última nota. New/Updated no son filtros de período. Sólo Today se contrastó con filtro de referencia; el resto son reglas propias de Noteka, no lógica Notion inferida.
+Today incluye vencidas, excluye futuras/sin vencimiento/done. **My Day sigue planned_date == día; Overdue sigue due_date < día**. `doing` cuenta como pendiente en Today, Inbox, Week, Month, Scheduled, No Due, proyectos activos y resúmenes; `done` es el único estado completado. Home Active es doing/ongoing; el workflow lateral Active Projects mantiene planned/doing/ongoing. La tab visual **Today** de Tasks usa `tasks_projects_in_progress` (pendientes de proyectos Doing/Ongoing, agrupadas); el núcleo conserva `tasks_today` por vencimiento para CLI/MCP. **Topic no se renombra Entity** y su grupo aparece cuando contiene registros. Tags Recent combina actividad de origen y notas relacionadas. People New/Updated usa fechas de origen cuando existen y fechas locales como fallback; el límite inferior es un mes civil inclusivo. El orden acreditado de galería precede al título y al ID. Son reglas locales, no lógica Notion inferida.
 
 Grupos referencian IDs de una página de elementos únicos; una tarea con dos proyectos aparece dos veces con el mismo ID. Cantidad del grupo = apariciones de página, no total del workspace. Se incluyen Sin proyecto, dos estados Active, cinco Board y tres Types vacíos. Un grupo vacío puede tener registros en otra página.
 
 ## Metadatos y resúmenes
 
-Lectura conservadora por claves conocidas: campos extras permanecen intactos; estado/default válido sólo por omisión legítima en objeto heredado (Task todo/normal/inbox true, Project planned, Note inbox true). Un null en estado/Inbox no es default; fechas opcionales null sí son ausencia. Payload no objeto y valores presentes incompatibles son no disponibles. All/Board/Types pueden conservar identidad con aviso/grupo No disponible; vistas filtradas indeterminadas no cuentan como match y exponen `unavailable_count`. Un campo irrelevante no invalida el resto de la fila.
+Lectura conservadora por claves conocidas: campos extras permanecen intactos; estado/default válido sólo por omisión legítima en objeto heredado (Task todo/normal/inbox true, Project planned, Note inbox true). Un null en estado/Inbox no es default; fechas opcionales null sí son ausencia. Payload no objeto y valores presentes incompatibles son no disponibles. All/Board/Types pueden conservar identidad con aviso/grupo No disponible; las filas cuya metadata completa no puede interpretarse se excluyen de esa vista y exponen `unavailable_count`, conservando el original recuperable. Un campo irrelevante no invalida el resto de la fila.
 
-- Proyecto: todas sus tareas únicas activas directamente relacionadas, no sólo las 50 filas visibles. `pending`, `done`, `overdue` (todo y due_date < día), `total`; progreso entero comprobado `floor(100 * done / total)`. Total cero → porcentaje null/**Sin tareas**. Metadatos requeridos incompatibles → resumen no disponible, no cero. No persiste porcentaje ni cambia estado del proyecto. No es una fórmula atribuida a Notion o Goals.
+- Proyecto: todas sus tareas únicas activas directamente relacionadas, no sólo las 50 filas visibles. `pending` (todo/doing), `done`, `overdue` (todo/doing y due_date < día), `total`; progreso entero comprobado `floor(100 * done / total)`. Total cero → porcentaje null/**Sin tareas**. Metadatos requeridos incompatibles → resumen no disponible, no cero. No persiste porcentaje ni cambia estado del proyecto. No es una fórmula atribuida a Notion o Goals.
 - Tag: todas sus notas únicas activas, conteo y última por updated_at desc/ID asc. Sin notas → 0/last null. Timestamp no interpretable → resumen no disponible; Inbox/payload no afectan identidad y fecha de la última nota. No carga documentos.
 - Nota: antigüedad civil firmada desde timestamp y zona/día de consulta en Rust; fecha futura e inválida se distinguen, no se clampa a cero.
 
@@ -54,7 +62,7 @@ Abrir/crear workspace entra en Home con sidebar y ancho restante, sin entity-lis
 
 Guardar mantiene abierto el original; **Volver a Home** protege guardar/descartar/cancelar también para buffers de colección. Cancelar/fallar/conflicto no monta Home sobre el buffer. Guardar y continuar confirma una creación una sola vez: un fallo posterior en Home ofrece reintentar lectura, no repetir creación. Completar/reclasificar se hace en el editor con revisión esperada, no mediante checkbox decorativo en Home.
 
-Tabs son botones `aria-pressed` con Tab/Enter/Espacio del navegador; grupos usan details/summary plegables. Siguiente reemplaza página; Inicio la reinicia, no acumula el workspace. Actualizar por sección o Home y reactivación de ventana leen originales sin polling. Cola Home máximo **dos** IPC; generación/lifetime descartan resultados antiguos, cancelan encoladas y conservan cupo de IPC iniciado hasta resolver. Fallo de una sección limpia su proyección, no las demás. Al desmontar/cambiar workspace se desechan los lectores.
+Tabs son botones `aria-pressed` con Tab/Enter/Espacio del navegador; grupos usan details/summary plegables. Load more acumula páginas; una actualización correcta vuelve a la primera y avisa si había páginas adicionales. Actualizar por sección o Home y reactivar la ventana leen originales sin polling ni detector persistente. Las lecturas coordinadas comparten máximo **dos** IPC por workspace; generaciones descartan respuestas antiguas y cancelan encoladas sin liberar anticipadamente el cupo de una operación iniciada. Durante el refresco se conservan los resultados de la misma consulta; si falla, permanecen identificados como anteriores, con reintento y sin usar su cursor. Un cambio de vista, día o workspace retira la identidad anterior. El tablero no permite mover proyectos con datos pendientes o no verificados. Los borradores y el historial del editor se conservan, y una revisión externa con cambios locales produce conflicto.
 
 ## Cobertura y tema
 
@@ -64,7 +72,7 @@ Portada CSS propia azul/verde, casa, navegación y orden **Tasks → Notes → P
 | --- | --- | --- |
 | Portada/nav | Jerarquía, enlaces locales, dos temas | Personalizar portada; Content |
 | Clima | Franja/aviso sin llamadas | Localidad/proveedor, opt-in/caché, siete días |
-| Tasks | Today/Inbox/All/Done | Week/Month/Scheduled/No Due/Recurring, Active Projects/(In Progress)/Active Content |
+| Tasks | Today (pendientes de proyectos Doing/Ongoing)/Inbox/All/Done | Week/Month/Scheduled/No Due/Recurring, All Active Projects/Active Content |
 | Notes | Notes/Inbox | Fav./Clips/Voice/Journal/Meetings/All diferenciada |
 | Projects | Active/Planned/Board y resumen Noteka | Paridad con campos/fórmulas de referencia no inspeccionados |
 | Tags | Recent/A–Z/Types; Topic conservado | Fav.; tipo Entity requiere decisión/modelo propio |

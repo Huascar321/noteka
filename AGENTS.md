@@ -22,6 +22,8 @@ Communicate with strict factual neutrality. Do not infer intelligence, skill, or
 
 Leé `docs/plan-noteka.md` antes de decidir arquitectura o alcance. Este archivo es autosuficiente: no hace falta acceder a los chats originales. Leé también `docs/openspec-workflow.md`, `openspec/config.yaml` y los artefactos del cambio activo.
 
+Antes de crear o modificar cualquier pantalla o componente visual, leé y aplicá obligatoriamente `docs/design-system.md`. Verificá que el resultado respete sus superficies, tokens, temas, accesibilidad y criterios de rendimiento; actualizá el documento si cambia una decisión visual compartida.
+
 Al inicializar el repositorio no existe código de la aplicación. No confundas especificaciones propuestas, tareas pendientes, validación documental y comportamiento implementado.
 
 ## Desarrollo con OpenSpec

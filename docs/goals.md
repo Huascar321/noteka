@@ -75,3 +75,7 @@ de payload cerrado deben actualizarse antes de editar los enriquecidos. Recupera
 no es atómico globalmente ni una restauración automática sobre cambios posteriores.
 Ver [ADR0045](decisions/0045-goals-as-typed-pages.md) y
 [revisión acotada](verification-goals.md).
+
+## Overview, Journal y proyectos
+
+El detalle ofrece Goal Overview y Additional Details editables, Journal desplegable con New entry fechada y una tabla de proyectos relacionados. Los cambios se guardan con el borrador del Goal; abrirlo no modifica datos. Los bloques anteriores e importados continúan en Previous content y no se convierten automáticamente. Ver [detalle](goal-person-detail.md), [ADR0056](decisions/0056-goal-document-sections.md) y [verificación](verification-goal-detail-enhancement.md).

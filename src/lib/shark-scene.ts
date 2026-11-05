@@ -3,7 +3,7 @@ export type SharkPoint = { x: number; y: number; z: number; nx: number; ny: numb
 export type SharkPose = { x: number; y: number; size: number; yaw: number; bank: number; pitch: number; phase: number; opacity: number; tailAmplitude?: number; bend?: number; depth?: number };
 export type FishKind = 'shark' | 'compact' | 'slender';
 export type SharkGeometry = { points: Float32Array; count: number; kind: FishKind; spine: Float32Array; anchor: number; step: number };
-export const OCEAN_ACTORS = [{kind:'shark',size:84},{kind:'shark',size:65},{kind:'compact',size:48},{kind:'slender',size:43}] as const;
+export const OCEAN_ACTORS = [{kind:'shark',size:84},{kind:'shark',size:65},{kind:'compact',size:48},{kind:'slender',size:43},{kind:'shark',size:46}] as const;
 // Independent loop regions keep the school spread across the cover. The small
 // fish explore its upper/lower areas while the sharks have room on either side.
 const SWIM_ROUTES = [
@@ -11,6 +11,7 @@ const SWIM_ROUTES = [
   {cx:.77,cy:.43,rx:.16,ry:.21,phase:2.78},
   {cx:.24,cy:.22,rx:.17,ry:.13,phase:1.55},
   {cx:.76,cy:.78,rx:.17,ry:.13,phase:4.9},
+  {cx:.51,cy:.23,rx:.15,ry:.10,phase:1.2},
 ] as const;
 export function oceanFit(width:number,height:number){return Math.min(1,width/900,height/288);}
 const STRIDE = 10, BONES = 80;
@@ -65,10 +66,10 @@ export function createSharkMesh(): SharkPoint[] {
   return points;
 }
 function swimmingPose(width:number,height:number,seconds:number,index:number):SharkPose {
-  const fit=oceanFit(width,height),shark=index<2,route=SWIM_ROUTES[index];
+  const fit=oceanFit(width,height),shark=OCEAN_ACTORS[index].kind==='shark',distant=index===4,route=SWIM_ROUTES[index];
   const direction=index===1||index===3?-1:1;
-  const cadence=seconds*(shark?.55:.7)+index*1.9;
-  const omega=[.145,.12,.21,.18][index],tempo=shark?.55:.7;
+  const tempo=distant?.43:shark?.55:.7,cadence=seconds*tempo+index*1.9;
+  const omega=[.145,.12,.21,.18,.085][index];
   const travel=route.phase+direction*omega*(seconds+.15/tempo*(Math.sin(cadence)-Math.sin(index*1.9)));
   const rx=width*route.rx,ry=height*route.ry;
   // Slow into a turn; a wide cover must not make the fish flip at each end.
@@ -76,7 +77,7 @@ function swimmingPose(width:number,height:number,seconds:number,index:number):Sh
   const angle=Math.atan2(ease*Math.sin(travel),Math.cos(travel));
   const dx=-rx*Math.sin(angle),dy=ry/SE*Math.cos(angle),length=Math.hypot(dx,dy);
   const curvature=rx*ry/SE/Math.max(1,length**3);
-  const depth=[.12,.62,.26,.76][index]+.09*Math.sin(angle+index);
+  const depth=distant?.91+.045*Math.sin(angle+index):[.12,.62,.26,.76][index]+.09*Math.sin(angle+index);
   const size=OCEAN_ACTORS[index].size*fit*(1.04-depth*.13);
   const effort=.5+.5*Math.cos(cadence);
   return {
@@ -85,13 +86,13 @@ function swimmingPose(width:number,height:number,seconds:number,index:number):Sh
     size,yaw:Math.atan2(dy*direction,dx*direction),
     bend:Math.min(shark?2.25:1.4,curvature*size*(shark?3.5:2.3))*direction,
     bank:-direction*Math.min(.16,curvature*size*.13),pitch:Math.sin(cadence)*.015,
-    phase:seconds*[4.4,4.9,6.9,8.4][index]+.32*Math.sin(cadence)+index*2.1,
+    phase:seconds*[4.4,4.9,6.9,8.4,3.6][index]+.32*Math.sin(cadence)+index*2.1,
     tailAmplitude:shark?.36+.2*effort:index===2?.23+.08*effort:.36+.1*effort,
-    depth,opacity:1-depth*.30,
+    depth,opacity:distant?.44-(depth-.865)*.7:1-depth*.30,
   };
 }
 export function sharkPoses(width:number,height:number,seconds:number):SharkPose[] {
-  return [0,1,2].map(index=>swimmingPose(width,height,seconds,index));
+  return OCEAN_ACTORS.flatMap((actor,index)=>actor.kind==='shark'?[swimmingPose(width,height,seconds,index)]:[]);
 }
 export function createFishMesh(kind:'compact'|'slender'):SharkPoint[] {
   const compact=kind==='compact',points:SharkPoint[]=[];

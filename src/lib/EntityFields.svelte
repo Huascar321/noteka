@@ -28,7 +28,7 @@
     <label class="checkbox-label"><input aria-label="Favorite note" type="checkbox" checked={payload.favorite === true} onchange={(e) => set('favorite', e.currentTarget.checked)} /> Favorite</label>
   {/if}
   {#if kind === 'task'}
-    {#if !taskSecondaryOnly}<label>Status<select aria-label="Task status" value={String(payload.state ?? 'todo')} onchange={(e) => set('state', e.currentTarget.value)}><option value="todo">Pending</option><option value="done">Completed</option></select></label>{/if}
+    {#if !taskSecondaryOnly}<label>Status<select aria-label="Task status" value={String(payload.state ?? 'todo')} onchange={(e) => set('state', e.currentTarget.value)}><option value="todo">To Do</option><option value="doing">Doing</option><option value="done">Done</option></select></label>{/if}
     <label>Priority<select aria-label="Priority" value={String(payload.priority ?? 'normal')} onchange={(e) => set('priority', e.currentTarget.value)}><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option></select></label>
     <label>Planned<input aria-label="Planned date" type="date" value={String(payload.planned_date ?? '')} onchange={(e) => set('planned_date', e.currentTarget.value || null)} /></label>
     {#if !taskSecondaryOnly}<label>Due date<input aria-label="Due date" type="date" value={String(payload.due_date ?? '')} onchange={(e) => set('due_date', e.currentTarget.value || null)} /></label>{/if}

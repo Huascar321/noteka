@@ -71,6 +71,42 @@
     const info = await control('init');
     const homeChecks = stage => window.notekaHomeSmoke({control,assert,wait,click,fill,change,delay,allEntities,openListed,info},stage);
     await wait(() => document.hasFocus(), 'ventana/webview con foco real');
+    if (info.phase === 'focus') {
+      fill('#workspace-path', info.path); await click('Create workspace');
+      await wait(() => document.querySelector('.home [data-home-section="person"]')?.getAttribute('aria-busy') === 'false', 'Home sintético listo');
+      const gui = await control('entity_create', { kind: 'note', title: 'GUI writer' });
+      const cli = await control('entity_create', { kind: 'note', title: 'CLI writer' });
+      const mcp = await control('entity_create', { kind: 'note', title: 'MCP writer' });
+      await control('start_competing_writers', { cli_id: cli.id, mcp_id: mcp.id });
+      let writerReady = false;
+      for (let i = 0; i < 100 && !writerReady; i++) { writerReady = await control('writers_ready'); if (!writerReady) await new Promise(resolve => setTimeout(resolve, 20)); }
+      assert(writerReady, 'CLI y MCP preparados bajo el bloqueo sintético');
+      const guiWrite = invoke('operate', { request: { workspace: info.path, command: { operation: 'entity.update', input: { id: gui.id, expected_revision: gui.revision, title: 'GUI concurrent' } } } });
+      await new Promise(resolve => setTimeout(resolve, 100));
+      await control('writers_release');
+      const [guiResult, writerResult] = await Promise.all([guiWrite, control('writers_result')]);
+      assert(guiResult.ok && writerResult.ok, 'desktop, CLI y MCP confirman escrituras concurrentes');
+      const written = await Promise.all([gui, cli, mcp].map(entity => control('get', { id: entity.id })));
+      assert(written.every(entity => entity.revision === 2) && written.map(entity => entity.title).join('|') === 'GUI concurrent|CLI concurrent|MCP concurrent', 'revisiones y títulos de los tres clientes preservados');
+      const project = await control('entity_create', { kind: 'project', title: 'Focus synthetic project', payload: { state: 'planned', purpose: 'preserve' } });
+      await control('blur_host');
+      await wait(() => !document.hasFocus(), 'pérdida de foco nativa');
+      const person = await control('entity_create', { kind: 'person', title: 'Focus synthetic person', payload: {} });
+      await control('focus_host');
+      await wait(() => document.hasFocus(), 'recuperación de foco nativa');
+      await wait(() => document.querySelector(`.home [data-home-section="person"] [data-person-id="${person.id}"]`), 'cambio externo visible tras recuperar foco');
+      assert(document.hasFocus(), 'foco físico recuperado y cambio CLI visible');
+      const projectCard = () => document.querySelector(`.home [data-home-section="project"] [data-project-id="${project.id}"]`);
+      await wait(() => projectCard()?.querySelector('.project-move-trigger:not(:disabled)'), 'movimiento del Board habilitado tras refresco');
+      projectCard().querySelector('.project-move-trigger').click();
+      await wait(() => document.querySelector('.project-move-dialog[open]'), 'diálogo de movimiento');
+      await change('.project-move-dialog [aria-label="Estado destino"]', 'doing');
+      await click('Move');
+      await wait(() => document.querySelector(`.home .project-column[data-project-state="doing"] [data-project-id="${project.id}"]`), 'proyecto en la columna nueva');
+      const moved = await control('get', { id: project.id });
+      assert(moved.payload.state === 'doing' && moved.payload.purpose === 'preserve', 'Board mueve el proyecto tras el foco y conserva sus propiedades');
+      await control('finish', { ok: true, checks }); return;
+    }
     if(info.phase === 'layout') {
       fill('#workspace-path',info.path);await click("Open workspace");await homeChecks('layout');await control('finish',{ok:true,checks});return;
     }

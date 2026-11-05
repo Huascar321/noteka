@@ -6,7 +6,7 @@
     name = 'file-text',
     size = 18,
     color = undefined,
-    strokeWidth = 1.8,
+    strokeWidth = undefined,
     class: className = '',
     workspace = undefined,
   }: { name?: string; size?: number; color?: string; strokeWidth?: number; class?: string; workspace?: string } = $props();
@@ -27,4 +27,4 @@
   });
 </script>
 
-{#if source}<img src={source} alt="" width={size} height={size} class={className} style:object-fit="contain" style:flex-shrink="0" onerror={() => source = ''} />{:else}<svg {...attributes} width={size} height={size} stroke-width={strokeWidth} style:color={color} class={className} data-app-icon={iconName(name)} aria-hidden="true">{@html markup}</svg>{/if}
+{#if source}<img src={source} alt="" width={size} height={size} class={className} style:object-fit="contain" style:flex-shrink="0" onerror={() => source = ''} />{:else}<svg {...attributes} width={size} height={size} stroke-width={strokeWidth ?? attributes['stroke-width']} style:color={color} class={className} data-app-icon={iconName(name)} aria-hidden="true">{@html markup}</svg>{/if}

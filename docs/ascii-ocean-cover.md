@@ -1,14 +1,15 @@
 # Portada de océano ASCII
 
-El experimento del 26/10/2026 combina este océano con koi naranja/blanco y medusas
-cian/violeta, ordenando individuos por profundidad compartida y variando escala y
-contraste. Sustituye las tres escenas alternadas, preservadas en `2d43a66`. Ver
-[composición y referencias](ascii-cover-scenes.md) y
-[verificación actual](verification-mixed-ocean.md). La geometría y nado de
-tiburones descritos abajo se conservan; su API original sigue disponible.
+El26/10/2026 se restauró esta escena como una de las tres variantes alternadas,
+junto a koi naranja/blanco y medusas cian/violeta. El usuario descartó la mezcla;
+se recuperó la base de `2d43a66`, luego ampliada con ambiente y un tiburón lejano. Ver
+[variantes y referencias](ascii-cover-scenes.md) y
+[verificación actual](verification-ascii-cover-scenes.md). La geometría y nado
+de tiburones descritos abajo se conservan.
 
 Home conserva ASCII/Foto y su preferencia local anterior. La escena procedural
-combina dos tiburones, un pez de cuerpo compacto y otro alargado. Los tipos de
+combina dos tiburones principales, un tercero más pequeño y tenue al fondo,
+un pez de cuerpo compacto y otro alargado. Los tipos de
 pez son categorías visuales, sin atribuir una especie biológica al video de
 referencia. Cada tipo tiene su propia malla, aletas, cola y ritmo de ondulación.
 La cámara es cenital. Un esqueleto de ochenta segmentos de longitud constante
@@ -23,12 +24,16 @@ impulso/deslizamiento con ritmos propios. La curva corporal sigue la curvatura
 del recorrido; se limita para evitar pliegues cerrados. Escala/opacidad dependen
 de la profundidad decorativa y el orden de dibujo sigue esa profundidad.
 
-Los centros de los tiburones están repartidos a izquierda/derecha, con recorridos
+Los centros de los tiburones principales están repartidos a izquierda/derecha, con recorridos
 que abarcan cada uno el 32 % del ancho. Los peces pequeños exploran el 34 % del
 ancho en zonas altas/bajas y con fases diferentes. Así conservan posiciones
 variadas y cruces ocasionales sin acumular casi todo el elenco en la misma zona.
 La distribución es continua y determinista, sin teletransportes ni un simulador
 de colisiones. Ver [revisión de dispersión](verification-ocean-spread.md).
+El tercero reutiliza la misma malla/articulación, con escala base46 frente a84/65,
+opacidad aproximada0,38–0,44, mayor profundidad y ruta más lenta por la zona alta
+central. Se añade al final del catálogo para conservar índices/poses de los cuatro
+animales anteriores y se dibuja primero al ordenar por profundidad.
 
 La textura sigue los videos de día y noche aportados por el usuario: celdas de
 6×8 px, letras contrastantes, tiburones gris azulados y peces oliva/dorados.
@@ -39,8 +44,11 @@ La grilla viaja con cada animal para permitir una traslación continua. Un atlas
 local prepara las celdas y glifos por tema/DPR; geometría, profundidad y sombreado
 reutilizan buffers. Suavizado e histéresis de tonos estabilizan los caracteres,
 y las celdas vacías se limpian sin estela. El fondo usa una grilla fina, partículas
-y tres bancos lejanos de puntos y pequeños trazos; los rayos de la iteración anterior se
-retiraron para seguir la referencia.
+y tres bancos lejanos de puntos y pequeños trazos. Tres bandas ASCII de luz lenta
+y ondulante y un relieve rocoso tenue recortado en la esquina inferior derecha
+se dibujan detrás de los animales. El ambiente prepara celdas por tamaño y
+reutiliza el atlas de tinta y tiempo activo existentes, sin otro reloj o textura
+externa. El relieve se mantiene en ese borde también en ancho estrecho.
 
 No se incorporan fotogramas ni el video al producto. Todo es decorativo y local,
 sin imágenes descargadas, consultas del workspace ni funciones de IA. Claro y

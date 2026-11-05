@@ -267,7 +267,14 @@ fn every_view_orders_and_paginates_unique_originals_and_declared_groups() {
             .len(),
         5
     );
-    assert_eq!(f.query("tags_types")["groups"].as_array().unwrap().len(), 3);
+    let tag_groups = f.query("tags_types")["groups"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|group| group["key"].as_str().unwrap().to_owned())
+        .collect::<Vec<_>>();
+    // Entity was added later without folding existing Topic tags into it.
+    assert_eq!(tag_groups, ["area", "resource", "entity", "topic"]);
     let old = f.ok(
         "workflow.query",
         json!({"view":"active_projects","limit":200}),
@@ -282,6 +289,74 @@ fn every_view_orders_and_paginates_unique_originals_and_declared_groups() {
         .map(|i| i["entity"]["title"].as_str().unwrap())
         .collect::<Vec<_>>();
     assert!(titles.windows(2).all(|a| a[0] <= a[1]));
+}
+
+#[test]
+fn doing_tasks_are_pending_for_views_workflows_and_project_progress() {
+    let f = F::new();
+    let project = f.create("project", "Active", json!({"state":"doing"}));
+    let task = f.create(
+        "task",
+        "Doing task",
+        json!({"state":"doing","due_date":"2026-10-12","planned_date":"2026-10-12","inbox":true}),
+    );
+    let overdue = f.create(
+        "task",
+        "Doing overdue",
+        json!({"state":"doing","due_date":"2026-10-05","inbox":true}),
+    );
+    f.link(&task, &project, "project");
+    f.link(&overdue, &project, "project");
+    let id = task["id"].as_str().unwrap();
+    let overdue_id = overdue["id"].as_str().unwrap();
+    for view in [
+        "tasks_today",
+        "tasks_inbox",
+        "tasks_week",
+        "tasks_scheduled",
+        "tasks_active_projects",
+        "tasks_projects_in_progress",
+        "tasks_all",
+    ] {
+        assert!(
+            ids(&f.query(view)).iter().any(|row| row.as_str() == id),
+            "{view}"
+        );
+    }
+    assert!(
+        !ids(&f.query("tasks_done"))
+            .iter()
+            .any(|row| row.as_str() == id)
+    );
+    for view in ["inbox", "my_day", "pending"] {
+        let page = f.ok(
+            "workflow.query",
+            json!({"view":view,"limit":50,"as_of":"2026-10-12"}),
+        );
+        assert!(
+            page["items"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|item| item["id"] == id),
+            "{view}"
+        );
+    }
+    let overdue_page = f.ok(
+        "workflow.query",
+        json!({"view":"overdue","limit":50,"as_of":"2026-10-12"}),
+    );
+    assert!(
+        overdue_page["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|item| item["id"] == overdue_id)
+    );
+    let summary = &f.query("projects_active")["items"][0]["summary"];
+    assert_eq!(summary["pending"], 2);
+    assert_eq!(summary["done"], 0);
+    assert_eq!(summary["total"], 2);
 }
 
 #[test]
@@ -572,7 +647,13 @@ fn view_membership_orders_and_partial_metadata_are_explicit() {
     assert_eq!(f.query("notes_all")["matching_count"], 2);
     assert_eq!(f.query("notes_inbox")["unavailable_count"], 1);
     f.raw(&topic, json!({"classification":null}));
-    assert_eq!(f.query("tags_types")["groups"][3]["key"], "unavailable");
+    let tags = f.query("tags_types");
+    assert_eq!(tags["unavailable_count"], 1);
+    assert!(!ids(&tags).contains(topic["id"].as_str().unwrap()));
+    assert_eq!(
+        f.ok("entity.get", json!({"id":topic["id"]}))["payload"],
+        json!({"classification": null})
+    );
 }
 
 #[test]
@@ -751,11 +832,30 @@ fn timestamp_and_id_orders_civil_age_and_archived_today() {
             people[1].clone()
         ]
     );
-    assert_eq!(
-        ordered("people_new"),
-        people.iter().rev().cloned().collect::<Vec<_>>()
-    );
-    assert_eq!(ordered("people_updated"), people);
+    // New and Updated filter by civil period, then share Contacts' gallery
+    // order with title/ID fallback (match-home-people-reference design).
+    let title_order = vec![
+        people[2].clone(),
+        people[3].clone(),
+        people[0].clone(),
+        people[1].clone(),
+    ];
+    assert_eq!(ordered("people_new"), title_order);
+    assert_eq!(ordered("people_updated"), title_order);
+    db.execute(
+        "UPDATE entities SET payload=json_set(payload,'$.gallery_order',0) WHERE id=?1",
+        params![people[1]],
+    )
+    .unwrap();
+    let gallery_order = vec![
+        people[1].clone(),
+        people[2].clone(),
+        people[3].clone(),
+        people[0].clone(),
+    ];
+    for view in ["people_contacts", "people_new", "people_updated"] {
+        assert_eq!(ordered(view), gallery_order, "{view}");
+    }
     let n = f.create("note", "Civil age", json!({}));
     db.execute(
         "UPDATE entities SET updated_at='2026-10-11T12:00:00Z' WHERE id=?1",

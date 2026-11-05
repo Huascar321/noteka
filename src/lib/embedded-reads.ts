@@ -4,22 +4,30 @@ export class ReadQueue {
   private active = 0;
   private pending: Array<() => void> = [];
   private readonly capacity: number;
-  constructor(capacity = 2) {
+  private readonly onIdle?: () => void;
+  constructor(capacity = 2, onIdle?: () => void) {
     if (!Number.isInteger(capacity) || capacity < 1) throw new Error("Invalid read capacity.");
     this.capacity = capacity;
+    this.onIdle = onIdle;
   }
-  private drain() { while (this.active < this.capacity && this.pending.length) this.pending.shift()!(); }
+  private drain() {
+    while (this.active < this.capacity && this.pending.length) this.pending.shift()!();
+    if (!this.active && !this.pending.length) this.onIdle?.();
+  }
   run<T>(work: () => Promise<T>, signal: AbortSignal): Promise<T> {
     return new Promise((resolve, reject) => {
       let started = false;
       const abort = () => {
-        if (!started) this.pending = this.pending.filter(start => start !== startJob);
+        if (!started) { this.pending = this.pending.filter(start => start !== startJob); this.drain(); }
         reject(new DOMException("Read discarded", 'AbortError'));
       };
       const startJob = () => {
         if (signal.aborted) { abort(); return; }
         started = true; this.active++;
-        void Promise.resolve().then(work).then(resolve, reject).finally(() => {
+        void Promise.resolve().then(() => {
+          if (signal.aborted) throw new DOMException("Read discarded", 'AbortError');
+          return work();
+        }).then(resolve, reject).finally(() => {
           signal.removeEventListener('abort', abort); this.active--; this.drain();
         });
       };

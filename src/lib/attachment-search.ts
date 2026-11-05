@@ -24,11 +24,11 @@ export class AttachmentReader {
   private lifetime = new ReadLifetime();
   private disposed = false;
   private committed: AttachmentSearchInput | null = null;
-  private read: (input: AttachmentSearchInput) => Promise<AttachmentSearchPage>;
+  private read: (input: AttachmentSearchInput, signal: AbortSignal) => Promise<AttachmentSearchPage>;
   private changed: (state: AttachmentReadState) => void;
   state: AttachmentReadState = { page: null, pageNumber: 0, busy: false, error: null };
 
-  constructor(read: (input: AttachmentSearchInput) => Promise<AttachmentSearchPage>, changed: (state: AttachmentReadState) => void) {
+  constructor(read: (input: AttachmentSearchInput, signal: AbortSignal) => Promise<AttachmentSearchPage>, changed: (state: AttachmentReadState) => void) {
     this.read = read; this.changed = changed;
   }
   private publish(state: AttachmentReadState) { this.state = state; this.changed(state); }
@@ -55,7 +55,7 @@ export class AttachmentReader {
     this.committed = { ...query };
     this.publish({ page: null, pageNumber: 0, busy: true, error: null });
     try {
-      const page = await pool.run(() => this.read(query), signal);
+      const page = await pool.run(() => this.read(query, signal), signal);
       if (!this.lifetime.current(token)) return;
       if (page.items.length > ATTACHMENT_PAGE_SIZE || (previous && (page.revision !== previous.revision || page.profile !== previous.profile || page.version !== previous.version))) {
         throw new Error("Page does not match the query. Search again.");

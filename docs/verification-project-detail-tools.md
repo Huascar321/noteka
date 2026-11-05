@@ -77,6 +77,10 @@ accesible exacto y se preservaron los registros. No son fallos del producto.
 
 ## Límites y cierre
 
+Nota posterior: `add-project-task-board` agrega List/Board al detalle de Project;
+la exclusión de Board/Calendar de esta revisión describe el alcance del 24/10. Ver
+[verificación del Board](verification-project-task-board.md).
+
 No se agregaron ni ejecutaron suites. Las comprobaciones UI fueron manuales y las
 simulaciones sólo alteraron DTOs/error de la copia de revisión; no acreditan
 persistencia, CAS real ni error real de almacenamiento. No se ejecutaron

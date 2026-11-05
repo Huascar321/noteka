@@ -1,82 +1,76 @@
 # Iconos de interfaz
 
-Noteka usa **AnimateIcons** (`@animateicons/vanilla` **0.1.0**) con 81 SVG locales
-seleccionados. La familia principal es Huge; las formas sin equivalente usan
-Lucide del mismo paquete. El catálogo estático no incluye instrucciones de
-animación ni importa el reproductor. No usa fuentes de iconos, CDN ni red remota.
-
-Al 26/10/2026 se agregaron save/trash para el diálogo de borrador y
-sidebar-right/app-window para los modos de peek. Se conservan las formas
-anteriores y nueve definiciones laterales diferidas.
+Noteka usa [Icona.works](https://icona.works/), con **85 claves lógicas** servidas
+por SVG locales. Se elige **Fill** cuando existe; los controles sin esa variante
+usan trazo **bold2.4**. Fill conserva el stroke1.5 del exportador oficial. No hay
+fuentes de iconos, CDN, React ni descargas de iconos en ejecución.
 
 ## Presentación y datos
 
-`AppIcon` conserva `currentColor`, tamaño, grosor de línea predeterminado 1.8 y
-fallback. Las claves lógicas previas siguen funcionando, por ejemplo `star`,
-`file-text` y `project`. Los nombres desconocidos muestran el documento por defecto.
-Los iconos decorativos llevan `aria-hidden`; los botones conservan sus nombres.
+`AppIcon` conserva `currentColor`, tamaño y fallback. Los recortes del relleno
+usan máscaras con IDs únicos por instancia, de modo que dejan ver cualquier
+fondo y funcionan en ambos temas. Las claves previas siguen funcionando, incluso
+cuando Icona requiere un equivalente semántico: por ejemplo, Goals usa una
+bandera, Travel un avión de papel y Book un marcador. La correspondencia completa
+y sus adaptaciones están en [la procedencia](../third-party/icona/README.md).
 
-Los campos opcionales `icon`/`icon_color` y el selector existente siguen vigentes.
-Rust valida `[a-z0-9-]`, hasta 40 bytes, y `#RRGGBB`. Una clave
-`image-<UUID hexadecimal sin guiones>` conserva su adjunto local original con
-[los límites del lector de imágenes](tasks-reference.md). El cambio de catálogo
-no reescribe entidades, logos, relaciones ni documentos. No acepta SVG arbitrario
-procedente de una entidad.
+Los campos opcionales `icon`/`icon_color` y el selector siguen vigentes. Rust valida
+`[a-z0-9-]`, hasta40 bytes, y `#RRGGBB`. Una clave `image-<UUID hexadecimal sin
+guiones>` conserva su adjunto local original con [los límites del lector de
+imágenes](tasks-reference.md). La migración visual no reescribe entidades, logos,
+relaciones ni documentos. Los nombres desconocidos y las imágenes no disponibles
+usan el documento de fallback. Los iconos decorativos llevan `aria-hidden`; las
+etiquetas de sus botones se conservan. No se acepta SVG de una entidad.
+
+Marca, controles nativos de ventana y marcas de estado de tareas conservan su
+presentación; el toggle lateral sí usa AppIcon. El guion pendiente sigue blanco.
 
 ## Movimiento
 
-Los iconos permanecen estáticos al renderizar, cambiar de pantalla o pasar el mouse.
-Sólo un clic de ratón o teclado en Home, Tasks, Notes, Projects, Tags, Goals, People,
-Search o Collections del lateral carga el reproductor diferido e inicia un ciclo.
+Render, navegación desde otra procedencia y hover permanecen estáticos. Un clic
+de ratón o teclado en Home, Tasks, Notes, Projects, Tags, Goals, People, Search
+o Collections del lateral, o en una tab de vista de sección, carga el módulo de
+movimiento e inicia el mismo **Jelly de Tasks**. La receta CSS oficial de Icona
+se comparte entre las nueve figuras del lateral y las tabs, con idénticos
+keyframes, intensidad y duración, sin partículas. Las tabs usan un wrapper
+genérico para animar el icono propio sin sustituir su figura.
 
-El ciclo termina a los **800 ms** restaurando exactamente los atributos estáticos.
-Otro clic reinicia un único ciclo. La preferencia de movimiento reducido, ocultar
-la página o desmontar el botón cancela la reproducción. La navegación conserva
-sus guardias; un fallo al cargar decoración no impide abrir una sección.
+El ciclo dura **1000ms**, tras el pedido de un ritmo más lento y pausado. La curva
+y la intensidad del rebote se conservan. A los1050ms se
+restauran los mismos nodos estáticos y se eliminan estilos/clases temporales.
+Otro clic reinicia un único ciclo global. Movimiento reducido, página oculta o
+desmontaje cancelan la reproducción o carga pendiente. Los estilos, keyframes y
+IDs de cada reproducción están aislados. Un fallo al cargar decoración no impide
+navegar y queda registrado en consola.
 
 ## Generación y licencias
 
-- `scripts/icon-catalog.mjs` selecciona las formas y mantiene las claves.
-- `npm run icons:generate` produce `icons.generated.ts` y las nueve definiciones
-  laterales separadas usando `restingAttributes` oficial. Valida tags/atributos,
-  referencias locales y namespace de IDs por instancia.
-- `npm run icons:check`, incluido en build, contrasta los archivos generados y
-  las licencias, copiadas también a `public/licenses/animateicons/` para distribuirlas
-  dentro de los assets offline de la aplicación.
-- `@lucide/svelte` dejó de ser dependencia; los SVG estáticos no necesitan React
-  ni componentes de otra biblioteca.
-
-[Documentación oficial vanilla](https://animateicons.in/icons/docs/vanilla),
-[licencias y procedencia](../third-party/animateicons/README.md),
-[ADR0041](decisions/0041-static-svg-and-explicit-icon-motion.md) y
-[alcance de revisión](verification-static-animateicons.md).
-
-## Desarrollo con Tauri
-
-El paquete ESM de AnimateIcons se excluye del prebundler de Vite para evitar URLs
-optimizadas obsoletas cuando se actualizan dependencias durante una sesión abierta.
-Se conserva la carga al clic y el empaquetado diferido de producción. Un fallo
-decorativo queda registrado en consola; no bloquea navegación ni cambia datos.
-La [corrección y revisión geométrica](verification-icon-motion-dev-fix.md) cubre
-el Vite activo en Chromium/WebKit, además de la revisión previa de producción.
-
-People añadió seis claves estáticas el 24/10/2026: contact, circle-user, user-plus,
-phone-call, arrow-up y arrow-down. Goals incorpora trophy ya existente como novena
-definición lateral diferida; los 76 SVG estáticos anteriores permanecen idénticos.
+- `scripts/icon-catalog.mjs` fija revisión, variantes, adaptaciones y Jelly en los
+  nueve accesos; `SIDEBAR_MOTION_DURATION_MS` centraliza su duración.
+- `third-party/icona/assets.json` contiene66 variantes oficiales seleccionadas y
+  nueve escenas con la misma receta Jelly; el generador deduplica en71 SVG para85
+  claves y una definición CSS compartida. Las figuras y el catálogo estático se conservan.
+- `npm run icons:generate` genera el catálogo estático y el módulo CSS diferido,
+  validando tags/atributos/referencias locales y namespace de máscaras.
+- `npm run icons:check`, incluido en build, contrasta recursos y avisos MIT en
+  `public/licenses/icona/`. Funciona sin upstream, catálogo npm ni red.
+- `scripts/import-icona.mjs` permite auditar/reimportar explícitamente desde un
+  checkout local limpio de la revisión fijada usando el exportador oficial.
+- AnimateIcons dejó de ser dependencia; sus avisos anteriores se conservan como
+  historial. Ya no hace falta la excepción de prebundling para ese paquete.
 
 ## Consistencia de navegación
 
-Las siete secciones usan una sola definición mediante `SectionIcon` y
-`navigation.ts`, compartida por lateral, breadcrumb, pestañas de sección,
-encabezados de Home/páginas y captura. Las formas canónicas son Home/home,
-Tasks/task, Notes/file-text, Projects/project, Tags/tag, Goals/trophy y
-People/person. Se retiraron circle-check/edit/rocket/circle-user de esos
-encabezados, sus rellenos y flechas superpuestas; el catálogo y las imágenes
-personales se conservan.
+`SectionIcon` y `navigation.ts` comparten forma entre lateral, breadcrumb,
+pestañas, Home, encabezados y captura. Las siete claves canónicas permanecen:
+home, task, file-text, project, tag, trophy y person. Los encabezados/breadcrumb
+siguen estáticos y el lateral recupera la misma forma al terminar el ciclo.
 
-Color y trazo parten del breadcrumb: acento compartido, sin relleno, trazo 1,8.
-El color primario se elige en [Settings → Preferences](settings.md); un ajuste
-por tema mantiene contraste para selecciones extremas. El movimiento lateral
-conserva su ciclo y reposo canónico; encabezados/breadcrumb siguen estáticos.
+El acento compartido se elige en [Settings → Preferences](settings.md), con ajuste
+de contraste por tema. Los colores personales de cada registro se conservan.
 
-[Revisión de apariencia](verification-appearance.md).
+[Documentación oficial](https://icona.works/docs),
+[licencias y equivalencias](../third-party/icona/README.md),
+[ADR0055](decisions/0055-local-icona-fill-bold.md) y
+[verificación inicial](verification-icona.md). La unificación posterior a Jelly
+se registra en [su verificación focalizada](verification-sidebar-jelly.md).

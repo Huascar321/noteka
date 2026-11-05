@@ -22,12 +22,16 @@ hitos vinculados y continuación. La biblioteca de hitos conserva List. Los
 proyectos relacionados abren sus originales; el editor completo de relaciones
 permanece disponible, aunque los enlaces se distribuyan entre Tag y Goal Projects.
 
-El editor existente de Goal se conserva con la misma configuración, documento,
-prefijo y guardias. No se agregan estructuras ni nuevas funciones de cuerpo.
-Los bloques importados de plantilla, incluidas etiquetas de vistas y orden,
-siguen siendo contenido del documento: no se eliminan ni se convierten en
-consultas por su apariencia. La tabla de hitos y Goal Projects son controles
-locales independientes de esos textos.
+Goal Overview ofrece un cuerpo editable y Additional Details desplegable;
+Journal es desplegable y New entry agrega un encabezado con la fecha local y un
+párrafo editable. Ambas secciones, junto al contenido anterior, son bloques del
+mismo documento y usan la guardia y guardado explícito existentes.
+
+Los bloques importados, incluidas etiquetas de vistas y orden, permanecen en
+Previous content sin convertirse automáticamente ni eliminarse. La tabla de
+hitos y Goal Projects son controles locales independientes. Goal Projects muestra
+nombre, estado y plazo de los proyectos relacionados y permite vincular o abrir
+originales; sin proyecto no inventa datos. Ver [ADR0056](decisions/0056-goal-document-sections.md).
 
 ## Person
 
