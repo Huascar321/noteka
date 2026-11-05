@@ -37,10 +37,10 @@
   <div class="task-view-toolbar tag-view-toolbar">
     <div class="home-tabs task-view-tabs" use:slidingTabs role="group" aria-label="Tags views">{#each views as view}<button class:active={!tableMode && readState?.view === view.id} aria-pressed={!tableMode && readState?.view === view.id} onclick={() => void selectView(view.id)}><AppIcon name={view.icon} size={16} /><span>{view.label}</span></button>{/each}{#if standalone}<button class:active={tableMode} aria-pressed={tableMode} onclick={() => void selectTable()}><AppIcon name="columns" size={16} /><span>Table</span></button>{/if}</div>
     <div class="task-view-actions"><HomeReadStatus state={readState} updating />
-      <button class="task-icon-action" aria-label="Refresh Tags" title="Refresh Tags" disabled={readState?.busy} onclick={() => void onview()}><AppIcon name="refresh" size={16} /></button>
+      <div class="glass-tool-group" role="group" aria-label="Tags tools"><button class="task-icon-action" aria-label="Refresh Tags" title="Refresh Tags" disabled={readState?.busy} onclick={() => void onview()}><AppIcon name="refresh" size={16} /></button>
       {#if !standalone}<button class="task-icon-action" aria-label="Open Tags list" title="Open Tags list" onclick={() => void onnavigate()}><AppIcon name="expand" size={16} /></button>{/if}
       <button class="task-icon-action" aria-label="Tags view options" aria-expanded={optionsOpen} title="View options" onclick={() => optionsOpen = !optionsOpen}><AppIcon name="sliders" size={16} /></button>
-      <button class="task-new primary" onclick={() => void create()}>New</button>
+      </div><button class="task-new primary" onclick={() => void create()}>New</button>
     </div>
   </div>
   {#if optionsOpen}<div class="task-view-options"><p>Types groups Area, Resource and Entity; Topic keeps its own type. Fav. uses the explicit flag. Views exclude source-archived tags; original entities are preserved.</p><p>Counts and latest notes use local relations and exclude notes archived locally or at the source. The latest note uses its available original date. Recent combines imported activity with related note dates; the source is a snapshot without continuous synchronization.</p>{#if standalone}<p>Table shows Tag, Last Note and Type in local A–Z order with the same pagination.</p>{/if}{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}

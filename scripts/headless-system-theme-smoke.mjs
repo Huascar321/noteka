@@ -16,7 +16,7 @@ const bridge = await startHeadlessBridge();
 const config = join(bridge.root, 'playwright.config.json');
 writeFileSync(config, JSON.stringify({ browser: { launchOptions: { headless: true }, contextOptions: { serviceWorkers: 'block' } } }));
 try {
-  await playwright(['open', bridge.origin, `--config=${config}`]);
+  await playwright(['open', bridge.origin, `--config=${config}`, ...(process.env.NOTEKA_TEST_BROWSER ? [`--browser=${process.env.NOTEKA_TEST_BROWSER}`] : [])]);
   await playwright(['run-code', `--filename=${resolve('tests/headless-system-theme.cjs')}`]);
 } finally {
   try { await playwright(['close']); } finally { await bridge.close(); }

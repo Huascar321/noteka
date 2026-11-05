@@ -67,13 +67,13 @@
   });
 </script>
 
-<dialog bind:this={dialog} id="settings-dialog" class="modal settings-dialog" aria-labelledby="settings-title" onkeydown={keydown} oncancel={(event) => { event.preventDefault(); onclose(); }}>
+<dialog bind:this={dialog} id="settings-dialog" class="modal settings-dialog glass-popup" aria-labelledby="settings-title" onkeydown={keydown} oncancel={(event) => { event.preventDefault(); onclose(); }}>
   <h2 id="settings-title" class="sr-only">Settings</h2>
   <aside class="settings-sidebar" aria-label="Settings navigation">
     <div class="settings-sidebar-heading"><AppIcon name="settings" size={18} /><span>Settings</span></div>
     <div class="settings-search">
       <AppIcon name="search" size={16} />
-      <input bind:this={search} bind:value={query} aria-label="Search settings" placeholder="Search settings" autocomplete="off" type="search" />
+      <input bind:this={search} bind:value={query} aria-label="Search settings" placeholder="Search" autocomplete="off" type="search" />
       {#if query}<button class="icon-button" aria-label="Clear search" title="Clear search" onclick={clearSearch}><AppIcon name="close" size={13} /></button>{/if}
     </div>
     <nav class="settings-navigation" aria-label="Settings sections">

@@ -25,17 +25,31 @@ async (page) => {
   const themeIs = async value => page.waitForFunction(expected => document.documentElement.dataset.theme === expected, value);
   const checkChrome = async theme => {
     await page.waitForTimeout(250); // Let the existing color transition finish before measuring contrast.
-    const result = await page.evaluate(() => {
+    // Sample composed pixels: an RGBA tint alone is not the visible glass background.
+    const screenshot = await page.locator('.sidebar-nav-indicator').screenshot({
+      style: '.desktop-sidebar .nav-icon,.desktop-sidebar .sidebar-nav-label { visibility:hidden !important; } .settings-dialog,.settings-dialog::backdrop { display:none !important; }'
+    });
+    const result = await page.evaluate(async screenshot => {
       const sidebar = document.querySelector('.desktop-sidebar'), bar = document.querySelector('.window-titlebar');
       const active = sidebar.querySelector('nav button.active');
       const context = document.createElement('canvas').getContext('2d');
       const color = value => { context.clearRect(0, 0, 1, 1); context.fillStyle = value; context.fillRect(0, 0, 1, 1); return [...context.getImageData(0, 0, 1, 1).data].slice(0, 3); };
-      const lum = value => color(value).map(c => c / 255).map(c => c <= .04045 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4).reduce((sum, c, i) => sum + c * [.2126, .7152, .0722][i], 0);
+      const lum = rgb => rgb.map(c => c / 255).map(c => c <= .04045 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4).reduce((sum, c, i) => sum + c * [.2126, .7152, .0722][i], 0);
       const indicator = sidebar.querySelector('.sidebar-nav-indicator');
-      const activeStyle = getComputedStyle(active), surface = indicator ? getComputedStyle(indicator).backgroundColor : activeStyle.backgroundColor, a = lum(activeStyle.color), b = lum(surface);
-      return { sidebar: getComputedStyle(sidebar).backgroundImage, bar: getComputedStyle(bar).backgroundImage, sidebarBlur: getComputedStyle(sidebar).backdropFilter, barBlur: getComputedStyle(bar).backdropFilter, foreground: activeStyle.color, background: surface, contrast: (Math.max(a, b) + .05) / (Math.min(a, b) + .05) };
-    });
-    expect(result.sidebar.includes('gradient') && result.bar.includes('gradient') && result.sidebarBlur === 'none' && result.barBlur === 'none' && result.contrast >= 4.5, `${theme} chrome appearance, contrast and no backdrop filter: ${JSON.stringify(result)}`);
+      const activeStyle = getComputedStyle(active), surface = getComputedStyle(indicator).backgroundColor, a = lum(color(activeStyle.color));
+      const image = new Image(); image.src = 'data:image/png;base64,' + screenshot; await image.decode();
+      const sample = document.createElement('canvas'); sample.width = image.naturalWidth; sample.height = image.naturalHeight;
+      const pixels = sample.getContext('2d'); pixels.drawImage(image, 0, 0);
+      let contrast = Infinity;
+      // Exclude the decorative rim and curved ends; sample the entire text-height fill.
+      for (let y = 4; y < sample.height - 4; y += 2) for (let x = Math.ceil(sample.height / 2); x < sample.width - sample.height / 2; x += 4) {
+        const b = lum([...pixels.getImageData(x, y, 1, 1).data].slice(0, 3));
+        contrast = Math.min(contrast, (Math.max(a, b) + .05) / (Math.min(a, b) + .05));
+      }
+      return { sidebar: getComputedStyle(sidebar).backgroundImage, bar: getComputedStyle(bar).backgroundImage, sidebarBlur: getComputedStyle(sidebar).backdropFilter, barBlur: getComputedStyle(bar).backdropFilter, foreground: activeStyle.color, background: surface, contrast };
+    }, screenshot.toString('base64'));
+    console.log(`${theme}: composed sidebar contrast ${result.contrast.toFixed(2)}:1`);
+    expect(result.sidebar.includes('gradient') && result.bar.includes('gradient') && result.sidebarBlur === 'none' && result.barBlur === 'none' && Number.isFinite(result.contrast) && result.contrast >= 4.5, `${theme} chrome appearance, contrast and no backdrop filter: ${JSON.stringify(result)}`);
   };
   await control('configure', { theme: 'dark', phase: 'main' });
   const info = await control('init');

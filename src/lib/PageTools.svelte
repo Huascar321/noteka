@@ -80,7 +80,7 @@
   {#if placement === 'header'}
     <button bind:this={menuTrigger} type="button" class="page-tool-trigger page-actions-trigger" aria-label="Page actions" title="Page actions" aria-haspopup="menu" aria-expanded={menuOpen} aria-controls={menuOpen ? `${id}-menu` : undefined} onclick={() => void toggleMenu()} onkeydown={event => { if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); if (!menuOpen) void toggleMenu(event.key === 'ArrowUp'); } }}><AppIcon name="ellipsis" size={20} /></button>
     {#if menuOpen}
-      <div bind:this={menu} id={`${id}-menu`} class="page-actions-menu" role="menu" aria-label="Page actions" tabindex="-1" onkeydown={menuKeydown} style:left={`${menuPosition.left}px`} style:top={`${menuPosition.top}px`} style:max-height={`${menuPosition.maxHeight}px`}>
+      <div bind:this={menu} id={`${id}-menu`} class="page-actions-menu glass-menu" role="menu" aria-label="Page actions" tabindex="-1" onkeydown={menuKeydown} style:left={`${menuPosition.left}px`} style:top={`${menuPosition.top}px`} style:max-height={`${menuPosition.maxHeight}px`}>
         {#each groups as group (group.id)}
           <button type="button" role="menuitem" tabindex="-1" aria-label={group.label} aria-controls={`${id}-${group.id}-panel`} aria-describedby={!group.available && group.reason ? `${id}-${group.id}-reason` : undefined} disabled={!group.available} onclick={() => void chooseTool(group.id)}><AppIcon name={group.icon} size={18} /><span>{group.label}{#if !group.available && group.reason}<small id={`${id}-${group.id}-reason`}>{group.reason}</small>{/if}</span></button>
         {/each}
@@ -101,7 +101,7 @@
   </div>
   {/if}
   {#each groups as group (group.id)}
-    <section class="page-tool-panel" id={`${id}-${group.id}-panel`} aria-labelledby={`${id}-${group.id}-heading`} hidden={active !== group.id || !group.available} style:left={placement === 'header' ? `${panelPosition.left}px` : undefined} style:top={placement === 'header' ? `${panelPosition.top}px` : undefined} style:max-height={placement === 'header' ? `${panelPosition.maxHeight}px` : undefined}>
+    <section class="page-tool-panel" class:glass-menu={placement === 'header'} id={`${id}-${group.id}-panel`} aria-labelledby={`${id}-${group.id}-heading`} hidden={active !== group.id || !group.available} style:left={placement === 'header' ? `${panelPosition.left}px` : undefined} style:top={placement === 'header' ? `${panelPosition.top}px` : undefined} style:max-height={placement === 'header' ? `${panelPosition.maxHeight}px` : undefined}>
       <header><h3 id={`${id}-${group.id}-heading`}>{group.label}</h3><button type="button" class="icon-button" aria-label={`Close ${group.label}`} onclick={close}><AppIcon name="close" size={16} /></button></header>
       {@render content(group.id)}
     </section>

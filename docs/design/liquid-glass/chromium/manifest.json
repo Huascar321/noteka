@@ -1,0 +1,552 @@
+{
+  "generatedAt": "2026-11-05T03:46:48.299Z",
+  "browser": "chromium",
+  "browserVersion": "156.0.8078.80",
+  "playwrightCli": "0.1.22",
+  "deviceScaleFactor": 2,
+  "reducedMotion": "reduce",
+  "data": "Workspace temporal nuevo, nombres ficticios, foto = icono local de Noteka. Sin datos de usuario.",
+  "scope": "Frontend compilado con puente CLI Rust/SQLite. No acredita composición Tauri/macOS ni IPC nativo.",
+  "sourceHashes": {
+    "scripts/capture-liquid-glass-guide.cjs": "5bdaf7e1799ffe55046aa3e8a48c42952a0836596f8a67c4b7cd010b0ee6999b",
+    "scripts/capture-liquid-glass-guide.mjs": "a7cb68f388adbd45fdf937a13c18749923f67277bccceb580c52d2b7665d0e44",
+    "src/App.svelte": "5d7979d8c688c72a33d5b53ceae693378f893472df34f57ddb38d95923cbc645",
+    "src/lib/AppIcon.svelte": "4f974db2ef613fe1737b318d11ad263df224c59f63ef6de086472fd791072403",
+    "src/lib/AsciiShark.svelte": "a9eb572b37fc70a1c82a51e20fe06d359f4698199b1db663a2bdac9b9959792f",
+    "src/lib/AttachmentGenerationPanel.svelte": "eff4687d390cb758041080ea6e0324b243f6c4ffe508db12e405a0a4ca6d7edb",
+    "src/lib/AttachmentPreparationPanel.svelte": "492b7c1a0cf29e15d5386644143a091a74206fbd92945d785942be06e28c1ca2",
+    "src/lib/AttachmentSearchPanel.svelte": "5c4e3541982c5a0bc77c74b819b65a3d45a95d387bfbd04116f6697718c91146",
+    "src/lib/BlockEditor.svelte": "4c7eed8bd295a141487ef3adddfd7f46c59cceaeafa2f5f5b5c479d9ec321dbd",
+    "src/lib/CollectionPresentation.svelte": "8a18c8c4f950ba00bcab206e1dfa34c1a3bcb9f6d051a2435cb4cc2ef0469bd2",
+    "src/lib/DatabasePanel.svelte": "b99a1cf4f32064d2b0c0dac3da3167fdb8492cdae568208d32b60b237ff7fa93",
+    "src/lib/EmbeddedCollectionView.svelte": "f0ceb13719d8fe9bfd71c379ec0dcc46cd063b4ad6d26d5f96245b7f1505383f",
+    "src/lib/EntityFields.svelte": "0e8ded51b788e412fa55c002c93faecb36b22daaff3133691ab56751726cce1e",
+    "src/lib/GoalPageProperties.svelte": "cdcd33595e5a10c9a4bd612afc84fd495ce938a25f9a314e961f44c2515d56ee",
+    "src/lib/GoalPicker.svelte": "ac6fc55ed15a61d31234490a3dc6f76718b4c6185f1f940f4ec06c4e73157ba4",
+    "src/lib/GoalProjects.svelte": "19e0f61e85d01a867ab0c58da69599551f13465551ab9efbe472664cf9be8151",
+    "src/lib/GoalsPage.svelte": "b849cf52fa89b8095c9c04cf5710fedd598e1247d1ce09255c65b825eb85aa2f",
+    "src/lib/GroupedSearchPanel.svelte": "f15b2add7da783cb89e17474d13f4627d406ec7b2709990637d421726936f145",
+    "src/lib/HomeGoalRow.svelte": "6ac8a50bb3641547b6a3b573798d6d9041eed8a377b551aee98be98efb1f6afc",
+    "src/lib/HomeGoalSection.svelte": "6506c27503c97471bf39df707add7b38ff1f55ce902e2d3fd1d6efa9a4781c77",
+    "src/lib/HomeItem.svelte": "a02ccc083395da4a8346307a1ee15030fdb0f71e67502347eefc5c6943b2e536",
+    "src/lib/HomeNoteSection.svelte": "bbbdd7d684ed3ec7ff94a0edec3731205d578dbe1a68b4c3442692fff2e15ea6",
+    "src/lib/HomePanel.svelte": "52d4a3abca076cb4f738fdbf0e4ffeec4c3285ef59b382d606a4aa53d2da97d4",
+    "src/lib/HomePersonCard.svelte": "a79f6d45eba37f90021c728ebb8569c43986009531ec500edf756ce903aca90b",
+    "src/lib/HomePersonProjectRow.svelte": "659410c1d68b0dd2915971b47b779850cc4f71a8357cdd810bcac6624335ffcb",
+    "src/lib/HomePersonSection.svelte": "fccbbb00beee26e8443031a6e037c038b1ac6ea6811ae2085e13e1172acc9e1f",
+    "src/lib/HomeProjectCard.svelte": "8c69c32253ca5d4af89e4ca0faf9f3c46aaed95a016442718ea413c65d1b9967",
+    "src/lib/HomeProjectSection.svelte": "257d5075542d417b64b16eeb63d399a5672b326ec206d54fd7591fa9b3d9baf9",
+    "src/lib/HomeReadStatus.svelte": "74e135ad566ece99639430edd1cb5a1fec58e642e2dee776902a98596d36820c",
+    "src/lib/HomeTagRow.svelte": "ff7408fba78140f191c75c7e90ef97a7cdde8e403b178c9986512860d348b10c",
+    "src/lib/HomeTagSection.svelte": "2ae71adb61195dd94eeed841731ec586683b10ac19905d20aae9da9ed4922e14",
+    "src/lib/HomeTagTable.svelte": "6ad97c1662bb92486fa73729d52ef24a7a0e6679a7e1b04529969ce5b0a36eeb",
+    "src/lib/HomeTaskSection.svelte": "5476fc50da20806e9a50df0ececa2a0deb107e4e75cb3646f862d685f4531d3b",
+    "src/lib/HomeWeather.svelte": "ec36653d73bfb3fa41f29a90f8565830f0af86aa5b462f2b95701a3571579a4e",
+    "src/lib/IconPicker.svelte": "528923fe48071634cc98202bcfd7b360fa87ac7bc48e119559a70ff1f256952b",
+    "src/lib/MilestonesPanel.svelte": "728b72187dd8fdf2cc08233a6b29672b928d1cf23e20352274f67c8b586c1a67",
+    "src/lib/NotePageProperties.svelte": "ea554023c00e57bab9ad74d57cdd675c38fb826eaba3966ea67446cee6658385",
+    "src/lib/NotesPage.svelte": "5dfdda9065711a57ad4781a6331bad8324ef684648fb55647293ee32fa2e0fdf",
+    "src/lib/PageBreadcrumb.svelte": "7c3ce1263ff30727406bcd4c1ccabc1563e364c1ef49e4d950b9b40119bb8a34",
+    "src/lib/PageTools.svelte": "ba3040d5ac414ae03611ea34d481abe89499460878b74b02397b136c2d319db0",
+    "src/lib/PanelResizeHandle.svelte": "9e62942ff7eb4dfec635e3b8c25e7da3bb17214538552d0a1a949327eeb0839c",
+    "src/lib/PeekModeMenu.svelte": "0092cdf49177976f87819dea4a990f563214b276b5cf00c776b6d1e9e20f3308",
+    "src/lib/PeoplePage.svelte": "009ec8b5d308d75cf89393a2b954eb2653769bccc58e0b762b2890af4cbb6529",
+    "src/lib/PersonContents.svelte": "2d3486c6d2b70fc77dfc1c45e0dee427bb1329b700c7454947032e0f19ef3c5d",
+    "src/lib/PersonPhoto.svelte": "14f72d572edac61dd81c56317cdb4a7948b83042913237c70b5a33d6adb51140",
+    "src/lib/PrimaryColorPicker.svelte": "6a56d1dd8847efcbff4d1c14853073fba1c2d3c37ba913cc88698036be2dee58",
+    "src/lib/ProjectContents.svelte": "1588e124f5668d54e5b2f5554f7b7cb756c79bdf513fee0d5880aa243c998dc7",
+    "src/lib/ProjectPageProperties.svelte": "f0a34139de3a2f1012be53d603aaaa59f9e087863e31eb93b59f4641bed49619",
+    "src/lib/ProjectTaskBoard.svelte": "1b084a92b552b38495b96e2748bde02da4c291731536d70b63d83b3c03dbd2f2",
+    "src/lib/ProjectTaskRow.svelte": "8c04af3e5e8c61a4b9bdc1377afb2406a26775f282e47b4df6071910678c92eb",
+    "src/lib/ProjectsPage.svelte": "713ac3265756f7e2ebe68a7b2dff81a86eacd787b71b1d7f3cbc491660f87422",
+    "src/lib/RelationPicker.svelte": "3d7c3e93a9a2d57798daad8d7a20bdbdb2324482f7c009c61dd41c15dcdd8894",
+    "src/lib/ScrollOutline.svelte": "4bd0651196de94b69215c70dfbb78e6766fba93dcd6eee7c99cc1f08f46c102c",
+    "src/lib/SearchDialog.svelte": "b41b124aa17082e091351cb54e41e9429aee09f8cb92d658da7b6299b70da578",
+    "src/lib/SectionIcon.svelte": "4c55a3f779585c21745b0b2d55ad65b38385918064a5053e69bfe2c58d42de91",
+    "src/lib/SettingsDialog.svelte": "c5cb3efcb694ba2d7906a9134fb00ab64fab9f185e12729eb0841c3c108785bf",
+    "src/lib/TagContents.svelte": "4aacc7d79006852c6d306a8564f1df3a611843b8852a69960a06c84ad8b27ebb",
+    "src/lib/TagPageProperties.svelte": "bb195bd4c57d3d98b0010139b6a9f385de382a8db82457e5e1c2306bf7f10a31",
+    "src/lib/TagsPage.svelte": "6c25bcc640c26eed40573f49bc42f5a9142fa117f7f6f1ce0bb5d7df633cd886",
+    "src/lib/TaskPageProjectRow.svelte": "461b7be38a037e0b641d46c08acd201fdf6f00cef486f0508a940363c0c00c38",
+    "src/lib/TaskPageProperties.svelte": "8af44f1401463b3152c5371869e7cdf9c8e689f943b60343d67276b1ca693480",
+    "src/lib/TasksPage.svelte": "517849ff23daf892190a9720bf728db90f72f64ac0e54a609fe3de4486a0ea41",
+    "src/lib/WeatherIcon.svelte": "afd3581c752e3214cfc08920af913d30dfbe9fa28d7b4824c0d347c220666367",
+    "src/lib/WindowTitlebar.svelte": "8b6015fc01597224926186eec1c578dcd888888480a3ebac214f7c82fb8b19ba",
+    "src/lib/WorkspacePane.svelte": "a341ce96162683ab99556bd826af2a508d82c2cec58eab45a3f8ba8a9a9847e5",
+    "src/lib/primary-color.ts": "6d383ca488491970f71788555116c04f0f8d7ec4cfc88334bf8950cab9063bcd",
+    "src/lib/sliding-tabs.ts": "afc1222faddd3bd27479194aab03ca1930914765f6b82593455250248df2ed50",
+    "src/style.css": "1b37b11e102d4c06a359cb6918dd79b692b99d02e14f18a90472d87986cb1d0a"
+  },
+  "captures": [
+    {
+      "file": "overview-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Home, sidebar, tabs and breadcrumb",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1440,
+        "height": 900
+      },
+      "sha256": "ec8aa7898d3e34f52e756330dc97b8bc687ddd6cb1f5b8f6ff6bb87d1dad5ff0",
+      "bytes": 623613
+    },
+    {
+      "file": "sidebar-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Selected Home and compact Search",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 250,
+        "height": 856
+      },
+      "sha256": "bed80ba014506a05aace9401c893f979ead9ebaa73681d5eaa2d643526137b0b",
+      "bytes": 111283
+    },
+    {
+      "file": "cover-selector-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "ASCII selected, keyboard focus",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 109.21875,
+        "height": 32
+      },
+      "sha256": "a8d627b8ca6feb804724ca46a6db4be683e2ac98fbc45fc52a7ad964d4642d9e",
+      "bytes": 9645
+    },
+    {
+      "file": "toolbar-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Sliding view indicator, grouped tools and New",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1082,
+        "height": 50
+      },
+      "sha256": "91adc780256810403a96caf6b0a648b905a801fb323d18fd1c65003a43fce58e",
+      "bytes": 34893
+    },
+    {
+      "file": "people-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Synthetic contacts, solid cards with glass frame and keyboard focus",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1060.40625,
+        "height": 530.484375
+      },
+      "sha256": "add944e301b43177852b6d890e20ad72d64076744e7eae980fd9345d63e2a382",
+      "bytes": 95261
+    },
+    {
+      "file": "note-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Full note pane: compact Tag/Type, relation capsules, header and solid content",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 856
+      },
+      "sha256": "9a67cabb14deda652932d94305a823a8e2fde57a85e3c5428a63d74786418ab1",
+      "bytes": 133637
+    },
+    {
+      "file": "page-menu-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Open local glass menu",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 260,
+        "height": 203.9375
+      },
+      "sha256": "d742c8deab2d372f23b2d80fffd78f3cdf2ee817bcd0695a5138b736638fd4e3",
+      "bytes": 43029
+    },
+    {
+      "file": "note-locked-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Locked fields retain frame and height; Tag destination remains navigable",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 778.40625,
+        "height": 57
+      },
+      "sha256": "585d77e19cf6355cdd0ac176dc58fa2e363805798a715d54186a83e9476d46bb",
+      "bytes": 17492
+    },
+    {
+      "file": "relation-picker-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Mounted relation picker uses glass-menu",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 320,
+        "height": 89
+      },
+      "sha256": "d41911066e89e1fa93d4ef54d6caf3756b231b63e2758daa62d783a105820356",
+      "bytes": 23713
+    },
+    {
+      "file": "note-header-dirty-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Unsaved changes, tinted Save and white shortcut",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 52
+      },
+      "sha256": "57094517ec4c766f35b53e4a8ccbc1a47f442c26d33b702762cd86de496bae48",
+      "bytes": 42840
+    },
+    {
+      "file": "save-guard-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Default Cancel focus, neutral secondary capsules and tinted confirmation",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 436.25,
+        "height": 172.4375
+      },
+      "sha256": "a03fa9c976a53c828ab0a0a013d7cae559f8cf359ee5c77bde5181baac44257c",
+      "bytes": 72058
+    },
+    {
+      "file": "settings-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Preferences, shared popup material and compact Search",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1000,
+        "height": 640
+      },
+      "sha256": "68f31e84b5527a3a22053478c5b0dfa48e3ff109349060b25c9879cc4ad29db8",
+      "bytes": 252672
+    },
+    {
+      "file": "search-light.png",
+      "theme": "light",
+      "accent": "Blue",
+      "state": "Shared popup material over actual Home content",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 780,
+        "height": 620
+      },
+      "sha256": "477091b1917d8fea8448ddd4cbd4c49305590b2bbb7535925ca2af0d58edc315",
+      "bytes": 220536
+    },
+    {
+      "file": "overview-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Home, sidebar, tabs and breadcrumb",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1440,
+        "height": 900
+      },
+      "sha256": "19e76f4557f041538d503fbab16441da1d8c85af31c6df1d7b5f0dd075443fa8",
+      "bytes": 787344
+    },
+    {
+      "file": "sidebar-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Selected Home and compact Search",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 250,
+        "height": 856
+      },
+      "sha256": "4e37d9d564adf5aef9447e7af9833a77a9667c663efb8aff23942bd35d0a07af",
+      "bytes": 110896
+    },
+    {
+      "file": "cover-selector-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "ASCII selected, keyboard focus",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 109.21875,
+        "height": 32
+      },
+      "sha256": "73a8b13cd4f73b63a1e890b632c540c48618d2198390f446f56d5dfba9765a18",
+      "bytes": 13343
+    },
+    {
+      "file": "toolbar-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Sliding view indicator, grouped tools and New",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1082,
+        "height": 50
+      },
+      "sha256": "bcb61ee29f68fe4f22c1e97277a3eedb181b575bcd22b0f31d20256768aa3bcc",
+      "bytes": 41986
+    },
+    {
+      "file": "people-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Synthetic contacts, solid cards with glass frame and keyboard focus",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1060.40625,
+        "height": 530.484375
+      },
+      "sha256": "6b01f80810e47a0de5f6e83883f1e4d94c781c4f36a74928eb28f77cf241d054",
+      "bytes": 96235
+    },
+    {
+      "file": "note-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Full note pane: compact Tag/Type, relation capsules, header and solid content",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 856
+      },
+      "sha256": "af0a35dfed5c2e6b0dde17b41f8c07fabf2b3c7ce7d31f0c6508db0482ce9382",
+      "bytes": 135823
+    },
+    {
+      "file": "page-menu-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Open local glass menu",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 260,
+        "height": 203.9375
+      },
+      "sha256": "f68e3ed26f212ceb769bdde7227d63424c57acc882d97ff40a9081c2e6db2216",
+      "bytes": 36689
+    },
+    {
+      "file": "note-locked-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Locked fields retain frame and height; Tag destination remains navigable",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 778.40625,
+        "height": 57
+      },
+      "sha256": "20926d53d31b4429ad1dda465171c91b1770e3e8daba81b1ee3afa219a4f512b",
+      "bytes": 17079
+    },
+    {
+      "file": "relation-picker-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Mounted relation picker uses glass-menu",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 320,
+        "height": 89
+      },
+      "sha256": "7d6f5915d70c8aee8f8511d081363a9a719b3f044b4f5f702c228df1c2fb55d3",
+      "bytes": 20869
+    },
+    {
+      "file": "note-header-dirty-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Unsaved changes, tinted Save and white shortcut",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 52
+      },
+      "sha256": "b66a0b07f52d08ef52a821263fa683b38bb766ccb51f4bbf575bbf97060a1d20",
+      "bytes": 42954
+    },
+    {
+      "file": "save-guard-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Default Cancel focus, neutral secondary capsules and tinted confirmation",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 436.25,
+        "height": 172.4375
+      },
+      "sha256": "0ce34fa2ae74af25c6651a7f7acd98e3f00c6a166693287524515d41e1ebfd76",
+      "bytes": 69080
+    },
+    {
+      "file": "settings-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Preferences, shared popup material and compact Search",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1000,
+        "height": 640
+      },
+      "sha256": "a0a48be60f460678c51e1312a13f854efd1925218b53f6ea0a70f8146f3697c7",
+      "bytes": 252154
+    },
+    {
+      "file": "search-dark.png",
+      "theme": "dark",
+      "accent": "Blue",
+      "state": "Shared popup material over actual Home content",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 780,
+        "height": 620
+      },
+      "sha256": "c256ed018b3584276db19792910113e9e9ef080b9b0890cbd2b324609fc64e6f",
+      "bytes": 218071
+    },
+    {
+      "file": "violet-action-dark.png",
+      "theme": "dark",
+      "accent": "Violet",
+      "state": "Alternate accent; header remains neutral",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 1190,
+        "height": 52
+      },
+      "sha256": "e9cccb7817996c200a38afb1897e516c6b8f0b12e63653f77050b37de773470a",
+      "bytes": 43772
+    },
+    {
+      "file": "save-guard-narrow-dark.png",
+      "theme": "dark",
+      "accent": "Violet",
+      "state": "420px, secondary row and full-width confirmation",
+      "viewport": {
+        "width": 420,
+        "height": 740
+      },
+      "cssSize": {
+        "width": 368.234375,
+        "height": 216.4375
+      },
+      "sha256": "f8c633ab8753223709f86500a69886af72c0d3656a80b3b17343e625f5a85243",
+      "bytes": 75888
+    },
+    {
+      "file": "search-solid-fallback-dark.png",
+      "theme": "dark",
+      "accent": "Violet",
+      "state": "prefers-contrast: more; solid surface, no sheen/filter",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssSize": {
+        "width": 780,
+        "height": 620
+      },
+      "sha256": "93bac358315017683f9aca9613c2c1c6b10f560788d4b22e8665ab624495cbda",
+      "bytes": 95494
+    }
+  ],
+  "buildHashes": {
+    "dist/assets/index-BDRjfEma.css": "4fb7d8a0c274c6d34ddd5a529b3bb40b7354d3130b33d3f0498a554286185339",
+    "dist/assets/index-BY4dfXap.js": "45519bb615d388fb0345b6aa680eb2a93dbcc5d8de586090f8034e5740600396",
+    "dist/assets/sidebar-icon-animation-BtloHV6V.js": "53fb22cc126ea76c3daedb6f5d2e46ee16c570c7e572fac0d501e2747e12a8ca",
+    "dist/index.html": "4899e740629595394b9b6b18a93aca610513f1db23427f6dc9ca66d4dd92f69e"
+  }
+}

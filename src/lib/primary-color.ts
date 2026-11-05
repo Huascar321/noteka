@@ -69,6 +69,7 @@ export function primaryPalette(value: string, theme: Theme): Record<string, stri
   const hover = mix(accent, text, 0.10);
   return {
     '--primary-color': color, '--accent': accent, '--accent-text': text,
+    '--glass-action-tint': readable(color, '#ffffff', 7, 'light'),
     '--accent-hover': colorContrast(hover, text) >= 4.5 ? hover : accent, '--focus': link,
     '--link': link, '--section-icon': accent,
     '--selected': mix(background, accent, selectionAmount),

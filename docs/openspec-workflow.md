@@ -1,5 +1,59 @@
 # Cómo desarrollar Noteka con OpenSpec
 
+Consolidación 04/11/2026: el usuario autoriza un **commit local conjunto** de
+los siete cambios Liquid Glass aceptados, después del checkpoint `affca8a`.
+`document-liquid-glass-system` amplía la [guía obligatoria](design-system.md)
+y agrega [29 capturas sintéticas y su regenerador](design/liquid-glass/README.md).
+Es un cambio de documentación/tooling con `skip_specs: true`. Esta autorización
+sustituye las restricciones anteriores de «sin commit adicional» para esta
+serie. Los siete deltas permanecen activos; no implica push, sync ni archivo.
+
+Seguimiento 04/11/2026: `refine-save-guard-glass` aplica el popup compartido a
+la guardia de cambios pendientes, cápsulas neutras a Cancel/Discard y vidrio
+teñido a Save/Retry y Save and continue. Conserva operaciones, errores, foco y
+atajo; ver [evidencia y límites](verification-save-guard-glass.md).
+Delta activo sin sync/archivo; incluido en la consolidación local autorizada.
+
+Seguimiento 04/11/2026: `refine-settings-and-search-glass` comparte un material
+translúcido entre Settings y Search, con velos locales de lectura, reflejos y
+un único filtro por popup. Ambos campos Search usan 32 px y fuente de 13 px.
+Transmisión de fondo, contraste y funciones verificados en Chromium/WebKit;
+ver [evidencia y límites](verification-settings-and-search-glass.md).
+Delta activo sin sync/archivo; incluido en la consolidación local autorizada.
+
+Seguimiento 04/11/2026: `refine-people-and-note-glass` aplica marcos tenues a
+People, cápsulas de relaciones, campos Tag/Type y una cabecera agrupada de Note.
+Conserva fotos, etiquetas semánticas, operaciones, bloqueo y guardado explícito.
+La revisión posterior compacta Tag con flecha reservada y normaliza el marco
+bloqueado con Type, manteniendo navegación al destino.
+Ver [evidencia](verification-people-and-note-glass.md). Delta activo sin
+sincronización/archivo; incluido en la consolidación local autorizada.
+
+Seguimiento 04/11/2026: `unify-liquid-glass-tools-and-popovers` agrupa herramientas
+de sección/Milestones con New independiente, adapta el campo del popup Search,
+comparte marcos de menús/pickers y agrega el indicador segmentado ASCII/Photo.
+Conserva operaciones, preferencias y filtros locales. Ver
+[evidencia y límites](verification-glass-tools-and-popovers.md).
+Delta pendiente de sincronización/archivo; incluido en la consolidación local autorizada.
+
+Seguimiento 04/11/2026: `refine-sidebar-search-capsule` cambia sólo el material
+del acceso Search del lateral a una cápsula de campo neutra, con borde fino,
+luces interiores y fallback sólido. Apertura/atajo conservados; ver
+[evidencia](verification-sidebar-search-capsule.md). Delta pendiente de sync/archivo.
+
+Seguimiento 04/11/2026: `extend-liquid-glass-controls` aplica óptica compartida a
+pestaña superior, breadcrumb, vista seleccionada y New, con distinta intensidad
+y tinte primario reservado a la acción. Conserva operaciones y fallbacks;
+los resultados y límites constan en [verificación](verification-liquid-glass-controls.md).
+Delta pendiente de sincronización/archivo.
+
+Experimento 04/11/2026: `refine-sidebar-liquid-glass` prueba tinte gris,
+borde luminoso y reflejos interiores sólo en la cápsula activa del sidebar.
+El usuario aceptó este acabado. El commit local `affca8a` preserva todo el trabajo previo. La implementación
+conserva navegación y movimiento, con fallback sólido accesible; el cambio
+permanece activo sin sync/archivo. Ver
+[evidencia y límites](verification-sidebar-liquid-glass.md).
+
 Seguimiento 04/11/2026: `add-project-task-board` agrega `doing` a las tareas y
 List/Board al detalle de Project, con columnas To Do/Doing/Done, tarjetas con
 vencimiento, New task por columna y movimiento por arrastre/selector con CAS.
@@ -429,6 +483,7 @@ El perfil generado no incluye una skill local `verify`; antes de cerrar un cambi
 | --- | --- |
 | `docs/plan-noteka.md` | Objetivo, decisiones, arquitectura propuesta, requisitos de visión y fases. |
 | `docs/development.md` | Comandos y prerequisitos realmente existentes para ejecutar, probar y construir. |
+| `docs/design-system.md` | Guía visual obligatoria, tokens, estados y enlace al atlas reproducible `docs/design/liquid-glass/`. |
 | `docs/decisions/` | ADRs de decisiones adoptadas con contexto, alternativas y consecuencias. |
 | `openspec/specs/<capability>/spec.md` | Comportamiento implementado y verificado, una vez sincronizado. |
 | `openspec/changes/<change>/` | Propuesta activa y su plan ejecutable; deltas añadidos/modificados/eliminados. |

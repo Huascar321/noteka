@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "check": "svelte-check --tsconfig ./tsconfig.json",
+    "design:screenshots": "node scripts/capture-liquid-glass-guide.mjs",
     "build": "npm run icons:check && npm run contracts:check && npm run check && vite build",
     "tauri": "tauri",
     "pdf:prepare": "node scripts/prepare-pdf-worker.mjs",

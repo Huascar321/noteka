@@ -43,7 +43,7 @@
     style:width={`${size + 14}px`} style:height={`${size + 14}px`}
   ><AppIcon name={current} color={currentColor ?? undefined} {size} /></button>
   {#if open}
-    <div class="icon-panel" role="dialog" aria-label="Page icon">
+    <div class="icon-panel glass-menu" role="dialog" aria-label="Page icon">
       <p class="icon-caption">Icon</p>
       <div class="icon-grid">
         {#each ICON_OPTIONS as option}

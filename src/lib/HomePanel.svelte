@@ -15,6 +15,7 @@
   import { ReadQueue } from './embedded-reads';
   import { captureRefreshFocus, restoreRefreshFocus } from './refresh-focus';
   import { readCover, saveCover, type CoverMode } from './home-cover';
+  import { slidingTabs } from './sliding-tabs';
   import type { HomeGroup, HomeView, EntityKind, ContextLink, HomePage } from './contracts.generated';
   let { workspace, active = true, visible = active, animateAlongsideSidePeek = false, blocked = false, searchOpen = false, error = '', onopen, oncreate, onnavigate }: {
     workspace: string; active?: boolean; visible?: boolean; animateAlongsideSidePeek?: boolean; blocked?: boolean; searchOpen?: boolean; error?: string; onopen: (id: string) => Promise<void>;
@@ -91,7 +92,7 @@
 <main bind:this={scrollRoot} class="home has-scroll-outline" aria-label="Home" aria-keyshortcuts="Meta+R Control+R F5">
   <div class="home-cover" data-cover={cover}>
     {#if cover === 'ascii'}<AsciiShark active={visible && (!blocked || searchOpen) && (active || animateAlongsideSidePeek)} />{:else}<img class="home-cover-photo" src="/images/home-cover.png" alt="" />{/if}
-    <div class="home-cover-controls" role="group" aria-label="Home cover"><button aria-pressed={cover === 'ascii'} onclick={() => changeCover('ascii')}>ASCII</button><button aria-pressed={cover === 'photo'} onclick={() => changeCover('photo')}>Photo</button></div>
+    <div class="home-cover-controls" use:slidingTabs role="group" aria-label="Home cover"><button aria-pressed={cover === 'ascii'} onclick={() => changeCover('ascii')}>ASCII</button><button aria-pressed={cover === 'photo'} onclick={() => changeCover('photo')}>Photo</button></div>
   </div>
   <div class="home-content">
     {#if error}<p class="error" role="alert">{error}</p>{/if}

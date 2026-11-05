@@ -52,10 +52,10 @@
   <div class="task-view-toolbar people-view-toolbar">
     <div class="home-tabs task-view-tabs" use:slidingTabs role="group" aria-label="People views">{#each views as view}<button class:active={readState?.view === view.id} aria-pressed={readState?.view === view.id} onclick={() => void onview(view.id)}><AppIcon name={view.icon} size={16} /><span>{view.label}</span></button>{/each}</div>
     <div class="task-view-actions"><HomeReadStatus state={readState} updating />
-      <button class="task-icon-action" aria-label="Refresh People" title="Refresh People" disabled={readState?.busy} onclick={() => void onview()}><AppIcon name="refresh" size={16} /></button>
+      <div class="glass-tool-group" role="group" aria-label="People tools"><button class="task-icon-action" aria-label="Refresh People" title="Refresh People" disabled={readState?.busy} onclick={() => void onview()}><AppIcon name="refresh" size={16} /></button>
       {#if !pageMode}<button class="task-icon-action" aria-label="Open People list" title="Open People list" onclick={() => void onnavigate()}><AppIcon name="expand" size={16} /></button>{/if}
       <button class="task-icon-action" aria-label="People view options" aria-expanded={optionsOpen} title="View options" onclick={() => optionsOpen = !optionsOpen}><AppIcon name="sliders" size={16} /></button>
-      <button class="task-new primary" onclick={() => void oncreate()}>New</button>
+      </div><button class="task-new primary" onclick={() => void oncreate()}>New</button>
     </div>
   </div>
   {#if optionsOpen}<div class="task-view-options"><p>Contacts includes local contacts and the People collection. Imported workspace members keep their original page and local search access. New/Updated use the last calendar month; Check-Ins includes dates up to one month ahead, including overdue dates.</p><p>Birthdays shows the chosen month; February 29 appears on February 28 in non-leap years. Pipeline uses the saved status, editable in the detail page. Active Projects groups Doing/Ongoing projects linked to people. Source photos and metadata are a local copy without continuous synchronization.</p>{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}

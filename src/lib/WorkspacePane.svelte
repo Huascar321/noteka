@@ -989,10 +989,13 @@
       <header class="editor-bar">{#if onclosepeek}<button class="icon-button close-peek" aria-label="Close peek" title="Close peek (Esc)" disabled={blocked || working || status === 'saving'} onclick={onclosepeek}><AppIcon name="forward" size={18} /></button>{/if}
         {#if onpresent && ondefaultpeek && (draft || selected)}<PeekModeMenu mode={peekMode} defaultMode={defaultPeekMode} preferenceError={peekPreferenceError} disabled={blocked || working || status === 'saving'} onchange={onpresent} ondefault={ondefaultpeek} />{/if}
         <PageBreadcrumb {section} record={breadcrumbRecord} disabled={blocked || working || status === 'saving'} onnavigate={navigate} />
-        {#if pageLocked}<button bind:this={lockStatusButton} type="button" class="page-lock-status" class:temporarily-unlocked={!noteReadOnly} aria-label={noteReadOnly ? "Unlock page temporarily" : "Re-lock page"} title={noteReadOnly ? "Unlock temporarily to edit" : "Lock the page again"} disabled={blocked || working || status === 'saving'} onclick={() => void toggleTemporaryUnlock()}><AppIcon name={noteReadOnly ? "lock" : "lock-open"} size={13} /><span>{noteReadOnly ? "Locked" : "Re-lock"}</span></button>{/if}
-        <button class="page-refresh" aria-label="Refresh page" title="Refresh page" disabled={working || loading || status === 'saving'} onclick={() => void refresh()}><AppIcon name="refresh" size={16} /></button>
-        <div class="actions">
-          {#if draft}<span class:warning={dirty} class="save-status" role="status">{({ saved: "Saved", dirty: "Unsaved changes", saving: "Saving…", error: "Error · Unsaved", conflict: "Conflict · Unsaved" })[status]}</span>{#if dirty}<button class="primary" onclick={() => void save()} disabled={working || status === 'saving'}>{status === 'error' ? "Retry" : "Save"} <kbd>⌘S</kbd></button>{/if}{/if}
+        {#if !plainNotePage}<button class="page-refresh" aria-label="Refresh page" title="Refresh page" disabled={working || loading || status === 'saving'} onclick={() => void refresh()}><AppIcon name="refresh" size={16} /></button>{/if}
+        <div class="actions" class:note-page-actions={plainNotePage} role={plainNotePage ? 'group' : undefined} aria-label={plainNotePage ? 'Note actions' : undefined}>
+          {#if plainNotePage}
+            {#if pageLocked}<button bind:this={lockStatusButton} type="button" class="page-lock-status" class:temporarily-unlocked={!noteReadOnly} aria-label={noteReadOnly ? "Unlock page temporarily" : "Re-lock page"} title={noteReadOnly ? "Unlock temporarily to edit" : "Lock the page again"} disabled={blocked || working || status === 'saving'} onclick={() => void toggleTemporaryUnlock()}><AppIcon name={noteReadOnly ? "lock" : "lock-open"} size={13} /><span>{noteReadOnly ? "Locked" : "Re-lock"}</span></button>{/if}
+            <button class="page-refresh" aria-label="Refresh page" title="Refresh page" disabled={working || loading || status === 'saving'} onclick={() => void refresh()}><AppIcon name="refresh" size={16} /></button>
+          {/if}
+          {#if draft}<span class:warning={dirty} class="save-status" role="status">{({ saved: "Saved", dirty: "Unsaved changes", saving: "Saving…", error: "Error · Unsaved", conflict: "Conflict · Unsaved" })[status]}</span>{#if dirty}<button class="primary glass-action" onclick={() => void save()} disabled={working || status === 'saving'}>{status === 'error' ? "Retry" : "Save"} <kbd>⌘S</kbd></button>{/if}{/if}
           {#if selected || draft}<PageTools groups={toolGroups} bind:active={utilityPanel} content={pageToolContent} placement="header" actions={[
             ...(plainNotePage ? [{ id: 'lock', label: 'Lock page', icon: 'lock', checked: pageLocked, disabled: !selected || working || status === 'saving', reason: !selected ? 'Save the page to lock it' : undefined, onselect: () => { void togglePageLock(); } }] : []),
             ...(selected ? [{ id: 'archive', label: selected.archived_at ? 'Restore' : 'Archive', icon: selected.archived_at ? 'undo' : 'archive', disabled: working || status === 'saving' || noteReadOnly, reason: noteReadOnly ? 'Unlock the page first' : undefined, onselect: () => { void archive(); } }] : [])
@@ -1069,13 +1072,13 @@
   <RelationPicker workspace={workspace.path} sourceId={selected.id} kind={relationPicker.kind} anchor={relationPicker.anchor} {relationships} busy={working || status === 'saving'} error={relationError} onadd={addRelation} onremove={removeRelation} onclose={() => { relationPicker = null; }} />
 {/if}
 {#if guard}
-    <dialog use:modal aria-labelledby={`pending-title-${paneId}`} class="modal unsaved-changes-dialog" oncancel={(e) => { e.preventDefault(); void resolveGuard('cancel'); }}>
+    <dialog use:modal aria-labelledby={`pending-title-${paneId}`} class="modal unsaved-changes-dialog glass-popup" oncancel={(e) => { e.preventDefault(); void resolveGuard('cancel'); }}>
       <h2 id={`pending-title-${paneId}`}>You have unsaved changes</h2><p>Choose what to do before leaving the current draft.</p>
       {#if error}<p class="error" role="alert">{error}</p>{/if}
       <div class="actions unsaved-actions">
-        <button data-cancel disabled={working || status === 'saving'} onclick={() => void resolveGuard('cancel')}><AppIcon name="close" size={16} />Cancel</button>
-        <button onclick={() => void resolveGuard('discard')} disabled={working || status === 'saving'}><AppIcon name="trash" size={16} />Discard</button>
-        <button class="primary" onclick={() => void resolveGuard('save')} disabled={working || status === 'saving'}><AppIcon name="save" size={16} />Save and continue</button>
+        <button class="glass-secondary" data-cancel disabled={working || status === 'saving'} onclick={() => void resolveGuard('cancel')}><AppIcon name="close" size={16} />Cancel</button>
+        <button class="glass-secondary" onclick={() => void resolveGuard('discard')} disabled={working || status === 'saving'}><AppIcon name="trash" size={16} />Discard</button>
+        <button class="primary glass-action" onclick={() => void resolveGuard('save')} disabled={working || status === 'saving'}><AppIcon name="save" size={16} />Save and continue</button>
       </div>
     </dialog>
 {/if}

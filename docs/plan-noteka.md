@@ -1,3 +1,5 @@
+> Consolidación visual 4/11/2026: el usuario autoriza guardar los siete cambios Liquid Glass aceptados en un commit local conjunto. `document-liquid-glass-system` consolida la [guía obligatoria](design-system.md) con recetas, tokens, estados, accesibilidad y [29 screenshots sintéticos reproducibles](design/liquid-glass/README.md). No cambia el comportamiento del producto; los deltas siguen activos sin sync/archivo y no se publica remotamente. Sustituye las restricciones anteriores de «sin commit adicional» para esta serie.
+>
 > Actualización 4/11/2026: `add-project-task-board` agrega `doing` a las tareas y List/Board al detalle de Project. Board tiene columnas To Do/Doing/Done, tarjetas con vencimiento, New task por columna y movimiento por arrastre o selector con CAS. El núcleo trata doing como pendiente; no hay migración. Calendar, comentarios y orden manual quedan fuera. Ver [guía](project-detail.md), [ADR0058](decisions/0058-task-status-and-project-board.md) y [verificación](verification-project-task-board.md).
 >
 > Actualización 29/10/2026: `fix-native-project-board-dragging` usa puntero e indica el destino; las pruebas sintéticas de Chromium/WebKit pasaron, pero el arrastre completo en Tauri/macOS sigue sin confirmarse. Ver [verificación](verification-native-project-dragging.md).
@@ -12,7 +14,21 @@
 >
 > Actualización 26/10/2026: `add-home-weather` implementa clima optativo con Open-Meteo, ubicación actual en macOS sin selección manual y caché local; pendiente de verificación nativa de red y archivo. Ver [verificación](verification-home-weather.md). Las menciones históricas de clima pendiente describen etapas anteriores.
 
+> Experimento visual 4/11/2026: `refine-sidebar-liquid-glass` aproxima la cápsula activa del menú lateral a la referencia macOS con tinte gris translúcido, borde luminoso direccional y reflejos interiores. El estado anterior está guardado en `affca8a`. Conserva navegación, densidad, Jelly y ventana opaca; el acabado fue aceptado por el usuario y se extiende a cuatro controles en `extend-liquid-glass-controls`; ambos deltas siguen sin sincronizar ni archivar. Ver [evidencia](verification-sidebar-liquid-glass.md).
+
+> Extensión visual 4/11/2026: `extend-liquid-glass-controls` comparte el material del sidebar con pestaña superior activa, breadcrumb, indicador de vistas y New. La navegación usa vidrio neutro con distinto relieve; New usa un tinte derivado del primario con margen para texto blanco. Conserva operaciones, tamaño y preferencias accesibles. Ver [verificación](verification-liquid-glass-controls.md).
+
+> Ajuste visual 4/11/2026: `refine-sidebar-search-capsule` adapta Search del lateral a la referencia del usuario: cápsula gris clara, borde fino y reflejos interiores discretos, sin blur; conserva la apertura del buscador y su atajo. Ver [verificación](verification-sidebar-search-capsule.md).
+
+> Continuidad visual 4/11/2026: `unify-liquid-glass-tools-and-popovers` extiende el material aprobado a herramientas agrupadas con New independiente, campo del popup Search, marcos de menús/pickers y selector segmentado ASCII/Photo. Conserva operaciones, posición y preferencias; ver [verificación](verification-glass-tools-and-popovers.md). Delta activo sin sincronización ni archivo.
+
+> Continuidad visual 4/11/2026: `refine-people-and-note-glass` incorpora marcos sólidos con reflejo tenue en People, cápsulas de relaciones y material de campo en Tag/Type. La cabecera de Note agrupa bloqueo, refresco, estado y menú. La revisión posterior mantiene Tag en 32 px con un destino/vacío, reserva la flecha y conserva el material del marco bloqueado como Type. Conserva fotos, colores semánticos, controles HTML, operaciones y guardias; ver [verificación](verification-people-and-note-glass.md). Delta activo sin sincronización ni archivo.
+
 # Noteka: plan de producto, arquitectura y desarrollo
+
+> Continuidad visual 4/11/2026: `refine-save-guard-glass` extiende el material compartido a la guardia de cambios pendientes y sus acciones. Save/Retry y Save and continue comparten vidrio teñido; Cancel/Discard son neutros. Conserva guardias, datos y estados; ver [verificación](verification-save-guard-glass.md). Delta activo sin sincronización ni archivo.
+
+> Continuidad visual 4/11/2026: `refine-settings-and-search-glass` comparte vidrio translúcido entre Settings y Search, reemplaza los velos blancos acumulados y unifica sus campos Search con el acceso lateral (32 px/13 px). Conserva funciones, datos y alternativas accesibles; ver [verificación](verification-settings-and-search-glass.md). Delta activo sin sincronización ni archivo.
 
 Fecha de referencia: **11 de octubre de 2026**, zona `America/La_Paz`.
 

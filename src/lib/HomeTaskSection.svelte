@@ -71,13 +71,13 @@
       {#if !pageMode}<button class="task-more-views" aria-label="More Tasks views" aria-expanded={moreOpen} onclick={() => moreOpen = !moreOpen} bind:this={moreButton}>1 more…</button>{/if}
     </div>
     <div class="task-view-actions"><HomeReadStatus state={readState} updating />
-      <button class="task-icon-action" aria-label="Refresh Tasks" title="Refresh Tasks" disabled={readState?.busy} onclick={() => void onview()}><AppIcon name="refresh" size={16} /></button>
+      <div class="glass-tool-group" role="group" aria-label="Tasks tools"><button class="task-icon-action" aria-label="Refresh Tasks" title="Refresh Tasks" disabled={readState?.busy} onclick={() => void onview()}><AppIcon name="refresh" size={16} /></button>
       {#if !pageMode}<button class="task-icon-action" aria-label="Open Tasks list" title="Open Tasks list" onclick={() => void onnavigate()}><AppIcon name="expand" size={16} /></button>{/if}
       <button class="task-icon-action" aria-label="Tasks view options" aria-expanded={optionsOpen} title="View options" onclick={() => optionsOpen = !optionsOpen}><AppIcon name="sliders" size={16} /></button>
-      <button class="task-new primary" onclick={() => void oncreate()}>New</button>
+      </div><button class="task-new primary" onclick={() => void oncreate()}>New</button>
     </div>
   </div>
-  {#if moreOpen}<div class="task-more-menu"><button aria-pressed={readState?.view === 'tasks_done'} onclick={() => { closeMore(); void onview('tasks_done'); }}><AppIcon name="circle-check" size={15} />Done</button><p>Recurring and Active Content are not yet implemented.</p><button onclick={closeMore}>Close</button></div>{/if}
+  {#if moreOpen}<div class="task-more-menu glass-menu"><button aria-pressed={readState?.view === 'tasks_done'} onclick={() => { closeMore(); void onview('tasks_done'); }}><AppIcon name="circle-check" size={15} />Done</button><p>Recurring and Active Content are not yet implemented.</p><button onclick={closeMore}>Close</button></div>{/if}
   {#if optionsOpen}<div class="task-view-options"><p>Today: pending tasks in unarchived Doing/Ongoing projects, grouped by project. All Active Projects also includes Planned. Week/Month: ISO week and calendar month of the due date. Scheduled: assigned due date; No Due: no due date.</p><p>Only pending tasks in unarchived projects appear in project views. Creating a task does not assign dates.</p><p>Groups cover this page; a task may appear in several projects. Recurring and Active Content require features that are not yet implemented.</p>{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}
   {#if readState?.busy && !page}<p role="status" class="task-read-status">Loading Tasks…</p>{/if}
   {#if readState?.error}<p class="error" role="alert">Read failed: {readState.error}</p><button onclick={() => void onretry()}>Retry Tasks</button>{/if}
