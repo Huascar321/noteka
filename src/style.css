@@ -1197,8 +1197,35 @@ svg[data-app-icon] { flex-shrink:0; vertical-align:middle; }
 .task-detail-project>svg,.task-detail-project>img { flex-shrink:0; }
 .task-project-edit.icon-button { width:23px; height:25px; border-radius:4px; }
 .task-property-empty { font-size:14px; color:var(--muted); }
-.task-page-properties .task-due-property input { display:block; width:150px; max-width:100%; margin:0; padding:3px 8px; border:1px solid transparent; border-radius:3px; background:transparent; color:var(--text); font-size:14px; }
-.task-page-properties .task-due-property input:hover { border-color:var(--control-border); background:var(--surface); }
+.task-page-properties .task-due-property { margin:0; min-width:0; display:flex; flex-direction:column; gap:9px; }
+.task-page-properties .task-due-trigger { display:flex; align-items:center; justify-content:space-between; gap:8px; width:150px; max-width:100%; margin:0; padding:3px 8px; color:var(--text); font-size:14px; line-height:22px; text-align:left; cursor:pointer; }
+.task-page-properties .task-due-value { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.task-page-properties .task-due-trigger>svg { flex-shrink:0; color:var(--muted); }
+.task-page-properties .task-due-trigger:hover:not(:disabled) { background:var(--glass-field-sheen),var(--glass-field-hover); }
+.task-page-properties .task-due-trigger.empty { color:var(--muted); }
+.task-page-properties .task-due-trigger:disabled { cursor:default; }
+.date-picker { position:fixed; z-index:95; display:flex; flex-direction:column; padding:8px; color:var(--text); font-size:13px; opacity:0; }
+.date-picker.ready { opacity:1; animation:date-picker-arrive 170ms var(--ease-ui) both; }
+@keyframes date-picker-arrive { from { opacity:0; transform:translateY(-5px) scale(.985); } to { opacity:1; transform:none; } }
+.date-picker-header { display:grid; grid-template-columns:26px minmax(0,1fr) 26px; align-items:center; gap:4px; padding:1px 1px 6px; }
+.date-picker-title { text-align:center; font-size:12.5px; font-weight:600; letter-spacing:.01em; white-space:nowrap; }
+.date-picker-nav { display:grid; place-items:center; width:26px; height:26px; padding:0; border:0; border-radius:999px; background:transparent; color:var(--muted); }
+.date-picker-nav:hover:not(:disabled) { background:var(--hover); color:var(--text); }
+.date-picker-weekdays { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:2px; padding:0 1px 4px; color:var(--muted); font-size:10px; text-align:center; }
+.date-picker-grid { display:flex; flex-direction:column; gap:2px; animation:date-picker-month 150ms var(--ease-ui); }
+@keyframes date-picker-month { from { opacity:.35; transform:translateY(2px); } to { opacity:1; transform:none; } }
+.date-picker-row { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:2px; }
+.date-picker-cell { min-width:0; }
+.date-picker-day { display:grid; place-items:center; width:100%; height:30px; padding:0; border:0; border-radius:8px; background:transparent; color:var(--text); font-size:12.5px; font-variant-numeric:tabular-nums; }
+.date-picker-day:hover:not(:disabled) { background:var(--hover); }
+.date-picker-day[aria-current="date"] { color:var(--accent); font-weight:650; }
+.date-picker-day[data-selected="true"],.date-picker-day[data-selected="true"]:hover:not(:disabled) { background:var(--accent); color:var(--accent-text); font-weight:650; box-shadow:var(--glass-nav-shadow); }
+.date-picker-day:focus-visible { outline:2px solid var(--focus); outline-offset:1px; }
+.date-picker-footer { display:flex; align-items:center; justify-content:space-between; gap:6px; margin-top:7px; padding-top:7px; border-top:1px solid var(--border); }
+.date-picker-footer button { padding:4px 7px; border:0; border-radius:6px; background:transparent; color:var(--muted); font-size:12px; }
+.date-picker-footer button:hover:not(:disabled) { background:var(--hover); color:var(--text); }
+@media (pointer:coarse) { .date-picker-day { height:36px; } }
+@media (prefers-reduced-motion:reduce) { .date-picker.ready { animation:none; opacity:1; } .date-picker-grid { animation:none; } }
 .task-detail .page-relations { margin:22px 0; padding:0; border:0; }
 .task-relation-actions { display:flex; align-items:center; gap:8px 16px; flex-wrap:wrap; margin-top:5px; }
 .task-relation-actions>button { display:inline-flex; align-items:center; gap:5px; padding:4px 0; border:0; background:transparent; font-size:13px; color:var(--muted); }
@@ -1829,6 +1856,7 @@ input[type="checkbox"],input[type="radio"],progress { accent-color:var(--accent)
 :root .page-actions-menu,
 :root .peek-mode-menu,
 :root .relation-picker,
+:root .date-picker,
 :root[data-theme] .editor-popover,
 :root .icon-picker .icon-panel,
 :root .page-tools-header .page-tool-panel:not([hidden]),
@@ -1864,6 +1892,7 @@ input[type="checkbox"],input[type="radio"],progress { accent-color:var(--accent)
   :root .page-actions-menu,
   :root .peek-mode-menu,
   :root .relation-picker,
+  :root .date-picker,
   :root[data-theme] .editor-popover,
   :root .icon-picker .icon-panel,
   :root .page-tools-header .page-tool-panel:not([hidden]),
@@ -1881,6 +1910,7 @@ input[type="checkbox"],input[type="radio"],progress { accent-color:var(--accent)
   :root:root .page-actions-menu,
   :root:root .peek-mode-menu,
   :root:root .relation-picker,
+  :root:root .date-picker,
   :root:root .editor-popover,
   :root:root .icon-picker .icon-panel,
   :root:root .page-tools-header .page-tool-panel:not([hidden]),
@@ -2249,7 +2279,7 @@ input[type="checkbox"],input[type="radio"],progress { accent-color:var(--accent)
 /* Compact fields are opt-in or restricted to the property editors. */
 :root .glass-field,
 .entity-fields :is(input:not([type="checkbox"]),select),
-.task-page-properties .task-due-property input,
+.task-page-properties .task-due-trigger,
 .project-page-properties input[type="date"],
 :is(.task-project-value,.goal-tag-value) {
   min-height:32px; max-width:100%; border:1px solid var(--glass-field-stroke); border-radius:16px;
@@ -2259,6 +2289,7 @@ input[type="checkbox"],input[type="radio"],progress { accent-color:var(--accent)
 :root select.glass-field,.entity-fields select { height:32px; }
 :root .glass-field:focus-visible,
 .entity-fields :is(input:not([type="checkbox"]),select):focus-visible,
+.task-page-properties .task-due-trigger:focus-visible,
 :is(.task-project-value,.goal-tag-value):focus-within { outline:2px solid var(--focus); outline-offset:2px; }
 :is(.task-project-value,.goal-tag-value) { flex-wrap:nowrap; gap:4px; padding:2px 6px; min-width:0; }
 .compact-relation-list { display:flex; flex:1; flex-wrap:wrap; align-items:center; gap:4px; min-width:0; }
@@ -2269,7 +2300,7 @@ input[type="checkbox"],input[type="radio"],progress { accent-color:var(--accent)
 .welcome .actions>button { min-height:36px; padding:6px 12px; }
 @media (prefers-reduced-transparency:reduce), (prefers-contrast:more) {
   :root .glass-field,.entity-fields :is(input:not([type="checkbox"]),select),
-  .task-page-properties .task-due-property input,.project-page-properties input[type="date"],
+  .task-page-properties .task-due-trigger,.project-page-properties input[type="date"],
   :is(.task-project-value,.goal-tag-value) { background:var(--surface); border-color:var(--control-border); box-shadow:none; }
   :is(.task-status-control,.project-detail-state,.goal-detail-state,.tag-detail-type) { box-shadow:none; border-color:var(--control-border); }
 }
@@ -2279,6 +2310,7 @@ input[type="checkbox"],input[type="radio"],progress { accent-color:var(--accent)
 :is(.project-add-row,.tag-add-row,.person-add-row):is(:hover,:focus-visible):not(:disabled) { background:var(--glass-field-sheen),var(--glass-field-surface); box-shadow:var(--glass-field-shadow); border-radius:8px; }
 @media (prefers-reduced-transparency:reduce), (prefers-contrast:more) {
   :root .glass-field:hover:not(:disabled),
+  .task-page-properties .task-due-trigger:hover:not(:disabled),
   :is(.project-add-row,.tag-add-row,.person-add-row):is(:hover,:focus-visible):not(:disabled) { background:var(--hover); box-shadow:none; }
 }
 :is(.attachment-search,.grouped-search,.preparation-panel,.generation-panel) .glass-secondary { min-height:28px; padding:4px 10px; }

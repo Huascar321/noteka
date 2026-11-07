@@ -30,6 +30,7 @@
     "test:headless-preparation": "node scripts/headless-preparation-smoke.mjs",
     "test:generation-reader": "node --experimental-strip-types --test tests/attachment-generation-reader.mjs",
     "test:headless-reader": "node scripts/headless-reader-smoke.mjs",
+    "test:headless-due-picker": "node scripts/headless-due-picker-smoke.mjs",
     "icons:generate": "node scripts/generate-icons.mjs",
     "icons:check": "node scripts/generate-icons.mjs --check"
   },

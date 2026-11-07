@@ -258,6 +258,7 @@ Los radios de cápsula usan `999px`, salvo Tag con `16px` para admitir varias fi
 | Cabeceras de detalle | Radio 18 px, gap 4 px, padding 2 px 5 px; sin blur | `WorkspacePane.svelte`, `.note-page-actions`; Refresh, estado, guardado y menú |
 | Save/Retry | Cápsula teñida, mínimo 28 px en cabecera | `.glass-action.primary`; atajo blanco, estado por separado |
 | Menús/pickers | Radio 14 px, material overlay, blur local 10 px existente | `.glass-menu`; PageTools, PeekModeMenu, BlockEditor, IconPicker, RelationPicker |
+| Calendario de Due (Task) | Panel ≤ 292 px, días 30 px; material de menú con blur 10 px | `DueDatePicker.svelte`; anclaje debajo/arriba del botón Due, evento propio |
 | Search popup | 780 × 620 px, limitado por viewport; radio 20 px | `.context-search.glass-popup`; filtro único 16 px |
 | Settings | 1000 × 640 px, limitado por viewport; radio 20 px | `.settings-dialog.glass-popup`; velo de lectura más denso en panel principal |
 | Guardia y Move project | Radio 20 px, material confirmación; botones mínimos 36 px | `.glass-popup`, `.glass-secondary`, `.glass-action.primary` |
@@ -467,6 +468,20 @@ animación perpetua de brillo o renderer para dar sensación de vidrio.
   la diferencia no depende solo del color. El toggle actualiza `state` mediante
   `entity.update`, refresca la vista y se deshabilita mientras hay una operación
   en curso. No anides el checkbox dentro del botón de apertura.
+- El campo Due del detalle de Task abre un calendario propio sobre `.glass-menu`
+  (`--glass-surface`, `--glass-sidebar-sheen`, borde/reflejos compartidos y
+  `--glass-blur`); no usa el popup nativo del WebView. Mide como máximo 292 px,
+  se ancla debajo del campo (arriba si no cabe), se limita al viewport y se
+  reposiciona con scroll y resize. La grilla va de lunes a domingo con días de
+  30 px (36 px con puntero grueso); la selección usa `--accent`/`--accent-text`
+  y hoy se marca con tinta de acento. Teclado: flechas, Home/End,
+  PageUp/PageDown, Enter y Escape; el foco vuelve al campo. Con movimiento
+  reducido no hay animación de entrada ni de mes; con transparencia reducida o
+  contraste alto el panel vuelve a `--surface` sólido sin blur. El campo Due es un
+  botón que muestra la fecha corta (`Nov 7, 2026`) o `Empty`, sin `input[type=date]`:
+  el picker nativo no puede abrirse. Reutiliza la receta de campo compacto
+  (`--glass-field-*`, radio 16 px) con el icono de calendario a la derecha, conserva
+  cursor pointer y el foco vuelve al botón al elegir con Enter o Escape.
 - El Board de tareas del detalle de Project usa columnas con tinte semántico
   To Do/Doing/Done y tarjetas sólidas. El selector de estado de cada tarjeta es la
   alternativa de teclado al arrastre; ambos escriben el mismo `state` con CAS.

@@ -256,7 +256,13 @@
     assert(document.querySelector('.dashboard').textContent.includes('Nota en CRE'), 'Dashboard abre IDs compartidos, no copias');
     const day = (await control('workflow', { view: 'my_day' })).date;
     const previous = new Date(`${day}T12:00:00Z`); previous.setUTCDate(previous.getUTCDate() - 1); const due = previous.toISOString().slice(0, 10);
-    await click("Capture a task here"); fill("[aria-label=\"Entity title\"]", 'Tarea en CRE'); await change("[aria-label=\"Priority\"]", 'high'); await change("[aria-label=\"Planned date\"]", day); await change("[aria-label=\"Due date\"]", due); await click("Save"); await wait(saved, 'tarea guardada');
+    await click("Capture a task here"); fill("[aria-label=\"Entity title\"]", 'Tarea en CRE'); await change("[aria-label=\"Priority\"]", 'high'); await change("[aria-label=\"Planned date\"]", day);
+    document.querySelector('[aria-label="Due date"]').click(); await wait(() => document.querySelector('.date-picker'), 'calendario Due abierto');
+    const dueMonth = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${due}T12:00:00Z`)),
+      dueLabel = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${due}T12:00:00Z`));
+    for (let guard = 0; guard < 12 && document.querySelector('.date-picker-title')?.textContent.trim() !== dueMonth; guard++) { document.querySelector('[aria-label="Previous month"]').click(); await delay(); }
+    [...document.querySelectorAll('.date-picker-day')].find(b => b.getAttribute('aria-label') === dueLabel)?.click(); await wait(() => !document.querySelector('.date-picker'), 'calendario Due cerrado');
+    await click("Save"); await wait(saved, 'tarea guardada');
     const task = (await control('list')).items.find(e => e.title === 'Tarea en CRE');
     assert(task.payload.planned_date === day && task.payload.due_date === due && task.payload.priority === 'high', 'Fechas civiles y prioridad persistidas desde UI');
     await click('My Day'); await wait(() => button('Tarea en CRE'), 'my day'); assert(document.querySelector('.entity-list').textContent.includes(day), 'My Day explicita día civil y zona');
