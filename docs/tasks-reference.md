@@ -19,8 +19,13 @@ All muestra tareas pendientes; Done muestra las completadas. La consulta públic
 como en la referencia inspeccionada. La búsqueda también conserva las completadas.
 
 Week y Month son calendarios navegables de Due por semana ISO y mes civil;
-incluyen completadas y acceso a tareas sin fecha. Crear desde un día prepara
-ese vencimiento; New general no asigna fecha. Las consultas previas
+incluyen completadas. La interfaz no lista las tareas sin fecha dentro del
+calendario ni ofrece Load more: la consulta trae hasta cien tareas del período.
+Crear desde un día prepara
+ese vencimiento; New general no asigna fecha. El encabezado de ambos
+calendarios muestra mes y año (`November 2026`); Week toma el mes que contiene
+la mayoría de sus días visibles y no muestra un rango de fechas. Las consultas
+previas
 `tasks_week`/`tasks_month` siguen siendo listas de pendientes, y la interfaz usa
 las variantes aditivas `tasks_calendar_week`/`tasks_calendar_month`. Scheduled tiene
 vencimiento asignado y No Due carece de él. No se derivan de planned_date.

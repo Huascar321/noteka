@@ -7,11 +7,11 @@ los requisitos de estas tres variantes.
 
 ## Why
 
-El usuario quiere conservar los tiburones e incorporar al azar los koi naranjas de Dao-Ho/portfolio y, después, las medusas ASCII del ZIP Kurage Dashboard aportado. La portada necesita tres variantes locales coherentes, sin cambiar el resto de Home.
+El usuario quiere conservar los tiburones e incorporar al azar koi inspirados en Dao-Ho/portfolio (referencia naranja/blanco) y, después, las medusas ASCII del ZIP Kurage Dashboard aportado. La portada necesita tres variantes locales coherentes, sin cambiar el resto de Home.
 
 ## What Changes
 
-- Tres escenas ASCII: tiburones actuales, koi naranjas/blancos y medusas cian/violeta, con orden inicial aleatorio y alternancia gradual en tiempo activo.
+- Tres escenas ASCII: tiburones actuales, koi con manchas del color primario y blancos, y medusas cian/violeta, con orden inicial aleatorio y alternancia gradual en tiempo activo.
 - El seguimiento de koi agrega pececitos lejanos, algas de bajo contraste y burbujas suaves detrás de los peces grandes, sólo en esa variante.
 - Los peces lejanos usan el mismo modelo de koi que los protagonistas, a un tamaño secundario legible y menor contraste; se modera la cantidad para dejar espacio al aumentar su escala.
 - Medusas recibe un ambiente propio con ejemplares secundarios del mismo modelo, burbujas y partículas tenues, para aplicar la misma profundidad sin mezclar las tres escenas.

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { liquidSurface, liquidTransition } from './liquid-overlay';
   import { onMount, tick } from 'svelte';
   import { operate } from './api';
   import AppIcon from './AppIcon.svelte';
@@ -91,7 +92,7 @@
 </script>
 
 <svelte:window onresize={positionPanel} onpointerdown={outside} onkeydown={event => { if (event.key === 'Escape' && !event.defaultPrevented && !event.isComposing) { event.preventDefault(); close(); } }} />
-<div bind:this={panel} class="relation-picker glass-menu" role="dialog" tabindex="-1" aria-label={`Edit ${kindLabel}`} onkeydown={keys} style:left={`${position.left}px`} style:top={`${position.top}px`} style:width={`${position.width}px`} style:max-height={`${position.maxHeight}px`}>
+<div bind:this={panel} class="relation-picker glass-menu" use:liquidSurface={{ anchor: () => anchor }} in:liquidTransition|global out:liquidTransition|global role="dialog" tabindex="-1" aria-label={`Edit ${kindLabel}`} onkeydown={keys} style:left={`${position.left}px`} style:top={`${position.top}px`} style:width={`${position.width}px`} style:max-height={`${position.maxHeight}px`}>
   <div class="relation-picker-search"><AppIcon name="search" size={16} /><input bind:this={input} bind:value={query} aria-label={`Search ${kindLabel}`} placeholder={`Search ${kindLabel}…`} maxlength="256" autocomplete="off" /><button type="button" class="icon-button" aria-label="Close relations" onclick={close}><AppIcon name="close" size={14} /></button></div>
   {#if error}<p class="relation-picker-message error" role="alert">{error}</p>{/if}
   <div class="relation-picker-results" aria-label={`${kindLabel} results`} aria-busy={loading}>

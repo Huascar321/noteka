@@ -20,7 +20,7 @@
   let tasks: HomeReader | undefined;
   let projects: HomeReader | undefined;
   onMount(() => {
-    tasks = new HomeReader('tasks_projects_in_progress', queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => taskState = state, 10, true, { tasks_calendar_week:100, tasks_calendar_month:100 });
+    tasks = new HomeReader('tasks_projects_in_progress', queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => taskState = state, 10, true, { tasks_calendar_week:100, tasks_calendar_month:100, tasks_scheduled:14, tasks_no_due:14, tasks_pending:14 });
     projects = new HomeReader('projects_active', queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => projectState = state, 100, true);
     void tasks.load(); void projects.load();
     window.addEventListener('keydown', refreshKeydown, true);

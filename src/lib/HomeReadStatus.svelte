@@ -7,5 +7,4 @@
   {#if state?.stale && state.page && state.busy}<span class="task-refresh-status" role="status" title="Updating; showing previous results.">Updating; showing previous results.</span>{/if}
 {:else}
   {#if state?.stale && state.page && !state.busy}<p class="task-read-status" role="status">Showing previous results; they may be out of date.</p>{/if}
-  {#if state?.notice && !state.busy}<p class="task-read-status" role="status">{state.notice}</p>{/if}
 {/if}

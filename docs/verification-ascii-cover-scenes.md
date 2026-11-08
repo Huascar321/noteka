@@ -229,6 +229,62 @@ No se registraron errores de navegador ni red externa. `npm run build` pasó con
 contratos/iconos vigentes y cero errores/advertencias Svelte; queda el aviso
 anterior de tamaño del bundle. OpenSpec estricto aprobado de forma independiente.
 
+## Muted primary color follow-up (05/11/2026)
+
+Cambio: `add-random-ascii-cover-scenes`, tarea2.8. Las manchas de los koi
+principales y secundarios usan el tono del color primario elegido con la mitad
+de su saturación y un rango claro/oscuro contenido: 26–66% en oscuro y 36–64%
+en claro. Aletas, cola, barbillas, ojos y brillos mantienen el segundo tono
+neutro, y un acento ausente o inválido recupera el azul inicial. `AsciiShark`
+lee `--primary-color` junto a `--text` y observa `data-theme` y `style` en la
+raíz: un cambio de acento reutiliza la instancia, reconstruye sólo el atlas koi
+y repinta el tiempo activo vigente; un cambio de tema rehace las capas porque
+cambian tinta y paleta. Tiburones y medusas no reciben el color.
+
+Pruebas ejecutadas:
+
+- `node --experimental-strip-types --test tests/ascii-koi-palette.mjs tests/ascii-cover-scenes.mjs tests/ascii-ocean.mjs`: **18 aprobadas**, 0 fallos. Las seis nuevas cubren tono primario en ambos temas para las seis sugerencias, determinismo, diferencias por acento/tema, fallback inválido o ausente, primarios acromáticos y saturación atenuada (entre35% y65% del acento y nunca superior a36%).
+- `npm run check`: 0 errores y 0 advertencias Svelte.
+- `npm run build`: aprobado con iconos/contratos vigentes; queda el aviso previo de tamaño del bundle.
+- `openspec validate add-random-ascii-cover-scenes`: válido. `--strict` informa la advertencia previa de requisito largo en `Variantes ASCII aleatorias y locales`; la misma advertencia y salida 1 existen en la versión de `HEAD`, por lo que no la introduce esta tarea.
+
+Matriz visual con Chromium headless y los módulos servidos por Vite, cuatro
+combinaciones claro/oscuro × 1000×288/420×230 y tres acentos:
+
+| Acento | Tono dominante / esperado | Distancia | Saturación media |
+| --- | --- | ---: | ---: |
+| Azul `#3183a6` | 195 / 197,9 | 2,9° | 0,174–0,209 |
+| Naranja `#c97927` | 35 / 30,4 | 4,6° | 0,217–0,242 |
+| Violeta `#8254d4` | 265 / 261,6 | 3,4° | 0,186–0,220 |
+
+Extremos de paleta (oscuro y claro): azul `#304a54`→`#91b2c0` y
+`#436675`→`#8aadbc`; naranja `#59432c`→`#c6a98b` y `#7b5c3d`→`#c2a484`;
+violeta `#3d2e56`→`#a18ec2` y `#544077`→`#9b88bf`. La saturación del tinte
+ronda la mitad del acento (54–67%) y no llega a extremos de brillo.
+
+En cada caso el bitmap fue no vacío (33.605–33.757 píxeles visibles a1000px;
+7.050–7.125 a420px) y estable al repetir el mismo tiempo. Un `resize` de azul a
+naranja sobre la misma instancia cambió19.999 píxeles y reprodujo las métricas
+del naranja, sin remontar. Los compuestos de tiburones y medusas resultaron
+idénticos byte a byte entre azul y naranja para la misma semilla/tiempo. No hubo
+errores de página ni requests externos.
+
+Capturas revisadas en `output/playwright/koi-muted-20261105/`: cuatro de la
+matriz azul y ocho de naranja/violeta/verde/gris en ambos temas a1000×288. El
+naranja conserva la calidez de la referencia, el gris neutraliza los koi y el
+azul/violeta quedan atenuados sin perder la silueta. La carpeta está ignorada
+por Git; las capturas de `koi-primary-20261105` corresponden a la versión
+saturada anterior y permanecen como referencia histórica.
+
+También se montó `AsciiShark` con movimiento reducido en la página de Vite hasta
+obtener la escena koi (1–7 intentos por la semilla aleatoria) y se cambió
+`--primary-color` en la raíz: el tono dominante pasó de195 (azul) a35 (naranja)
+y volvió a195, sin remontar el componente. La restauración azul difirió del
+primer bitmap en1.772 de ~288.000 píxeles con delta máximo1/255, compatible con
+el rasterizado de texto del atlas; tras desmontar no quedó ningún canvas ni
+bucle. Esto cubre la reacción al acento dentro del componente, no el recorrido
+completo de Settings.
+
 ## Limits
 
 Las cifras miden Canvas en este navegador/máquina; no garantizan 120 FPS físicos,
@@ -238,3 +294,7 @@ se reescribieron. No se inspeccionó pantalla nativa ni datos personales. No se
 cambiaron Rust, SQLite, contratos, dependencias o preferencia Photo/ASCII. Ver
 [guía y atribución](ascii-cover-scenes.md) y
 [ADR0052](decisions/0052-local-ascii-scene-composition.md).
+
+El seguimiento del color primario no ejecutó la App completa, Settings ni la
+ventana nativa. Las capturas naranja del26/10 permanecen como referencia
+histórica.

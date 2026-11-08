@@ -2,7 +2,7 @@
 use std::{
     fs, io,
     os::unix::process::CommandExt,
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::Command,
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -42,6 +42,7 @@ pub fn relaunch_if_unbundled() -> io::Result<()> {
     }
     let info = include_str!("../Info.plist").replace("</dict>", "<key>CFBundleIdentifier</key><string>app.noteka.desktop</string><key>CFBundleExecutable</key><string>noteka-desktop</string><key>CFBundleName</key><string>Noteka</string><key>CFBundlePackageType</key><string>APPL</string></dict>");
     fs::write(contents.join("Info.plist"), info)?;
+    write_icon_resources(&contents)?;
     let status = Command::new("/usr/bin/codesign")
         .args(["--force", "--sign", "-"])
         .arg(&app)
@@ -61,6 +62,51 @@ pub fn relaunch_if_unbundled() -> io::Result<()> {
         .args(std::env::args_os().skip(1))
         .exec();
     Err(error)
+}
+
+// Development bundles need the same native icon resources as packaged builds.
+// Embed them so a relocated binary does not depend on the source checkout.
+fn write_icon_resources(contents: &Path) -> io::Result<()> {
+    let resources = contents.join("Resources");
+    fs::create_dir_all(&resources)?;
+    fs::write(
+        resources.join("Assets.car"),
+        include_bytes!("../icons/Assets.car"),
+    )?;
+    fs::write(
+        resources.join("icon.icns"),
+        include_bytes!("../icons/icon.icns"),
+    )?;
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn development_bundle_contains_native_and_fallback_icon_resources() {
+        let root = std::env::temp_dir().join(format!("noteka-icon-test-{}", std::process::id()));
+        fs::create_dir(&root).unwrap();
+        let result = (|| -> io::Result<()> {
+            let contents = root.join("Noteka.app/Contents");
+            write_icon_resources(&contents)?;
+            assert_eq!(
+                fs::read(contents.join("Resources/Assets.car"))?,
+                include_bytes!("../icons/Assets.car")
+            );
+            assert_eq!(
+                fs::read(contents.join("Resources/icon.icns"))?,
+                include_bytes!("../icons/icon.icns")
+            );
+            let info = include_str!("../Info.plist");
+            assert!(info.contains("<key>CFBundleIconName</key><string>Noteka</string>"));
+            assert!(info.contains("<key>CFBundleIconFile</key><string>icon.icns</string>"));
+            Ok(())
+        })();
+        fs::remove_dir_all(&root).unwrap();
+        result.unwrap();
+    }
 }
 
 pub fn watch_supervisor() {

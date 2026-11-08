@@ -17,8 +17,8 @@
   import { readCover, saveCover, type CoverMode } from './home-cover';
   import { slidingTabs } from './sliding-tabs';
   import type { HomeGroup, HomeView, EntityKind, ContextLink, HomePage } from './contracts.generated';
-  let { workspace, active = true, visible = active, animateAlongsideSidePeek = false, blocked = false, searchOpen = false, error = '', onopen, oncreate, onnavigate }: {
-    workspace: string; active?: boolean; visible?: boolean; animateAlongsideSidePeek?: boolean; blocked?: boolean; searchOpen?: boolean; error?: string; onopen: (id: string) => Promise<void>;
+  let { workspace, active = true, visible = active, blocked = false, error = '', onopen, oncreate, onnavigate }: {
+    workspace: string; active?: boolean; visible?: boolean; blocked?: boolean; error?: string; onopen: (id: string) => Promise<void>;
     oncreate: (kind: EntityKind, context?: ContextLink, seed?: Record<string, unknown>) => Promise<void>;
     onnavigate: (kind: EntityKind | 'goals') => Promise<void>;
   } = $props();
@@ -53,7 +53,7 @@
     window.addEventListener('noteka-cover-change', syncCover);
     window.addEventListener('keydown', refreshKeydown, true);
     for (const section of sections) {
-      const reader = new HomeReader(section.id === 'project' ? 'projects_board' : section.id === 'tag' ? 'tags_types' : section.views[0][0], queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => { states = { ...states, [section.id]: state }; }, section.id === 'note' || section.id === 'person' ? 10 : section.id === 'project' ? 100 : 50, true, section.id === 'person' ? { people_new: 100, people_updated: 100, people_check_ins: 100, people_birthdays: 100, people_pipeline: 100, people_active_projects: 100 } : section.id === 'task' ? { tasks_calendar_week:100, tasks_calendar_month:100 } : {});
+      const reader = new HomeReader(section.id === 'project' ? 'projects_board' : section.id === 'tag' ? 'tags_types' : section.views[0][0], queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => { states = { ...states, [section.id]: state }; }, section.id === 'note' || section.id === 'person' ? 10 : section.id === 'project' ? 100 : 50, true, section.id === 'person' ? { people_new: 100, people_updated: 100, people_check_ins: 100, people_birthdays: 100, people_pipeline: 100, people_active_projects: 100 } : section.id === 'task' ? { tasks_calendar_week:100, tasks_calendar_month:100, tasks_scheduled:14, tasks_no_due:14, tasks_pending:14 } : {});
       readers.set(section.id, reader); void reader.load();
     }
     const goals = new HomeReader('goals_activity', queue, (query, signal) => operate<HomePage>({ operation: 'home.query', input: query }, workspace, { signal }), state => { states = { ...states, goals: state }; }, 10, true);
@@ -91,7 +91,8 @@
 
 <main bind:this={scrollRoot} class="home has-scroll-outline" aria-label="Home" aria-keyshortcuts="Meta+R Control+R F5">
   <div class="home-cover" data-cover={cover}>
-    {#if cover === 'ascii'}<AsciiShark active={visible && (!blocked || searchOpen) && (active || animateAlongsideSidePeek)} />{:else}<img class="home-cover-photo" src="/images/home-cover.png" alt="" />{/if}
+    <!-- Foco y blocked pertenecen a los controles; la portada sólo se pausa cuando deja de estar visible. -->
+    {#if cover === 'ascii'}<AsciiShark active={visible} />{:else}<img class="home-cover-photo" src="/images/home-cover.png" alt="" />{/if}
     <div class="home-cover-controls" use:slidingTabs role="group" aria-label="Home cover"><button aria-pressed={cover === 'ascii'} onclick={() => changeCover('ascii')}>ASCII</button><button aria-pressed={cover === 'photo'} onclick={() => changeCover('photo')}>Photo</button></div>
   </div>
   <div class="home-content">

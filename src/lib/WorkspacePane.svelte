@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { liquidSurface, liquidTransition, liquidExitFinished } from './liquid-overlay';
   import { onMount, tick, untrack } from 'svelte';
   import { operate, OperationError, pickGoogleDrive, openExternal, googlePreview, type GooglePreview } from './api';
   import { RefreshCoordinator } from './refresh-coordinator';
@@ -47,9 +48,9 @@
   type Draft = { kind: EntityKind; title: string; payload: Record<string, unknown>; document?: Document; context?: ContextLink };
   type Status = 'saved' | 'dirty' | 'saving' | 'error' | 'conflict';
   type Guard = { action: () => Promise<void>; resolve: (allowed: boolean) => void };
-  let { workspace, paneId, active, visible = active, sessionActive = active, animateAlongsideSidePeek = false, blocked = false, searchOpen = false, initialTarget, onstate, onrequestdetail, onnavigatesection, peekMode = 'full', defaultPeekMode = 'side', peekPreferenceError = '', onpresent, ondefaultpeek, onclosepeek }: {
-    workspace: WorkspaceInfo; paneId: string; active: boolean; blocked?: boolean; searchOpen?: boolean;
-    visible?: boolean; sessionActive?: boolean; animateAlongsideSidePeek?: boolean; peekMode?: PeekPresentation; defaultPeekMode?: PeekMode; peekPreferenceError?: string;
+  let { workspace, paneId, active, visible = active, sessionActive = active, blocked = false, initialTarget, onstate, onrequestdetail, onnavigatesection, peekMode = 'full', defaultPeekMode = 'side', peekPreferenceError = '', onpresent, ondefaultpeek, onclosepeek }: {
+    workspace: WorkspaceInfo; paneId: string; active: boolean; blocked?: boolean;
+    visible?: boolean; sessionActive?: boolean; peekMode?: PeekPresentation; defaultPeekMode?: PeekMode; peekPreferenceError?: string;
     onrequestdetail?: (target: NavigationTarget) => Promise<void>;
     onnavigatesection?: (section: Section) => Promise<void>;
     onpresent?: (mode: PeekMode) => void; ondefaultpeek?: (mode: PeekMode) => void; onclosepeek?: () => void;
@@ -236,9 +237,12 @@
   async function resolveGuard(choice: 'save' | 'discard' | 'cancel') {
     const pending = guard;
     if (!pending) return;
-    if (choice === 'cancel') { guard = null; pending.resolve(false); return; }
+    const dialog = document.getElementById(`pending-title-${paneId}`)?.closest('dialog') ?? null;
+    if (choice === 'cancel') { const exit = liquidExitFinished(dialog); guard = null; await exit; pending.resolve(false); return; }
     if (choice === 'save' && !(await save())) return;
+    const exit = liquidExitFinished(dialog);
     guard = null;
+    await exit;
     if (choice === 'discard') { databasePanel?.discardPending(); draft = null; status = 'saved'; }
     try { await pending.action(); pending.resolve(true); }
     catch (e) { error = report(e); pending.resolve(false); }
@@ -949,7 +953,7 @@
 <div class="workspace-pane" class:home-pane={section === 'home'} class:overview-pane={overview} class:breadcrumb-overview={section === 'home' || overview} aria-label={currentLabel}>
     {#if section === 'home' || overview}<div class="overview-breadcrumb-bar"><PageBreadcrumb {section} disabled={blocked || working || status === 'saving'} onnavigate={navigate} /></div>{/if}
     {#if section === 'home'}
-      {#key workspace.path}<HomePanel bind:this={homePanel} workspace={workspace.path} {active} {visible} {animateAlongsideSidePeek} {blocked} {searchOpen} {error} onopen={openHome} oncreate={createHome} onnavigate={async (kind) => { await navigate(kind); }} />{/key}
+      {#key workspace.path}<HomePanel bind:this={homePanel} workspace={workspace.path} {active} {visible} {blocked} {error} onopen={openHome} oncreate={createHome} onnavigate={async (kind) => { await navigate(kind); }} />{/key}
     {:else if section === 'task' && overview}
       {#key workspace.path}<TasksPage bind:this={tasksPage} workspace={workspace.path} {active} {blocked} {error} onopen={openHome} oncreate={createHome} onhome={async () => { await navigate('home'); }} onprojects={async () => { await navigate('project'); }} />{/key}
     {:else if section === 'note' && overview}
@@ -1071,7 +1075,7 @@
   <RelationPicker workspace={workspace.path} sourceId={selected.id} kind={relationPicker.kind} anchor={relationPicker.anchor} {relationships} busy={working || status === 'saving'} error={relationError} onadd={addRelation} onremove={removeRelation} onclose={() => { relationPicker = null; }} />
 {/if}
 {#if guard}
-    <dialog use:modal aria-labelledby={`pending-title-${paneId}`} class="modal unsaved-changes-dialog glass-popup" oncancel={(e) => { e.preventDefault(); void resolveGuard('cancel'); }}>
+    <dialog use:modal aria-labelledby={`pending-title-${paneId}`} class="modal unsaved-changes-dialog glass-popup" use:liquidSurface in:liquidTransition|global out:liquidTransition|global oncancel={(e) => { e.preventDefault(); void resolveGuard('cancel'); }}>
       <h2 id={`pending-title-${paneId}`}>You have unsaved changes</h2><p>Choose what to do before leaving the current draft.</p>
       {#if error}<p class="error" role="alert">{error}</p>{/if}
       <div class="actions unsaved-actions">

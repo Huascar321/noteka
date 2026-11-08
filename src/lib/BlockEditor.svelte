@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { liquidSurface, liquidTransition } from './liquid-overlay';
   import AppIcon from './AppIcon.svelte';
   import { onMount, untrack, mount, unmount } from 'svelte';
   import { Editor, Node } from '@tiptap/core';
@@ -594,7 +595,7 @@
   <div class="editor-surface" data-empty={bodyEmpty} data-placeholder={placeholder}><div bind:this={element}></div></div>
   {#if showStarters && bodyEmpty && !starterChosen}<div class="task-body-starters" role="group" aria-label={starterContext === 'note' ? "Start note content" : "Start task content"}><p>Press Enter in the title to begin, or choose a structure.</p><button type="button" disabled={disabled} onclick={() => startBody('empty')}><AppIcon name="file-text" size={18} />Empty page</button><button type="button" disabled={disabled} onclick={() => startBody('checklist')}><AppIcon name="list-checks" size={18} />{starterContext === 'note' ? 'Checklist' : "Checklist"}</button><button type="button" disabled={disabled} onclick={() => startBody('notes')}><AppIcon name="notebook" size={18} />{starterContext === 'note' ? "Note with sections" : "Task notes"}</button></div>{/if}
   {#if pageStyle && bubble && !disabled}
-    <div class="selection-toolbar editor-popover glass-menu" role="toolbar" aria-label="Text formatting" tabindex="-1" style:left={`${bubble.left}px`} style:top={`${bubble.top}px`} onmousedown={event => event.preventDefault()}>
+    <div class="selection-toolbar editor-popover glass-menu" use:liquidSurface={{ anchor: () => selectionRect() }} in:liquidTransition|global out:liquidTransition|global role="toolbar" aria-label="Text formatting" tabindex="-1" style:left={`${bubble.left}px`} style:top={`${bubble.top}px`} onmousedown={event => event.preventDefault()}>
       <button type="button" class="selection-block-type" aria-haspopup="listbox" onclick={() => openCommands('turn')} title="Turn into">{currentBlock}<AppIcon name="chevron-down" size={13} /></button>
       <span class="toolbar-separator"></span>
       <button type="button" aria-label="Bold" aria-pressed={activeMarks.bold} title="Bold · ⌘B / Ctrl+B" onclick={() => editor?.chain().focus().toggleBold().run()}><b>B</b></button>
@@ -606,7 +607,7 @@
     </div>
   {/if}
   {#if pageStyle && pageMenu && !disabled}
-    <div bind:this={menuElement} id={menuId} class="page-command-menu editor-popover glass-menu" role="listbox" aria-label="Block commands" tabindex="0" aria-activedescendant={menuItems[menuIndex] ? `${menuId}-option-${menuIndex}` : undefined} style:left={`${menuPosition.left}px`} style:top={`${menuPosition.top}px`} onkeydown={commandKeydown} onmousedown={event => event.preventDefault()}>
+    <div bind:this={menuElement} id={menuId} class="page-command-menu editor-popover glass-menu" use:liquidSurface={{ anchor: () => selectionRect() }} in:liquidTransition|global out:liquidTransition|global role="listbox" aria-label="Block commands" tabindex="0" aria-activedescendant={menuItems[menuIndex] ? `${menuId}-option-${menuIndex}` : undefined} style:left={`${menuPosition.left}px`} style:top={`${menuPosition.top}px`} onkeydown={commandKeydown} onmousedown={event => event.preventDefault()}>
       <div class="command-menu-heading">{pageMenu === 'turn' ? 'Turn into' : menuQuery ? `Results for “${menuQuery}”` : 'Basic blocks'}</div>
       {#each menuItems as block, index (block.command)}
         <button type="button" role="option" id={`${menuId}-option-${index}`} tabindex="-1" aria-selected={index === menuIndex} onmouseenter={() => menuIndex = index} onclick={() => chooseCommand(block.command)}>
@@ -617,7 +618,7 @@
     </div>
   {/if}
   {#if pageStyle && blockMenu && handle && !disabled}
-    <div class="page-block-menu editor-popover glass-menu" role="menu" aria-label="Block actions" tabindex="-1" style:left={`${panelPosition.left}px`} style:top={`${panelPosition.top}px`} onkeydown={blockMenuKeydown}>
+    <div class="page-block-menu editor-popover glass-menu" use:liquidSurface={{ anchor: () => blockButton }} in:liquidTransition|global out:liquidTransition|global role="menu" aria-label="Block actions" tabindex="-1" style:left={`${panelPosition.left}px`} style:top={`${panelPosition.top}px`} onkeydown={blockMenuKeydown}>
       <div class="command-menu-heading">Block actions</div>
       <button type="button" role="menuitem" disabled={!handle.convertible} onclick={turnBlock}><span>Turn into</span><AppIcon name="chevron-right" size={14} /></button>
       <button type="button" role="menuitem" onclick={() => blockAction('duplicate')}><AppIcon name="file-text" size={16} /><span>Duplicate</span></button>
@@ -628,7 +629,7 @@
     </div>
   {/if}
   {#if pageStyle && panel && !disabled}
-    <form class="editor-link-panel editor-popover glass-menu" aria-label={panel === 'link' ? 'Edit link' : 'Insert attachment'} style:left={`${panelPosition.left}px`} style:top={`${panelPosition.top}px`} onsubmit={event => { event.preventDefault(); if (panel === 'link') applyPageLink(); else void attach(); }}>
+    <form class="editor-link-panel editor-popover glass-menu" use:liquidSurface={{ anchor: () => selectionRect() }} in:liquidTransition|global out:liquidTransition|global aria-label={panel === 'link' ? 'Edit link' : 'Insert attachment'} style:left={`${panelPosition.left}px`} style:top={`${panelPosition.top}px`} onsubmit={event => { event.preventDefault(); if (panel === 'link') applyPageLink(); else void attach(); }}>
       <div class="editor-panel-heading"><strong>{panel === 'link' ? 'Link' : 'Image or file'}</strong><button type="button" aria-label="Close editor panel" disabled={importing} onclick={() => closeMenus()}><AppIcon name="close" size={15} /></button></div>
       {#if panel === 'link'}
         <label for={`${menuId}-link`}>Paste an http, https or mailto link</label><input bind:this={panelInput} id={`${menuId}-link`} class="glass-field" aria-label="Link" bind:value={link} placeholder="https://…" autocomplete="off" />
@@ -641,14 +642,14 @@
     </form>
   {/if}
   {#if pageStyle && dropTarget}<div class="block-drop-line" style:top={`${dropTarget.top}px`}></div>{/if}
-  {#if picker}<section class="view-picker" class:editor-popover={pageStyle} class:page-view-picker={pageStyle} class:glass-menu={pageStyle} style:left={pageStyle ? `${menuPosition.left}px` : undefined} style:top={pageStyle ? `${menuPosition.top}px` : undefined} aria-label="Insert local view">
+  {#if picker}<section class="view-picker" use:liquidSurface={{ anchor: () => selectionRect() }} in:liquidTransition|global out:liquidTransition|global class:editor-popover={pageStyle} class:page-view-picker={pageStyle} class:glass-menu={pageStyle} style:left={pageStyle ? `${menuPosition.left}px` : undefined} style:top={pageStyle ? `${menuPosition.top}px` : undefined} aria-label="Insert local view">
     <label>Collection<select aria-label="Collection to embed" disabled={disabled || pickerBusy} bind:value={pickerCollection} onchange={() => void loadPickerViews()}><option value="">Choose a collection</option>{#each pickerCollections as c (c.id)}<option value={c.id}>{c.name}</option>{/each}</select></label>
     {#if pickerCursor}<button disabled={pickerBusy} onclick={() => void listPicker(pickerCursor ?? undefined)}>More collections to embed</button>{/if}
     <label>Saved view<select aria-label="View to embed" disabled={disabled || pickerBusy} bind:value={pickerView}><option value="">Choose a view</option>{#each pickerViews as v (v.id)}<option value={v.id}>{v.name} · {v.layout}</option>{/each}</select></label>
     <button disabled={disabled || pickerBusy || !pickerView} onclick={insertView}>Insert saved view</button><button onclick={() => { picker = false; pickerRange = null; if (pageStyle) closeMenus(); }}>Cancel insertion</button>
     {#if pickerError}<p class="error" role="alert">{pickerError}</p>{/if}<p class="metadata">References the original only. Choosing without inserting does not change the note.</p>
   </section>{/if}
-  {#if slash && !pageStyle}<div class="slash-menu" role="toolbar" aria-label="Block commands">{#each blocks as block}<button disabled={disabled} onclick={() => command(block.command, true)}>{block.label}</button>{/each}<button onclick={() => slash = false}>Cancel /</button></div>{/if}
+  {#if slash && !pageStyle}<div class="slash-menu" use:liquidSurface={{ anchor: () => selectionRect() }} in:liquidTransition|global out:liquidTransition|global role="toolbar" aria-label="Block commands">{#each blocks as block}<button disabled={disabled} onclick={() => command(block.command, true)}>{block.label}</button>{/each}<button onclick={() => slash = false}>Cancel /</button></div>{/if}
   {#if !pageStyle}
     <button class="add-paragraph" disabled={disabled} onclick={() => editor?.chain().focus('end').insertContentAt(editor.state.doc.content.size, { type: 'paragraph' }).run()}><AppIcon name="plus" size={14} />Add paragraph</button>
   {/if}

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import QuickNavMenu from './QuickNavMenu.svelte';
+  import { liquidSurface, liquidTransition } from './liquid-overlay';
   import { onDestroy } from 'svelte';
   import SectionIcon from './SectionIcon.svelte';
   import AppIcon from './AppIcon.svelte';
@@ -41,6 +43,7 @@
   let ghost = $state<{ x: number; y: number; title: string } | null>(null);
   let suppressClick = false;
   let dialogId = $state<string | null>(null);
+  let moveAnchor = $state<HTMLElement | null>(null);
   let dialogState = $state<ProjectState>('planned');
   let beforeId = $state<string | null>(null);
   let moveError = $state('');
@@ -89,6 +92,7 @@
   function cancelClick(event: MouseEvent) { if (suppressClick) { event.preventDefault(); event.stopPropagation(); suppressClick = false; } }
   function openMove(id: string) {
     if (!available || moving || !page) return;
+    moveAnchor = root?.querySelector<HTMLElement>(`[data-project-id="${id}"] .project-move-trigger`) ?? null;
     const row = page.items.find(item => item.entity.id === id); if (!row) return;
     dialogState = row.metadata.state as ProjectState;
     const peers = page.items.filter(item => item.metadata.state === dialogState);
@@ -119,7 +123,7 @@
 <section class="home-section home-tasks home-projects" class:task-page-projects={pageMode} class:tasks-page-section={standalone} data-home-section="project" aria-label="Projects" aria-busy={readState?.busy ?? true} bind:this={root}>
   {#if standalone}
     <header class="tasks-page-heading"><span class="tasks-page-emblem" aria-hidden="true"><SectionIcon section="project" size={68} /></span><h1>Projects</h1></header>
-    <nav class="tasks-page-nav" aria-label="Projects quick navigation"><details><summary>Nav</summary>{#each displayedViews as view}<button disabled={moving} onclick={() => void onview(view.id)}>{view.label}</button>{/each}</details><span aria-hidden="true">|</span><button aria-pressed={readState?.view === 'projects_by_tag'} disabled={moving} onclick={() => void onview('projects_by_tag')}>By Tag</button><span aria-hidden="true">|</span><button aria-pressed={readState?.view === 'projects_by_people'} disabled={moving} onclick={() => void onview('projects_by_people')}>By People</button></nav>
+    <nav class="tasks-page-nav" aria-label="Projects quick navigation"><QuickNavMenu>{#each displayedViews as view}<button disabled={moving} onclick={() => void onview(view.id)}>{view.label}</button>{/each}</QuickNavMenu><span aria-hidden="true">|</span><button aria-pressed={readState?.view === 'projects_by_tag'} disabled={moving} onclick={() => void onview('projects_by_tag')}>By Tag</button><span aria-hidden="true">|</span><button aria-pressed={readState?.view === 'projects_by_people'} disabled={moving} onclick={() => void onview('projects_by_people')}>By People</button></nav>
   {:else}<header><h2><span class="task-heading-icon project-heading-icon" aria-hidden="true"><SectionIcon section="project" size={31} /></span><button onclick={() => void onnavigate()}>Projects</button></h2></header>{/if}
   <div class="task-view-toolbar">
     <div class="home-tabs task-view-tabs" use:slidingTabs role="group" aria-label="Projects views">{#each displayedViews as view}<button class:active={readState?.view === view.id} aria-pressed={readState?.view === view.id} disabled={moving} onclick={() => void onview(view.id)}><AppIcon name={view.icon} size={16} /><span>{view.label}</span></button>{/each}</div>
@@ -130,7 +134,7 @@
       </div><button class="task-new primary" disabled={moving} onclick={() => void create()}><AppIcon name="plus" size={16} />New</button>
     </div>
   </div>
-  {#if optionsOpen}<div class="task-view-options"><p>Active: Doing and Ongoing. Planned: planned projects. Board: all five statuses. Projects archived locally or in their imported source are excluded; general search keeps source-archived imports accessible.</p>{#if pageMode}<p>Deadlines: calendar of project end dates, including completed and undated projects. Completed: Done status. Dates are not derived from tasks.</p>{/if}{#if standalone}<p>On Hold: paused projects. By Tag and By People group all five statuses by local links; a project may appear in several groups. Groups and counts cover loaded projects. New page in a relation group prepares Planned with that link.</p>{/if}<p>Progress uses related local tasks: completed / total, rounded to one decimal place. Overdue: pending tasks due before the workspace calendar day. Goal references open their imported pages.</p>{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}
+  {#if optionsOpen}<div class="task-view-options" use:liquidSurface={{ anchor: () => root?.querySelector('[aria-label$="view options"]') }} in:liquidTransition|global out:liquidTransition|global><p>Active: Doing and Ongoing. Planned: planned projects. Board: all five statuses. Projects archived locally or in their imported source are excluded; general search keeps source-archived imports accessible.</p>{#if pageMode}<p>Deadlines: calendar of project end dates, including completed and undated projects. Completed: Done status. Dates are not derived from tasks.</p>{/if}{#if standalone}<p>On Hold: paused projects. By Tag and By People group all five statuses by local links; a project may appear in several groups. Groups and counts cover loaded projects. New page in a relation group prepares Planned with that link.</p>{/if}<p>Progress uses related local tasks: completed / total, rounded to one decimal place. Overdue: pending tasks due before the workspace calendar day. Goal references open their imported pages.</p>{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}
   {#if readState?.busy && !page}<p role="status" class="task-read-status">Loading Projects…</p>{/if}
   {#if readState?.error}<p class="error" role="alert">Read failed: {readState.error}</p><button onclick={() => void onretry()}>Retry Projects</button>{/if}
   <HomeReadStatus state={readState} />
@@ -180,7 +184,7 @@
     {#if page.next_cursor}<footer class="section-row-footer"><button class="section-row-action" disabled={readState?.busy || readState?.stale || moving} onclick={() => void onnext()}><AppIcon name="arrow-down" size={15} />Load more</button></footer>{/if}
   {/if}
   {#if dialogId && dialogProject}
-    <dialog use:modal class="modal project-move-dialog glass-popup" aria-labelledby={titleId} oncancel={(event) => { event.preventDefault(); if (!moving) dialogId = null; }}>
+    <dialog use:modal class="modal project-move-dialog glass-popup" use:liquidSurface={{ anchor: () => moveAnchor }} in:liquidTransition|global out:liquidTransition|global aria-labelledby={titleId} oncancel={(event) => { event.preventDefault(); if (!moving) dialogId = null; }}>
       <form onsubmit={(event) => { event.preventDefault(); if (dialogId) void savePlacement({ id: dialogId, state: dialogState, beforeId }); }}>
         <h3 id={titleId}>Move {dialogProject.entity.title}</h3>
         <label>Status<select aria-label="Estado destino" value={dialogState} disabled={moving} onchange={(event) => { dialogState = event.currentTarget.value as ProjectState; beforeId = null; }}>{#each definitions as column}<option value={column.state}>{column.label}</option>{/each}</select></label>

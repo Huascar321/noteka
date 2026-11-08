@@ -1,6 +1,8 @@
 // Local procedural silhouettes inspired by the supplied koi/Kurage references.
 // No third-party source, fonts, interfaces or network resources are embedded.
 import { sceneNoise, koiBody, koiPoses, jellyPoses, type KoiPose, type JellyPose } from './ascii-cover-scene';
+import { koiPalette } from './ascii-koi-palette';
+import { DEFAULT_PRIMARY_COLOR, normalizeColor } from './primary-color';
 import { KoiHabitatRenderer, backgroundKoiPoses } from './koi-habitat';
 import { JellyHabitatRenderer, backgroundJellyPoses } from './jelly-habitat';
 const CW=6, CH=8, LEVELS=11, GLYPHS=['.',':',';','o','+','t','S','X','%','8','#','@'];
@@ -11,11 +13,11 @@ function interpolate(a:string,b:string,t:number){const n=parseInt(a.slice(1),16)
 function signal(family:number,light:number,alpha=1){return `rgba(${20+family*40},${Math.round(light)},0,${alpha})`;}
 class CreatureAtlas {
   readonly canvas=document.createElement('canvas');
-  constructor(readonly dpr:number,dark:boolean){
+  constructor(readonly dpr:number,dark:boolean,primary:string){
     this.canvas.width=GLYPHS.length*CW*dpr;this.canvas.height=5*LEVELS*CH*dpr;
     const ctx=context(this.canvas);ctx.scale(dpr,dpr);ctx.font='400 8px ui-monospace, SFMono-Regular, Menlo, monospace';ctx.textBaseline='alphabetic';
     for(let family=0;family<5;family++)for(let level=0;level<LEVELS;level++){
-      const y=(family*LEVELS+level)*CH,palette=(dark?DARK:LIGHT)[family],color=interpolate(palette[0],palette[1],level/(LEVELS-1));
+      const y=(family*LEVELS+level)*CH,palette=family===1?koiPalette(primary,dark):(dark?DARK:LIGHT)[family],color=interpolate(palette[0],palette[1],level/(LEVELS-1));
       for(let glyph=0;glyph<GLYPHS.length;glyph++){
         const x=glyph*CW;ctx.globalAlpha=family===2||family===3?.20:.94;ctx.fillStyle=color;ctx.fillRect(x+.3,y+.3,CW-.6,CH-.6);
         ctx.globalAlpha=1;ctx.fillStyle=family===2||family===3?color:family===4?'#d4d2cd':level>4?'#303239':dark?'#e4ded4':'#fcf5e9';ctx.fillText(GLYPHS[glyph],x+.5,y+6.5);
@@ -29,12 +31,20 @@ class CreatureAtlas {
 export class AsciiCreaturesRenderer {
   private ctx:CanvasRenderingContext2D;private field=document.createElement('canvas');private fieldCtx=context(this.field,true);
   private grid=document.createElement('canvas');
-  private atlas:CreatureAtlas|null=null;private width=0;private height=0;private cols=0;private rows=0;private dpr=1;private dark=true;
+  private atlas:CreatureAtlas|null=null;private width=0;private height=0;private cols=0;private rows=0;private dpr=1;private dark=true;private primary=DEFAULT_PRIMARY_COLOR;
   private habitat:KoiHabitatRenderer|JellyHabitatRenderer;
   constructor(private canvas:HTMLCanvasElement,private kind:'koi'|'jellyfish',private seed:number){this.ctx=context(canvas);this.habitat=kind==='koi'?new KoiHabitatRenderer(seed):new JellyHabitatRenderer(seed);}
-  resize(width:number,height:number,dpr:number,dark:boolean,ink=dark?'#e9e9e7':'#37352f'){
+  setPrimary(primary:string){
+    if(this.kind!=='koi')return false;
+    const tone=normalizeColor(primary)??DEFAULT_PRIMARY_COLOR;
+    if(tone===this.primary)return false;
+    this.primary=tone;if(this.atlas)this.atlas=new CreatureAtlas(this.dpr,this.dark,tone);
+    return true;
+  }
+  resize(width:number,height:number,dpr:number,dark:boolean,ink=dark?'#e9e9e7':'#37352f',primary=DEFAULT_PRIMARY_COLOR){
+    const tone=normalizeColor(primary)??DEFAULT_PRIMARY_COLOR;
     this.width=Math.max(0,width);this.height=Math.max(0,height);this.cols=Math.ceil(width/CW);this.rows=Math.ceil(height/CH);
-    this.dpr=Math.min(2,Math.max(1,dpr));if(!this.atlas||this.atlas.dpr!==this.dpr||this.dark!==dark)this.atlas=new CreatureAtlas(this.dpr,dark);this.dark=dark;
+    this.dpr=Math.min(2,Math.max(1,dpr));if(!this.atlas||this.atlas.dpr!==this.dpr||this.dark!==dark||this.primary!==tone)this.atlas=new CreatureAtlas(this.dpr,dark,tone);this.dark=dark;this.primary=tone;
     this.canvas.width=Math.round(width*this.dpr);this.canvas.height=Math.round(height*this.dpr);this.field.width=this.cols*2;this.field.height=this.rows*2;
     this.grid.width=Math.ceil(width*this.dpr);this.grid.height=Math.ceil(height*this.dpr);
     const grid=context(this.grid);grid.scale(this.dpr,this.dpr);grid.strokeStyle=ink;grid.lineWidth=.5;

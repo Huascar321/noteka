@@ -4,7 +4,7 @@
 
 ### Requirement: Portada local y animación ASCII accesible
 
-Home SHALL ofrecer la portada local recuperada de la referencia autorizada y una alternativa ASCII con tres variantes aleatorias: tiburones, koi naranjas y medusas. La variante de tiburones conserva nado y giros mediante cambios continuos de forma, orientación y profundidad. MUST funcionar offline en claro/oscuro, conservar la preferencia de portada separada de los datos y detener movimiento cuando se pide movimiento reducido, la portada no es visible, el documento está oculto o la pestaña está inactiva.
+Home SHALL ofrecer la portada local recuperada de la referencia autorizada y una alternativa ASCII con tres variantes aleatorias: tiburones, koi con manchas del color primario y medusas. La variante de tiburones conserva nado y giros mediante cambios continuos de forma, orientación y profundidad. MUST funcionar offline en claro/oscuro, conservar la preferencia de portada separada de los datos y detener movimiento cuando se pide movimiento reducido, la portada no es visible, el documento está oculto o la pestaña está inactiva.
 
 La variante de tiburones SHALL distinguir morro/aletas/cola, coordinar giros y ondulación posterior con impulso/deslizamiento y estabilizar caracteres sin ruido temporal ni estelas de celdas vacías. MUST reutilizar buffers y caracteres preparados, conservar velocidad basada en tiempo y programar dibujo con requestAnimationFrame hasta120 FPS, sujeto a la cadencia/presupuesto reales. Partículas, luz y bancos de peces ASCII SHALL ser ambientales, acotados y locales; sin consultas de datos, recursos remotos ni nuevos ajustes persistentes.
 
@@ -64,11 +64,13 @@ La escena SHALL conservar los dos tiburones originales y los peces compacto/alar
 
 ### Requirement: Variantes ASCII aleatorias y locales
 
-La portada ASCII SHALL alternar entre tiburones, koi naranjas/blancos y medusas cian/violeta con selección inicial aleatoria estable y transición gradual. MUST conservar cada escena durante un tramo visible de tiempo activo, sin repetir consecutivamente ni sortear caracteres por frame. Las tres variantes SHALL respetar temas, ancho estrecho, pausas, movimiento reducido y funcionamiento offline sin nuevos ajustes ni writes.
+La portada ASCII SHALL alternar entre tiburones, koi con manchas del color primario y medusas cian/violeta con selección inicial aleatoria estable y transición gradual. MUST conservar cada escena durante un tramo visible de tiempo activo, sin repetir consecutivamente ni sortear caracteres por frame. Las tres variantes SHALL respetar temas, ancho estrecho, pausas, movimiento reducido y funcionamiento offline sin nuevos ajustes ni writes.
 
 La variante koi SHALL incluir pececitos pequeños de fondo, algas discretas y burbujas suaves detrás de sus peces principales. MUST conservar contraste secundario, densidad acotada/adaptada al ancho y animación basada en el mismo tiempo activo, sin extender ese ambiente a tiburones.
 
-Los peces del fondo SHALL compartir el diseño reconocible de los koi grandes, con manchas naranja/blanco, aletas y cola. MUST tener un tamaño secundario legible y menor contraste que indique distancia, sin reemplazarlos por símbolos mínimos ni competir con los protagonistas.
+Las manchas de los koi principales y secundarios SHALL derivar del color primario elegido en Settings, conservando su tono con una saturación atenuada (alrededor de la mitad del acento) y extremos de luminosidad legibles por tema. MUST recuperar el azul inicial ante un acento ausente o inválido y conservar el segundo tono neutro en aletas, cola, ojos y brillos. Un cambio de acento o tema SHALL repintar la portada con el tiempo activo vigente, sin datos, preferencias ni solicitudes nuevas.
+
+Los peces del fondo SHALL compartir el diseño reconocible de los koi grandes, con manchas del color primario vigente y blanco, aletas y cola. MUST tener un tamaño secundario legible y menor contraste que indique distancia, sin reemplazarlos por símbolos mínimos ni competir con los protagonistas.
 
 La variante medusas SHALL incluir ejemplares secundarios con el mismo diseño de campana/lóbulos/tentáculos, más burbujas y partículas tenues cian/violeta. MUST distinguir profundidad mediante escala/contraste menores, mantener densidad acotada/adaptable y compartir reloj/pausas/fundido sin alterar la apariencia de koi o tiburones.
 
@@ -78,11 +80,16 @@ Koi y medusas SHALL mostrar la misma cuadrícula minimalista de fondo que tiburo
 
 #### Scenario: Tres variantes reconocibles
 - **WHEN** se observa la portada durante un ciclo de tiempo activo
-- **THEN** aparecen las tres variantes, con siluetas propias y fundido entre ellas; los tiburones conservan su nado actual, los koi muestran manchas naranja/blanco y las medusas campanas y tentáculos
+- **THEN** aparecen las tres variantes, con siluetas propias y fundido entre ellas; los tiburones conservan su nado actual, los koi muestran manchas del color primario y blanco, y las medusas campanas y tentáculos
 
 #### Scenario: Pausa y resize
 - **WHEN** se oculta o pausa la portada, cambia su tamaño o se pide movimiento reducido
 - **THEN** el tiempo pausado no adelanta escenas, resize conserva composición/bitmap y movimiento reducido no deja un bucle activo
+
+
+#### Scenario: Koi con el color primario
+- **WHEN** se elige un color primario en Settings o se alterna el tema con la escena koi visible
+- **THEN** las manchas de koi principales y secundarios adoptan el tono vigente con contraste legible en claro/oscuro, conservan el segundo tono neutro y la portada se repinta sin escribir datos ni preferencias; un acento inválido recupera el azul inicial
 
 #### Scenario: Ambiente de koi
 - **WHEN** se muestra la escena koi en claro/oscuro o ancho estrecho, también durante el fundido

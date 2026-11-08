@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { tick } from 'svelte';
+  import { onDestroy, tick } from 'svelte';
   import AppIcon from './AppIcon.svelte';
   import DueDatePicker from './DueDatePicker.svelte';
   import type { Entity } from './contracts.generated';
@@ -27,25 +27,31 @@
   let dueButton = $state<HTMLButtonElement>();
   let dueOpen = $state(false);
   let dueFocus = $state(false);
+  let dueFlash = $state(false);
+  let flashTimer: ReturnType<typeof setTimeout> | undefined;
   function set(key: string, value: unknown) { payload[key] = value; onchange(); }
   function closeDue(focus: boolean) {
     dueOpen = false;
     if (focus) void tick().then(() => dueButton?.focus());
   }
-  function toggleDue(focus: boolean) {
-    if (disabled) return;
-    if (dueOpen) { closeDue(false); return; }
+  function openDue(focus: boolean) {
+    if (disabled || dueOpen) return;
     dueFocus = focus;
     dueOpen = true;
   }
-  function pickDue(value: string) { set('due_date', value || null); closeDue(true); }
+  function pickDue(value: string) {
+    set('due_date', value || null);
+    if (!value) return;
+    dueFlash = true;
+    if (flashTimer) clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => { dueFlash = false; flashTimer = undefined; }, 460);
+  }
   function dueKeys(event: KeyboardEvent) {
     if (event.isComposing) return;
-    if (event.altKey && event.key === 'ArrowDown') { event.preventDefault(); toggleDue(true); return; }
-    if (!dueOpen) return;
-    if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeDue(true); }
+    if (event.altKey && event.key === 'ArrowDown') { event.preventDefault(); openDue(true); }
   }
   $effect(() => { if (disabled) dueOpen = false; });
+  onDestroy(() => { if (flashTimer) clearTimeout(flashTimer); });
 </script>
 
 <fieldset class="task-page-properties" disabled={disabled}>
@@ -63,7 +69,7 @@
   </div>
   <div class="task-due-property">
     <span class="task-property-label"><AppIcon name="calendar" size={14} />Due</span>
-    <button type="button" bind:this={dueButton} class="task-due-trigger" class:empty={!dueValue} data-date={dueValue} aria-label="Due date" aria-haspopup="dialog" aria-expanded={dueOpen} onclick={() => toggleDue(false)} onkeydown={dueKeys}><span class="task-due-value">{dueLabel}</span><AppIcon name="calendar" size={14} /></button>
+    <button type="button" bind:this={dueButton} class="task-due-trigger" class:empty={!dueValue} data-date={dueValue} aria-label="Due date" aria-haspopup="dialog" aria-expanded={dueOpen} class:updated={dueFlash} onclick={() => openDue(false)} onkeydown={dueKeys}><span class="task-due-value">{dueLabel}</span><AppIcon name="calendar" size={14} /></button>
   </div>
 </fieldset>
 

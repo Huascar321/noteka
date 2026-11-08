@@ -1,4 +1,6 @@
 <script lang="ts">
+  import QuickNavMenu from './QuickNavMenu.svelte';
+  import { liquidSurface, liquidTransition } from './liquid-overlay';
   import SectionIcon from './SectionIcon.svelte';
   import AppIcon from './AppIcon.svelte';
   import HomeRow from './HomeItem.svelte';
@@ -28,6 +30,7 @@
     { id: 'tasks_pending', label: 'All', icon: 'list-checks' },
   ];
   const page = $derived(readState?.page);
+  const calendarView = $derived(readState?.view === 'tasks_calendar_week' || readState?.view === 'tasks_calendar_month');
   const displayedViews = $derived(pageMode ? [...views, { id: 'tasks_done' as HomeView, label: 'Done', icon: 'circle-check' }] : views);
   let optionsOpen = $state(false);
   let moreOpen = $state(false);
@@ -60,7 +63,7 @@
 <section class="home-section home-tasks" class:tasks-page-section={pageMode} data-home-section="task" aria-label="Tasks" aria-busy={readState?.busy ?? true} bind:this={root}>
   {#if pageMode}
     <header class="tasks-page-heading"><span class="tasks-page-emblem" aria-hidden="true"><SectionIcon section="task" size={68} /></span><h1>Tasks</h1></header>
-    <nav class="tasks-page-nav" aria-label="Tasks quick navigation"><details><summary>Nav</summary><button onclick={() => void onview('tasks_pending')}>All tasks</button><button onclick={() => void onview('tasks_done')}>Done</button></details>{#each displayedViews.slice(0, 4).sort((a,b) => Number(a.id !== 'tasks_inbox') - Number(b.id !== 'tasks_inbox')) as view}<span aria-hidden="true">|</span><button onclick={() => void onview(view.id)}>{view.label}</button>{/each}</nav>
+    <nav class="tasks-page-nav" aria-label="Tasks quick navigation"><QuickNavMenu><button onclick={() => void onview('tasks_pending')}>All tasks</button><button onclick={() => void onview('tasks_done')}>Done</button></QuickNavMenu>{#each displayedViews.slice(0, 4).sort((a,b) => Number(a.id !== 'tasks_inbox') - Number(b.id !== 'tasks_inbox')) as view}<span aria-hidden="true">|</span><button onclick={() => void onview(view.id)}>{view.label}</button>{/each}</nav>
   {:else}<header><h2><span class="task-heading-icon" aria-hidden="true"><SectionIcon section="task" size={29} /></span><button onclick={() => void onnavigate()}>Tasks</button></h2></header>{/if}
   <div class="task-view-toolbar">
     <div class="home-tabs task-view-tabs" use:slidingTabs role="group" aria-label="Tasks views">
@@ -78,17 +81,16 @@
       </div><button class="task-new primary" onclick={() => void oncreate()}><AppIcon name="plus" size={16} />New</button>
     </div>
   </div>
-  {#if moreOpen}<div class="task-more-menu glass-menu"><button aria-pressed={readState?.view === 'tasks_done'} onclick={() => { closeMore(); void onview('tasks_done'); }}><AppIcon name="circle-check" size={15} />Done</button><p>Recurring and Active Content are not yet implemented.</p><button onclick={closeMore}>Close</button></div>{/if}
-  {#if optionsOpen}<div class="task-view-options"><p>Today: pending tasks in unarchived Doing/Ongoing projects, grouped by project. All Active Projects also includes Planned. Week/Month: calendars by due date, including completed and undated tasks. Scheduled: assigned due date; No Due: no due date. Inbox shows pending tasks without a Project relation; All shows pending tasks; Done shows completed tasks.</p><p>Only pending tasks in unarchived projects appear in project views. New from a calendar day prepares that due date; ordinary New does not assign dates.</p><p>Groups cover this page; a task may appear in several projects. Recurring and Active Content require features that are not yet implemented.</p>{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}
+  {#if moreOpen}<div class="task-more-menu glass-menu" use:liquidSurface={{ anchor: () => moreButton }} in:liquidTransition|global out:liquidTransition|global><button aria-pressed={readState?.view === 'tasks_done'} onclick={() => { closeMore(); void onview('tasks_done'); }}><AppIcon name="circle-check" size={15} />Done</button><p>Recurring and Active Content are not yet implemented.</p><button onclick={closeMore}>Close</button></div>{/if}
+  {#if optionsOpen}<div class="task-view-options" use:liquidSurface={{ anchor: () => root?.querySelector('[aria-label$="view options"]') }} in:liquidTransition|global out:liquidTransition|global><p>Today: pending tasks in unarchived Doing/Ongoing projects, grouped by project. All Active Projects also includes Planned. Week/Month: calendars by due date, including completed tasks. Scheduled: assigned due date; No Due: no due date. Inbox shows pending tasks without a Project relation; All shows pending tasks; Done shows completed tasks.</p><p>Only pending tasks in unarchived projects appear in project views. New from a calendar day prepares that due date; ordinary New does not assign dates.</p><p>Groups cover this page; a task may appear in several projects. Recurring and Active Content require features that are not yet implemented.</p>{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}
   {#if readState?.busy && !page}<p role="status" class="task-read-status">Loading Tasks…</p>{/if}
   {#if readState?.error}<p class="error" role="alert">Read failed: {readState.error}</p><button onclick={() => void onretry()}>Retry Tasks</button>{/if}
   {#if toggleError}<p class="error" role="alert">{toggleError}</p>{/if}
   <HomeReadStatus state={readState} />
-  {#if readState?.view === 'tasks_inbox'}<p class="task-read-status">Pending tasks without a local Project relation. Linking one to a project removes it from this view.</p>{/if}
   {#if page}
     {#if page.unavailable_count}<p class="home-unavailable">{page.unavailable_count} tasks with uninterpretable metadata for this view.</p>{/if}
-    {#if readState?.view === 'tasks_calendar_week' || readState?.view === 'tasks_calendar_month'}
-      <TaskCalendar items={page.items} date={page.date} mode={readState.view === 'tasks_calendar_week' ? 'week' : 'month'} partial={!!page.next_cursor} busy={!!readState.busy} {onopen} oncreate={(date) => void oncreate({due_date:date})} ondate={(date) => ondate(readState!.view, date)} />
+    {#if calendarView}
+      <TaskCalendar items={page.items} date={page.date} mode={readState!.view === 'tasks_calendar_week' ? 'week' : 'month'} busy={!!readState?.busy} {onopen} oncreate={(date) => void oncreate({due_date:date})} ondate={(date) => ondate(readState!.view, date)} />
     {:else if page.groups.length}
       <div class="home-groups task-groups">
         {#each page.groups as group (group.key)}
@@ -105,6 +107,6 @@
       <div class="home-rows task-rows">{#each page.items as row (row.entity.id)}<HomeRow item={row} {onopen} ontoggle={toggleTask} toggleDisabled={!!readState?.busy || togglingId !== ''} taskStyle />{/each}{#if !page.items.length}<p class="home-empty">No Tasks in this view.</p>{/if}</div>
       <button class="home-new task-add-row" onclick={() => void oncreate()}><AppIcon name="plus" size={16} />New task</button>
     {/if}
-    {#if page.next_cursor}<footer class="section-row-footer"><button class="section-row-action" disabled={readState?.busy || readState?.stale} onclick={() => void onnext()}><AppIcon name="arrow-down" size={15} />Load more</button></footer>{/if}
+    {#if page.next_cursor && !calendarView}<footer class="section-row-footer"><button class="section-row-action" disabled={readState?.busy || readState?.stale} onclick={() => void onnext()}><AppIcon name="arrow-down" size={15} />Load more</button></footer>{/if}
   {/if}
 </section>

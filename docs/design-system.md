@@ -46,6 +46,24 @@ La ventana Tauri actual es opaca. El material CSS no muestra el escritorio ni
 reproduce la refracción de Liquid Glass nativo. No agregues una imagen de fondo
 solo para que el vidrio parezca más visible.
 
+## Identidad de aplicación
+
+La marca vigente es una «n» azul de nota adhesiva con la esquina superior derecha
+despegada: el área liberada revela el fondo y la solapa clara forma una capa
+independiente. Bienvenida y sidebar reutilizan `NotekaMark.svelte`, con geometría
+local de `noteka-brand.json`, sin filtros ni animaciones. El sidebar reserva
+28 px para el SVG; el nombre usa sans serif del sistema, peso 450 y `--text`.
+La marca usa azul fijo `#3183a6`/`#56b1cd` por tema y no sigue el acento personal
+de los controles. En contraste aumentado adopta tinta del tema y borde definido.
+Los íconos de entidades y navegación conservan sus reglas.
+
+El ícono macOS usa capas de Icon Composer y `Assets.car` nativo; PNG/ICNS/ICO y
+favicon conservan la misma geometría. No reproduzcas el vidrio del ícono dentro
+del sidebar. Fuentes, comandos y alcance del material en [identidad](brand.md).
+Las referencias de identidad actuales se registran en
+[verificación de marca](verification-brand.md); el atlas general anterior
+conserva la identidad `n.` de su fecha de captura.
+
 ## Superficies y tokens
 
 `src/style.css` define `--bg`, `--surface`, `--text`, `--muted`, `--border`,
@@ -78,12 +96,20 @@ contenido con `--glass-popup-content`, un velo algo más denso. Los hijos no
 agregan filtros. La transmisión del fondo y el contraste se verifican sobre
 píxeles compuestos, no sólo leyendo el alfa. Con transparencia reducida o
 contraste aumentado, paneles y capas vuelven a superficies sólidas sin reflejos
-ni filtros. La búsqueda se abre como diálogo modal: el
-clic en el backdrop la cierra y los clics dentro del panel no. Mientras está
-abierta, la portada ASCII de Home sigue animando; `blocked` desactiva los
-controles del fondo, no el canvas. La portada ASCII comparte el fondo de Home
+ni filtros. Search y Settings se abren como diálogos modales; en Search, el
+clic en el backdrop la cierra y los clics dentro del panel no. Mientras
+cualquiera está abierto sobre Home, la portada ASCII sigue animando; `blocked`
+desactiva los controles del fondo, no el canvas. Center peek tampoco la pausa
+mientras la portada permanezca visible: sólo la cobertura completa de Full page,
+la pestaña inactiva, el documento oculto o la portada fuera de vista suspenden
+el render. La portada ASCII comparte el fondo de Home
 para evitar una línea de color al terminar el canvas; la portada fotográfica
-conserva su propia imagen.
+conserva su propia imagen. En la variante koi, las manchas de protagonistas y
+secundarios usan el color primario vigente: tono del acento y saturación
+reducida a la mitad, con extremos de luminosidad contenidos por tema; aletas, cola, ojos y
+brillos conservan el segundo tono neutro. El valor se lee de `--primary-color`
+y un cambio en Settings repinta la portada sin datos ni preferencias nuevas.
+Tiburones y medusas no siguen el acento.
 
 Los campos Search de ambos popups repiten `--glass-field-*` del acceso lateral:
 cápsula de 32 px, borde fino, padding único, fuente de 13 px a peso 400 y
@@ -408,6 +434,51 @@ En relaciones, nombre y × no se anidan como botones entre sí.
 | Icono lateral o tab de vista al clic | Jelly compartido, un ciclo de 1000 ms, limpieza 1050 ms; ver [iconos](icons.md) |
 | Breadcrumb | Entrada/retorno compartidos, sin otra fila ni cambio de destino |
 | Movimiento reducido | Cambio inmediato de indicadores y sin animación decorativa |
+| Calendario de Due | Morph del material desde el rectángulo Due, 400 ms con asentamiento elástico; contenido independiente sin compresión; retorno 200 ms desde el frame actual; desmontaje al terminar o fallback 280 ms |
+| Menús, pickers, herramientas y popups | Mismos tiempos/curvas de Due; origen en control o selección; expansión central contenida si no hay ancla visible. Texto sin escala; salida inerte desde el frame actual. |
+
+La extensión aprobada el 07/11/2026 se implementa explícitamente con
+`liquidSurface` y transiciones de entrada/salida de `liquid-overlay.ts`; los
+keyframes y tiempos compartidos viven en `liquid-motion.ts`. Incluye Page actions,
+Peek mode, iconos, relaciones, herramientas, menús del editor (también `/` del
+editor convencional), Nav, opciones de vista de las secciones/Milestones, Search,
+Settings, Move project, guardia de cambios y Center peek. Los selects y diálogos
+del sistema, tooltips no interactivos, disclosures documentales y Side/Full peek
+conservan sus patrones. Las barras expansibles del editor convencional siguen
+siendo controles en el flujo, no popups.
+
+Cada dueño conserva su DOM, posición, foco y operaciones. Durante el morph,
+una capa decorativa del material copia la óptica local:
+`aria-hidden`, inert, sin foco ni eventos. En menús/pickers entra en top layer
+mediante un popover manual para evitar recortes por sus ancestros. La capa
+incluye el sheen breve y no contiene controles ni contenido del usuario. El
+material del dueño se suspende durante esos frames para evitar dos filtros;
+su texto aparece por opacidad, sin heredar la escala. Al terminar se retiran la
+capa, efectos y observadores; la superficie recupera exactamente su material.
+Scroll/resize y cambios de altura reposicionan la capa sólo mientras existe.
+Sin soporte de popovers los menús/pickers aparecen sin morph.
+
+Los diálogos y Center peek colocan el vidrio local detrás de sus controles:
+el blur nunca tapa su propio texto. El contenido real arranca al 24% de su
+opacidad original y alcanza claridad completa al 55% de la entrada (220 ms).
+Se recorta a los límites redondeados del vidrio en movimiento, sin escalar texto,
+clonar controles ni mostrar un panel deliberadamente vacío. Conservan 400/200 ms;
+Due y los menús/pickers mantienen su receta. El recorte original se restaura
+al terminar o cancelar el efecto. El reloj es finito y compartido con Svelte.
+
+Los nodos condicionales usan entrada/salida separadas de Svelte, con preparación
+diferida después de posicionar o `showModal`. Una salida captura el estado visual
+actual. PageTools usa presencia persistente: conserva la sección y su buffer;
+la representación saliente permanece como `hidden`/inert/`aria-hidden` hasta
+terminar. Nav conserva `<details>` y su disposición en el flujo; el adaptador
+demora el cierre visual, sin convertir sus opciones en un menú flotante.
+
+Search y las decisiones de la guardia esperan el desmontaje modal antes de
+continuar la navegación para que la devolución de foco no lo quite al destino.
+Escape resuelve primero un overlay activo dentro del detalle, incluido el
+selector de iconos. `Reduce Motion` omite los efectos y cancela los activos;
+contraste/transparencia reducida conservan superficies sólidas. Ver
+[inventario, pruebas y límites](verification-liquid-overlays.md).
 
 Reutilizá `slidingTabs` y el reproductor de iconos. No crees otro RAF, intervalo,
 animación perpetua de brillo o renderer para dar sensación de vidrio.
@@ -468,6 +539,11 @@ animación perpetua de brillo o renderer para dar sensación de vidrio.
   la diferencia no depende solo del color. El toggle actualiza `state` mediante
   `entity.update`, refresca la vista y se deshabilita mientras hay una operación
   en curso. No anides el checkbox dentro del botón de apertura.
+- Las filas de listas (`.home-item`) pintan un único fondo `--hover` en todo su
+  ancho, incluida la columna del checkbox y la meta. El botón de apertura, el
+  checkbox y las referencias internas no agregan un segundo fondo al pasar el
+  cursor; el hover no cambia alto, padding ni posición. Aplica a Home y a las
+  páginas de sección que reutilizan la fila.
 - El campo Due del detalle de Task abre un calendario propio sobre `.glass-menu`
   (`--glass-surface`, `--glass-sidebar-sheen`, borde/reflejos compartidos y
   `--glass-blur`); no usa el popup nativo del WebView. Mide como máximo 292 px,
@@ -475,9 +551,19 @@ animación perpetua de brillo o renderer para dar sensación de vidrio.
   reposiciona con scroll y resize. La grilla va de lunes a domingo con días de
   30 px (36 px con puntero grueso); la selección usa `--accent`/`--accent-text`
   y hoy se marca con tinta de acento. Teclado: flechas, Home/End,
-  PageUp/PageDown, Enter y Escape; el foco vuelve al campo. Con movimiento
-  reducido no hay animación de entrada ni de mes; con transparencia reducida o
-  contraste alto el panel vuelve a `--surface` sólido sin blur. El campo Due es un
+  PageUp/PageDown, Enter y Escape; el foco vuelve al campo. Abre con un
+  morph de 400 ms desde el rectángulo real del campo, con expansión y
+  asentamiento elástico. Sólo `.date-picker-material.glass-menu` se deforma:
+  el contenido hermano aparece con fundido/traslación pequeña, sin aplastar
+  números ni texto. El radio compensa la escala inicial para conservar la
+  cápsula. Cierra en 200 ms hacia el campo, capturando el frame actual si la
+  apertura seguía en curso; el panel queda inerte y se desmonta al terminar
+  (fallback 280 ms). Las animaciones finitas usan Web Animations API y se
+  cancelan al desmontar o activar movimiento reducido; no hay otro RAF.
+  El material mantiene un único blur local y el sheen es breve.
+  Ver [investigación y evidencia](verification-due-liquid-morph.md). Con movimiento reducido no hay
+  animación de entrada, cierre, sheen ni de mes; con transparencia reducida o
+  contraste alto el panel vuelve a `--surface` sólido sin blur y sin sheen. El campo Due es un
   botón que muestra la fecha corta (`Nov 7, 2026`) o `Empty`, sin `input[type=date]`:
   el picker nativo no puede abrirse. Reutiliza la receta de campo compacto
   (`--glass-field-*`, radio 16 px) con el icono de calendario a la derecha, conserva
@@ -495,9 +581,12 @@ primarios distintos y en anchuras estrechas. El fondo de vidrio debe seguir
 neutro al cambiar el color primario. Con `prefers-reduced-transparency: reduce`
 o `prefers-contrast: more`, los overlays adoptan fondo sólido y se elimina su
 desenfoque. Respetá `prefers-reduced-motion` y las condiciones de pausa del
-renderer ASCII. Search es una excepción explícita al bloqueo del fondo:
-deshabilita los controles de Home pero mantiene su animación. No restaures la
-pausa de Search para satisfacer una expectativa de pruebas anterior a esa decisión.
+renderer ASCII. Cualquier popup que deje la portada visible —Search, Settings o
+Center peek — bloquea los controles del fondo pero mantiene su animación. No
+restaures las pausas de Search, Settings ni Center peek para satisfacer una
+expectativa de pruebas anterior a esa decisión. Full page, la pestaña inactiva,
+el documento oculto, la portada fuera de vista y el movimiento reducido sí
+suspenden el render.
 
 Para texto normal buscá contraste de al menos 4,5:1 sobre el fondo compuesto.
 Medí el resultado real o probá extremos claros y oscuros detrás de un overlay;
@@ -606,9 +695,10 @@ real es preferible a maquillar la imagen o subir el filtro sin verificar.
    compartidos, regenerá la galería y revisá los PNG, además del flujo funcional
    afectado. Las suites históricas `headless-page-actions` y
    `headless-ascii-side-peek` conservan expectativas antiguas documentadas en la
-   evidencia: un selector `Create in Tasks`, blur exacto de 8 px y pausa de Search.
-   No confundas esos fallos conocidos con pruebas verdes ni cambies el producto
-   para restaurar decisiones sustituidas.
+   evidencia: un selector `Create in Tasks`, blur exacto de 8 px y pausas de
+   Search/Center peek. Esos fallos conocidos no son pruebas verdes ni justifican
+   restaurar decisiones sustituidas; el comportamiento vigente de los popups se
+   verifica con `headless-ascii-popups`.
 4. Inspeccioná la ventana nativa cuando el acabado dependa de composición o
    de la posición real del panel; anotá lo que no se haya verificado.
 

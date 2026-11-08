@@ -1,0 +1,16 @@
+{
+  "renderer": "Icon Composer ictool macOS; Xcode 27.2",
+  "sourceHashes": {
+    "src/lib/noteka-brand.json": "684b9ee3b8152529b2c1d527834dd1338078136e9b60983c4642435c8704745b",
+    "src-tauri/icons/Noteka.icon/icon.json": "a5eab871de82a0c2bff8124fad64ea26feae862ad318aad4392a8bd3a249e832",
+    "scripts/generate-brand.mjs": "a6d40c16f58c02eb2c95d982bc449c328f060dd2778622b285ecb04916c0fd77",
+    "scripts/normalize-icon-png.swift": "63d8c9f4b308ab0bc3397fd55264717903518278efc888ae7a9eb38859af63bc"
+  },
+  "captures": {
+    "Default.png": "011434bd2ce79545f6cd5a65f3cc19bf97dc7b3405a67bf974adeea16cd0d63f",
+    "Dark.png": "cec0100836d94a7cc3209e74fe9daa4f7e8f973676d40247e02c322ffc44d608",
+    "ClearLight.png": "6455b72d7486750f4d52f55753c9bca34a0a17df38e60147df75f11526ec72c4",
+    "ClearDark.png": "623d3857e1ac1fc3383521f519153a6a281322d85cb947661a8111e5c747ffff"
+  },
+  "scope": "Native exports from the production Noteka.icon document, not screen captures or generated mockups."
+}

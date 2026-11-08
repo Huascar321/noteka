@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-05T05:41:26.642Z",
+  "generatedAt": "2026-11-07T15:10:09.276Z",
   "browser": "webkit",
   "browserVersion": "26.6",
   "playwrightCli": "0.1.22",
@@ -9,73 +9,81 @@
   "scope": "Frontend compilado con puente CLI Rust/SQLite. No acredita composición Tauri/macOS ni IPC nativo.",
   "sourceHashes": {
     "scripts/capture-liquid-glass-guide.cjs": "a781cf1979336caf81159eb81a446d0fe895cd75eba265ed405b62c83e0927eb",
-    "scripts/capture-liquid-glass-guide.mjs": "b93d6f512cf168c85e90a8cd70b0d376aab373bdcd172dd8cec390dfb75d7e6c",
-    "src/App.svelte": "c54a82f15bc8c35c9d2fc1eb173c642caab2cb95c36b771342fe8cdca9ba845a",
+    "scripts/capture-liquid-glass-guide.mjs": "835725f13ce6f1195f3414f6d818eabfdf11c8795f05241e357767f76e101177",
+    "src/App.svelte": "024722acfc1918136ba911ae81514868309d32f6727ef3ef28c99ea6c6a6aa8d",
     "src/lib/AppIcon.svelte": "4f974db2ef613fe1737b318d11ad263df224c59f63ef6de086472fd791072403",
-    "src/lib/AsciiShark.svelte": "a9eb572b37fc70a1c82a51e20fe06d359f4698199b1db663a2bdac9b9959792f",
+    "src/lib/AsciiShark.svelte": "2093f08ec82223483584b712a35ba112b00db0f85350dcb5ca91a873316c44ff",
     "src/lib/AttachmentGenerationPanel.svelte": "c88352bfa30d6be18bbbf1b2994fa75f7addf10f9589869bb401e64851dda531",
     "src/lib/AttachmentPreparationPanel.svelte": "1058f5d2f5b0f2efcf7b9f7c730b75b8f31f8f445f94bfe920452a911efac5a2",
     "src/lib/AttachmentSearchPanel.svelte": "ce0c993aefe46593cbd501fa22519cdd314b808dc2b30528827ba179f75f6d39",
-    "src/lib/BlockEditor.svelte": "507563430dd1445327487852546d02026496d028852fc18d06114f929296a2d6",
+    "src/lib/BlockEditor.svelte": "390baa5688e9381e3f5e6c13ca6b48635220a47cd7f7df0d13c7e4d1f12d01a5",
     "src/lib/CollectionPresentation.svelte": "8a18c8c4f950ba00bcab206e1dfa34c1a3bcb9f6d051a2435cb4cc2ef0469bd2",
     "src/lib/DatabasePanel.svelte": "92791a4288b5a7731db4e61fbbf832fc2a0c3c0bbb62d5e9217e7064c4817134",
+    "src/lib/DueDatePicker.svelte": "7030c54bb9efed17bb8f6c1eff92688ab38bae1f88382ea4afea37de6673fcff",
     "src/lib/EmbeddedCollectionView.svelte": "f0ceb13719d8fe9bfd71c379ec0dcc46cd063b4ad6d26d5f96245b7f1505383f",
-    "src/lib/EntityFields.svelte": "0e8ded51b788e412fa55c002c93faecb36b22daaff3133691ab56751726cce1e",
+    "src/lib/EntityFields.svelte": "a14e6ca2c44c60e39d0308b619ef4f8a4d6b08a5ba06d0455acb1b9b366aa893",
     "src/lib/GoalPageProperties.svelte": "c55fc1882c0f6f8364506950372bb1602895652b5a9a94b9b31cc522f8aaeef3",
     "src/lib/GoalPicker.svelte": "ac6fc55ed15a61d31234490a3dc6f76718b4c6185f1f940f4ec06c4e73157ba4",
     "src/lib/GoalProjects.svelte": "8f91a45adbf2868298768fdcaf7f2431751c45cedbdeffcc2cd97b1b0fd149f6",
     "src/lib/GoalsPage.svelte": "b849cf52fa89b8095c9c04cf5710fedd598e1247d1ce09255c65b825eb85aa2f",
     "src/lib/GroupedSearchPanel.svelte": "2e31ac1e97dcefd53096c4a7c2eb135e1a3cda9a1b1757e958c984a789f1caa1",
     "src/lib/HomeGoalRow.svelte": "6ac8a50bb3641547b6a3b573798d6d9041eed8a377b551aee98be98efb1f6afc",
-    "src/lib/HomeGoalSection.svelte": "4f032ff4b8c3488b96248ff008ac62d588b6768358b7af067d2ae891f5899ec7",
-    "src/lib/HomeItem.svelte": "a02ccc083395da4a8346307a1ee15030fdb0f71e67502347eefc5c6943b2e536",
-    "src/lib/HomeNoteSection.svelte": "5df5da2b5c3c51e4da24caa45467769ee1a7d27f6a6acc3578785a170a974b7e",
-    "src/lib/HomePanel.svelte": "52d4a3abca076cb4f738fdbf0e4ffeec4c3285ef59b382d606a4aa53d2da97d4",
+    "src/lib/HomeGoalSection.svelte": "1c407b61c32d2ad57be1ee4acc6c4dbd5c843a3021c338e9e7e1fae6aeb4e91c",
+    "src/lib/HomeItem.svelte": "398cb9e74f09e221271c8de5c63aee5a5cec0a3e77ead5aa5137b66825e12919",
+    "src/lib/HomeNoteSection.svelte": "c28db42a2dfb47f3fba0edb0884fa3d9e1dbaba4d0b99d2bbb66e10ef3697a1a",
+    "src/lib/HomePanel.svelte": "4e5c9145f83a494c344801f341196534eddea92d81e90b6961dee4ab47c0ec80",
     "src/lib/HomePersonCard.svelte": "a79f6d45eba37f90021c728ebb8569c43986009531ec500edf756ce903aca90b",
     "src/lib/HomePersonProjectRow.svelte": "659410c1d68b0dd2915971b47b779850cc4f71a8357cdd810bcac6624335ffcb",
-    "src/lib/HomePersonSection.svelte": "6d5596fca06ea394bfd050bf9d0d645961ed7858ba179c0bb0ccf11d10dee5fc",
+    "src/lib/HomePersonSection.svelte": "dfc0ab2d7f780430f3376d6531cf157df5b6f894d6ade95f5f972d460e00a8ef",
     "src/lib/HomeProjectCard.svelte": "8c69c32253ca5d4af89e4ca0faf9f3c46aaed95a016442718ea413c65d1b9967",
-    "src/lib/HomeProjectSection.svelte": "2aeaa96fef818ff1ef2e8fe2c10cba460fecd26400aeb78b57e423c586d2ce2f",
-    "src/lib/HomeReadStatus.svelte": "74e135ad566ece99639430edd1cb5a1fec58e642e2dee776902a98596d36820c",
+    "src/lib/HomeProjectSection.svelte": "c65a1b5a4a076f63e6b0e356b9e577d912854618791f2865c960abf5ab8a028d",
+    "src/lib/HomeReadStatus.svelte": "fb8cec4e1f6834efc4c4db2c3dfef2ca97c2b45083065e56a999c2a6056adc43",
     "src/lib/HomeTagRow.svelte": "ff7408fba78140f191c75c7e90ef97a7cdde8e403b178c9986512860d348b10c",
-    "src/lib/HomeTagSection.svelte": "3af6923a5e0066a2b8868d3b95fc7612ea590e7b6e57789e54266a597337b719",
+    "src/lib/HomeTagSection.svelte": "cbaf0b04736f0e7993608b59744af93cfe12e2fe3901733975cf42579b6d2a11",
     "src/lib/HomeTagTable.svelte": "6ad97c1662bb92486fa73729d52ef24a7a0e6679a7e1b04529969ce5b0a36eeb",
-    "src/lib/HomeTaskSection.svelte": "1433ebe4a61f15c19245c629aabadfa5b81dfadbf235e822f233e68ce2e0d35b",
+    "src/lib/HomeTaskSection.svelte": "487021ed167997060c0a8fe24f70100f47264193e19e58e7081309cdef126a43",
     "src/lib/HomeWeather.svelte": "ec36653d73bfb3fa41f29a90f8565830f0af86aa5b462f2b95701a3571579a4e",
-    "src/lib/IconPicker.svelte": "528923fe48071634cc98202bcfd7b360fa87ac7bc48e119559a70ff1f256952b",
-    "src/lib/MilestonesPanel.svelte": "769612cf816a74ebbb4b9c7f4f37dde0c13dbedaa2fae4b29087dc8bdb1b80de",
-    "src/lib/NotePageProperties.svelte": "ea554023c00e57bab9ad74d57cdd675c38fb826eaba3966ea67446cee6658385",
-    "src/lib/NotesPage.svelte": "5dfdda9065711a57ad4781a6331bad8324ef684648fb55647293ee32fa2e0fdf",
+    "src/lib/IconPicker.svelte": "0ebfee400798abcdc40e25f08bd8c66735bacde335e45550757d50ce769e4a7a",
+    "src/lib/MilestonesPanel.svelte": "cf0c8c1728a24199d1e4926a563145d6e73b214e87ffdce3ac89fe6e55f67100",
+    "src/lib/NotePageProperties.svelte": "e8abe5c707d8705e90ad03bf0bcf023564545ec8199f764bf1f9b2e0ce1ca315",
+    "src/lib/NotekaMark.svelte": "3f71840282793fb71013e346faaadd339f9ca96e5bd6bc7d66ab44d85007935a",
+    "src/lib/NotesPage.svelte": "071600145eaad40379e1fa37156d529b9a96b78c2300dcd56a3b68d28045a3c1",
     "src/lib/PageBreadcrumb.svelte": "7c3ce1263ff30727406bcd4c1ccabc1563e364c1ef49e4d950b9b40119bb8a34",
-    "src/lib/PageTools.svelte": "ba3040d5ac414ae03611ea34d481abe89499460878b74b02397b136c2d319db0",
+    "src/lib/PageTools.svelte": "3b69f6e4071c43aa330f18ca1d364cbec09ff203abd51e539875bff7461a4b29",
     "src/lib/PanelResizeHandle.svelte": "9e62942ff7eb4dfec635e3b8c25e7da3bb17214538552d0a1a949327eeb0839c",
-    "src/lib/PeekModeMenu.svelte": "0092cdf49177976f87819dea4a990f563214b276b5cf00c776b6d1e9e20f3308",
+    "src/lib/PeekModeMenu.svelte": "17720c4278de386dfaf40a2966c3240f11a692996f0cfce2d7c00227d2891353",
     "src/lib/PeoplePage.svelte": "009ec8b5d308d75cf89393a2b954eb2653769bccc58e0b762b2890af4cbb6529",
     "src/lib/PersonContents.svelte": "2b4773643bdc64027d5e1e12cc88958c5f6b2dfc998d8926a46af075acedf752",
     "src/lib/PersonPhoto.svelte": "14f72d572edac61dd81c56317cdb4a7948b83042913237c70b5a33d6adb51140",
     "src/lib/PrimaryColorPicker.svelte": "24c2f3468370ee860be5696d80ab3472b28f8a077b9a585a463399785e2ee8d1",
-    "src/lib/ProjectContents.svelte": "7e0fb766c6a3601e0743d8be3aca5aabcc873dc0e426fa82a7a88e73b665e0ca",
+    "src/lib/ProjectContents.svelte": "e62a1e6ece6faa42e95c2f1b61d40aaed8313b87d4218fb2cecad638af1a2bfa",
+    "src/lib/ProjectDeadlineCalendar.svelte": "0542373251edf6913f440fb63d8be326dbc824326995293f36c13c303d822616",
     "src/lib/ProjectPageProperties.svelte": "f0a34139de3a2f1012be53d603aaaa59f9e087863e31eb93b59f4641bed49619",
     "src/lib/ProjectTaskBoard.svelte": "e56a7ed2cf0b107932f84a8d3619cb37b119fee43613d90a355db9fd988cde51",
+    "src/lib/ProjectTaskCalendar.svelte": "66299d23f18fbdb2575d9949556452b91a46e4a3b401c4e838f3632d08e0c0e2",
     "src/lib/ProjectTaskRow.svelte": "8c04af3e5e8c61a4b9bdc1377afb2406a26775f282e47b4df6071910678c92eb",
     "src/lib/ProjectsPage.svelte": "713ac3265756f7e2ebe68a7b2dff81a86eacd787b71b1d7f3cbc491660f87422",
-    "src/lib/RelationPicker.svelte": "3d7c3e93a9a2d57798daad8d7a20bdbdb2324482f7c009c61dd41c15dcdd8894",
+    "src/lib/QuickNavMenu.svelte": "887099492d60ffe32b41f7a7770c9cd5be8eff83b6a9d05c985f616ea130adad",
+    "src/lib/RelationPicker.svelte": "c99edec79eb658905ed5791b9e69f2f166d54a9cf2ccaf7fc7a54f2bf0bc5569",
     "src/lib/ScrollOutline.svelte": "4bd0651196de94b69215c70dfbb78e6766fba93dcd6eee7c99cc1f08f46c102c",
-    "src/lib/SearchDialog.svelte": "b41b124aa17082e091351cb54e41e9429aee09f8cb92d658da7b6299b70da578",
+    "src/lib/SearchDialog.svelte": "611aed74b4ad2fe3aec32e4617d8f31fd429f7758d9aa17a049c14a321091f80",
     "src/lib/SectionIcon.svelte": "4c55a3f779585c21745b0b2d55ad65b38385918064a5053e69bfe2c58d42de91",
-    "src/lib/SettingsDialog.svelte": "352ab826b4cc151c17be2f5ad1718eac215ee0f410e7dc94c727397e87b3f8b5",
-    "src/lib/TagContents.svelte": "8260ecb0584fad113bc4796a8a710d1953ef429a8aabc898aa71cfe3e8adf2b0",
+    "src/lib/SettingsDialog.svelte": "398673554a9e28e0c9b5698c6f81507d9c59631e137ae3f31e119b2563e9b319",
+    "src/lib/TagContents.svelte": "bdde3fc86fd4df1c56f2a2c2f60370a9b24da573d814142082bed0003100da7d",
     "src/lib/TagPageProperties.svelte": "bb195bd4c57d3d98b0010139b6a9f385de382a8db82457e5e1c2306bf7f10a31",
     "src/lib/TagsPage.svelte": "6c25bcc640c26eed40573f49bc42f5a9142fa117f7f6f1ce0bb5d7df633cd886",
+    "src/lib/TaskCalendar.svelte": "974cb8f9d01d8ee0e43596a62c7ebcf8a61e4dd408eb98643ff96f7f2064e29f",
     "src/lib/TaskPageProjectRow.svelte": "461b7be38a037e0b641d46c08acd201fdf6f00cef486f0508a940363c0c00c38",
-    "src/lib/TaskPageProperties.svelte": "50997a9f56dc43902c44b43c6a1def44b8857c1d8c6d5f8b0134f2229ed59431",
-    "src/lib/TasksPage.svelte": "517849ff23daf892190a9720bf728db90f72f64ac0e54a609fe3de4486a0ea41",
+    "src/lib/TaskPageProperties.svelte": "a83ed437dc717e3314b0f43d2a605f5e32aa69089e7526b70d73f4f57b9f3bf0",
+    "src/lib/TasksPage.svelte": "f54d6081809112994e0b1e4f9d0f85d9857c90712952fec079c2dfb275b13ec0",
     "src/lib/WeatherIcon.svelte": "afd3581c752e3214cfc08920af913d30dfbe9fa28d7b4824c0d347c220666367",
     "src/lib/WindowTitlebar.svelte": "8b6015fc01597224926186eec1c578dcd888888480a3ebac214f7c82fb8b19ba",
-    "src/lib/WorkspacePane.svelte": "6194da088759b4aaf6f2c242b19427d438bfbf33131a78468d120901d1bc2dff",
+    "src/lib/WorkspacePane.svelte": "cf773941558fa1e2ed6147f5205b32d3a36a29a2e9438320ea9277687ac6083f",
+    "src/lib/liquid-motion.ts": "44edfb6c0a9b07d37051201c0b3a389c616ea3a117d20354678674d322c197ef",
+    "src/lib/liquid-overlay.ts": "83f4d17cb25d17dc34cd746516add99da7e328d91cabd022ec2b142dc15a47e0",
     "src/lib/primary-color.ts": "6d383ca488491970f71788555116c04f0f8d7ec4cfc88334bf8950cab9063bcd",
     "src/lib/sliding-tabs.ts": "3b35beda1a85e96c452bbf49c719cc3fc31bf8aec6feb2eed86bf62a0d726383",
-    "src/style.css": "c34ff0d0b85512fe97b0c6bf0052a4a4d1ea9ddc882659e4d7c8a1dc9c6ccdf6"
+    "src/style.css": "cbc8234eb475d8f722ee3f7d711d3beb29c279785d19d7fed73478cbb533453c"
   },
   "captures": [
     {
@@ -99,10 +107,10 @@
       },
       "cssSize": {
         "width": 419.8125,
-        "height": 561.28125
+        "height": 567.28125
       },
-      "sha256": "bb11a1ef16baad33e95ea99eacdf103045db9fecc8a8245ad437f923fc644e18",
-      "bytes": 117556
+      "sha256": "2486e5f0007d69dd5fdaada524932455df9e2991c088f658cfdb1e6dd94dd4a5",
+      "bytes": 118400
     },
     {
       "file": "welcome-dark.png",
@@ -125,10 +133,10 @@
       },
       "cssSize": {
         "width": 419.8125,
-        "height": 561.28125
+        "height": 567.28125
       },
-      "sha256": "92f200aa44965ea0e24abdc9a010a40980ba0c3ada5c03f062d4edc6fec12893",
-      "bytes": 113772
+      "sha256": "ffca7c71314c789c847c7c7e914cc1ec269bacc500c78481d0d8ddbbf1d3c9c1",
+      "bytes": 114386
     },
     {
       "file": "overview-light.png",
@@ -153,8 +161,8 @@
         "width": 1440,
         "height": 900
       },
-      "sha256": "a49f203575be0a30de1ee689decf7134bbea475a62b01d1afee1ae63135912d8",
-      "bytes": 1648696
+      "sha256": "7f2ec7682e88e96116bba353df31657694b4b6cc473a6265012b23c2822251c0",
+      "bytes": 1651456
     },
     {
       "file": "sidebar-light.png",
@@ -179,8 +187,8 @@
         "width": 250,
         "height": 856
       },
-      "sha256": "bda36fe6db9261ff4e60d650fbfcb0d5e882c544ec97862854035c7e9887e9e0",
-      "bytes": 916409
+      "sha256": "348f5eefb305c4e9067a706193f12646b8dabdf1d221cdd3c8e41bdb34e9141a",
+      "bytes": 915950
     },
     {
       "file": "cover-selector-light.png",
@@ -205,8 +213,8 @@
         "width": 109.21875,
         "height": 32
       },
-      "sha256": "5c6be35197a90a6eed6a714543406a3e3080b5d9893ac711eedadd764dee980c",
-      "bytes": 12527
+      "sha256": "e6921ad4655fa710e427161633a370884ad4c475ffec85c02635e3c75775025f",
+      "bytes": 12050
     },
     {
       "file": "toolbar-light.png",
@@ -257,8 +265,8 @@
         "width": 1060.40625,
         "height": 530.484375
       },
-      "sha256": "1f19cb90c59666a78ddfcb67234d4b9b2600938a8d7f1404bddcf2cf4646e9de",
-      "bytes": 144881
+      "sha256": "ea8e52e6f5e6323f5fd9958054ef7d3eabd9b1af069a8437d8aaf9d3523c022d",
+      "bytes": 193642
     },
     {
       "file": "birthday-calendar-light.png",
@@ -335,8 +343,8 @@
         "width": 747.21875,
         "height": 564.421875
       },
-      "sha256": "cc65d22feb4aada3b02a0bd15cac49d214a118f8c250fa1e17ebfd0edd498408",
-      "bytes": 193023
+      "sha256": "0c32942bc829569fc77b17c8d7bb223efe27e32259680378616f4ee837b6f28b",
+      "bytes": 193199
     },
     {
       "file": "detail-task-light.png",
@@ -361,8 +369,8 @@
         "width": 1190,
         "height": 856
       },
-      "sha256": "c7977fb2e0d44d819d646e476455c265345c7266e33427458c04db7326cf9ea3",
-      "bytes": 255613
+      "sha256": "3e3bdbaad7f8badf6fc13f60c71c6aa1f5430ee5d24d8f9e0e14f764f7447291",
+      "bytes": 252620
     },
     {
       "file": "detail-project-light.png",
@@ -387,8 +395,8 @@
         "width": 1190,
         "height": 856
       },
-      "sha256": "bb845f8137258a56976d025c697533778c408cf8a390458d035525de6f76f4ad",
-      "bytes": 1248218
+      "sha256": "6d3278e0543680f55d8d0fc4905639922ac5964f6dab25e596f216be8d494888",
+      "bytes": 1248278
     },
     {
       "file": "detail-goal-light.png",
@@ -413,8 +421,8 @@
         "width": 1190,
         "height": 856
       },
-      "sha256": "a995b2dd97b957eb18ac259af9c939386d0fae2d43ad0ff60af671c4fc6de1bc",
-      "bytes": 236512
+      "sha256": "34d0d5be48756c2ace6017c0bc46b9c896c3b274d7085795858beefbb7cb0b02",
+      "bytes": 236810
     },
     {
       "file": "detail-tag-light.png",
@@ -439,8 +447,8 @@
         "width": 1190,
         "height": 856
       },
-      "sha256": "dd11ae1e5d6907600d9e165a7030bcba818f95d80955542d2b751561b948d47b",
-      "bytes": 1225841
+      "sha256": "4030e2c0cc8c8d3e7e2f0da00f96cb2c52b4da93e13c01c34d48327a90f504e7",
+      "bytes": 1225851
     },
     {
       "file": "detail-person-light.png",
@@ -465,8 +473,8 @@
         "width": 1190,
         "height": 856
       },
-      "sha256": "15955a4b29283ca98ba1e37329f1d0190ad60db9bc24d1011aeee2a0e1e3ce57",
-      "bytes": 254130
+      "sha256": "be2f9c5b809691dc1d550c5475a808d5a4659efaa605930cfd8e0a818ca62666",
+      "bytes": 465985
     },
     {
       "file": "detail-milestone-light.png",
@@ -491,8 +499,8 @@
         "width": 1190,
         "height": 856
       },
-      "sha256": "848e292715599a5173078641359141874aea39a213bc5dbf523b3d0bf3ff0be6",
-      "bytes": 206271
+      "sha256": "b3ad56666f2aa88ef054344812935bce84603e64adb37d8b4a6b30a50565af25",
+      "bytes": 205346
     },
     {
       "file": "note-light.png",
@@ -751,8 +759,8 @@
         "width": 436.25,
         "height": 172.4375
       },
-      "sha256": "51d2bdb368e4737a49fee070a2d1f41c92f510e883dbe34dc222b25abd2c5a35",
-      "bytes": 99345
+      "sha256": "a1aee0c875204662f30b2933ac6fedfea13fd6f75665ac20beadcba0654a1898",
+      "bytes": 100011
     },
     {
       "file": "settings-light.png",
@@ -777,8 +785,8 @@
         "width": 1000,
         "height": 640
       },
-      "sha256": "8eefe5592c79963138e5ae6eeaca52094c8fd7aea61a8deeb2bfca69f4223163",
-      "bytes": 595986
+      "sha256": "46374f9a2bdf1ee4b5bf38918bb819420d189264f2298b03c5a584ed26dd3faf",
+      "bytes": 558339
     },
     {
       "file": "settings-color-light.png",
@@ -803,8 +811,8 @@
         "width": 1000,
         "height": 640
       },
-      "sha256": "16134c1968f3d6451ce7cf3a924dfe644ed1c648359b52ccc1f649e0567a4dac",
-      "bytes": 658862
+      "sha256": "a917f12388d8e75e59c10b24c3d776875c51c294cf5cee15c81e0378ccb29143",
+      "bytes": 620604
     },
     {
       "file": "settings-workspace-light.png",
@@ -829,8 +837,8 @@
         "width": 1000,
         "height": 640
       },
-      "sha256": "b11ee5c2333c0cbc0dbab123b186b0c111d000cce3659c582422061bd610843e",
-      "bytes": 555673
+      "sha256": "997a21ced5515d99563e416441d018271ee486ba570caaf84b8fcfa4ae7357f7",
+      "bytes": 517521
     },
     {
       "file": "search-light.png",
@@ -855,8 +863,8 @@
         "width": 780,
         "height": 620
       },
-      "sha256": "499da08fd9953fcc16930349c7457ecff4958654048180dcfc48bc64216628b1",
-      "bytes": 471723
+      "sha256": "cba1fb3c5531163e108f4341cdf8864f23717e0a8e98c01447b79fcbfa5dcc10",
+      "bytes": 389630
     },
     {
       "file": "advanced-search-light.png",
@@ -1011,8 +1019,8 @@
         "width": 1440,
         "height": 900
       },
-      "sha256": "3c552eafcfb2c2c12e000828684d49005524e57dff0ef1c855a8d0769a68a509",
-      "bytes": 2690286
+      "sha256": "fc93ece3943f7bdd2a5be3dad170633add0bf7dc0398393f66bfabed61f0aa98",
+      "bytes": 2685626
     },
     {
       "file": "sidebar-dark.png",
@@ -1037,8 +1045,8 @@
         "width": 250,
         "height": 856
       },
-      "sha256": "5bb1dd7c172457b6f811167a32499b6ab7577442f2cb73d20d1f7fcc89c33b31",
-      "bytes": 903348
+      "sha256": "4062b82eb6d2e45cb9a454b6edfa9250793ac27709534de158e71b0f3775ec6b",
+      "bytes": 903236
     },
     {
       "file": "cover-selector-dark.png",
@@ -1063,8 +1071,8 @@
         "width": 109.21875,
         "height": 32
       },
-      "sha256": "dbf8b38c27ab894cd6d143d1d282156bc040a412ce6a33e62f0e04edea5d36ed",
-      "bytes": 23697
+      "sha256": "b541ada7dadb0b548f5e7cdca9df1db9cfbb178d186a3eccf6ee8bb1b0659df9",
+      "bytes": 15178
     },
     {
       "file": "toolbar-dark.png",
@@ -1115,8 +1123,8 @@
         "width": 1060.40625,
         "height": 530.484375
       },
-      "sha256": "3a040f07a79f7af055a019cf47df0c0d756b58dcbe33dee6a8ccd39d32cd3fd4",
-      "bytes": 151043
+      "sha256": "cc237b1b2913225974116547e1ac455dc6c51c85a48802a5bccd8d3a53eeaf54",
+      "bytes": 200338
     },
     {
       "file": "birthday-calendar-dark.png",
@@ -1193,8 +1201,8 @@
         "width": 747.21875,
         "height": 564.421875
       },
-      "sha256": "5972e037eeec40a7a6fd3be0aeecd72b0e67f99afc0b9d609c8053266d359209",
-      "bytes": 175415
+      "sha256": "c1fc0d57f669d3f9ba0bc788b70320f5f07b0124ff34bb2de6fab5c528421f03",
+      "bytes": 175810
     },
     {
       "file": "detail-task-dark.png",
@@ -1219,8 +1227,8 @@
         "width": 1190,
         "height": 856
       },
-      "sha256": "808303a61c444458a649cad363b1fdb682cacb98c9c8bc31217de948fa575a3d",
-      "bytes": 253490
+      "sha256": "e2203a5418e71a73380daea6cf7415bb42c4ef8e7ebfd02ed0630a67e8c761ae",
+      "bytes": 250510
     },
     {
       "file": "detail-project-dark.png",
@@ -1245,8 +1253,8 @@
         "width": 1190,
         "height": 856
       },
-      "sha256": "bd6c082f95086f3ed113ab1f354badb68a40dee5b4942ef4b8c57a7fe5d21b8b",
-      "bytes": 1236905
+      "sha256": "3a57bed979875b450395f4e3fbf78c555f34bcfb0b869fb7df7a4e5b1e68adba",
+      "bytes": 1236674
     },
     {
       "file": "detail-goal-dark.png",
@@ -1271,8 +1279,8 @@
         "width": 1190,
         "height": 856
       },
-      "sha256": "6f78522371f723cfddeaab44b348243e602d2636c91ff7a94b0caef2d4d63cb9",
-      "bytes": 234712
+      "sha256": "8c91592657fdab3ddb780ed978bb31570f39fefeb9457d1e109223f432720a50",
+      "bytes": 235041
     },
     {
       "file": "detail-tag-dark.png",
@@ -1297,8 +1305,8 @@
         "width": 1190,
         "height": 856
       },
-      "sha256": "2281ee2ea9576b5b146c0bbdf0dc6c34ff4705ebdec90b67a30713089cf8aab0",
-      "bytes": 1212519
+      "sha256": "2b30840b782226509a5f48fff14aa443d62631e8804b1f31a5238b21ac8cc78b",
+      "bytes": 1212871
     },
     {
       "file": "detail-person-dark.png",
@@ -1323,8 +1331,8 @@
         "width": 1190,
         "height": 856
       },
-      "sha256": "b45402cf0f0bb960c4604f3dce7b29f57be2e96ec5566916fdf8dc44789989f8",
-      "bytes": 251462
+      "sha256": "b31df30a9a931cbb698f032f3a9fe852738bbdc00eb95171f1bb1861703be619",
+      "bytes": 459891
     },
     {
       "file": "detail-milestone-dark.png",
@@ -1349,8 +1357,8 @@
         "width": 1190,
         "height": 856
       },
-      "sha256": "e7d9b03ec6b00828056af331daac59549d9f2793a9285e93f17fa373017c49d9",
-      "bytes": 206351
+      "sha256": "eeae4d9dad581731021c9554c030204b91a84d8533645265adf2f3d670e83018",
+      "bytes": 205260
     },
     {
       "file": "note-dark.png",
@@ -1635,8 +1643,8 @@
         "width": 1000,
         "height": 640
       },
-      "sha256": "7c4ab48d2893e549f541201f615077219b4c54ed899f8dd6575c8b31fb0402dd",
-      "bytes": 592238
+      "sha256": "d05a57f44ae087d070400e16bffd974ea4b66c218e795566bdef89b8020583f8",
+      "bytes": 613015
     },
     {
       "file": "settings-color-dark.png",
@@ -1661,8 +1669,8 @@
         "width": 1000,
         "height": 640
       },
-      "sha256": "87a66c77bac71d808d7883f328f8f0d3fc024f61d876f9e4817bc0da550a4793",
-      "bytes": 652276
+      "sha256": "583cb7a2476772ca7f2a8b9314450584f4754ec0e1073edbbd5d904283e02d76",
+      "bytes": 674370
     },
     {
       "file": "settings-workspace-dark.png",
@@ -1687,8 +1695,8 @@
         "width": 1000,
         "height": 640
       },
-      "sha256": "24ffb0f6280d115fb8fdae3b1c85c957379e8880baac2790e4eb909a830c670f",
-      "bytes": 538616
+      "sha256": "747a3fd0ac078219614a6605240b28c50a698bf6c243c139441f54402d03ccba",
+      "bytes": 557775
     },
     {
       "file": "search-dark.png",
@@ -1713,8 +1721,8 @@
         "width": 780,
         "height": 620
       },
-      "sha256": "96bdd852059f059ed24582eb0b5b898efbd0996e0d2e7a6fbc427315aab5479c",
-      "bytes": 490364
+      "sha256": "272b0aed6a7ef31bf090c4f8880372854e5c2b2313ca7e2290fbbc18efe40556",
+      "bytes": 497173
     },
     {
       "file": "advanced-search-dark.png",
@@ -1926,9 +1934,9 @@
     }
   ],
   "buildHashes": {
-    "dist/assets/index-Byz6leee.js": "3e7b94c2ed7fe42e9e3c0ac47cdaee3bbb04fa79f4aebf27bd1394f33bc32225",
-    "dist/assets/index-Cn5v4gSb.css": "d371c14d1e9bf7bceb3b299170d016f4c11ab7b7558420f36d47c8c9b148c3db",
+    "dist/assets/index-BmU88-qb.js": "15ebd1aee327f366d70ac7b49cc8deb88e3e8e73ab3d8700aaa638a72a61da4b",
+    "dist/assets/index-BwrYs_MU.css": "d0dc05632d2b01c02df3611159df449604fbe54f22ad6c2c6f4bf3fc5f03d22e",
     "dist/assets/sidebar-icon-animation-BtloHV6V.js": "53fb22cc126ea76c3daedb6f5d2e46ee16c570c7e572fac0d501e2747e12a8ca",
-    "dist/index.html": "455d684f6408428de76f3e28ae07336eca6e7956d36a0cd65b5deaba25490060"
+    "dist/index.html": "eb8995adb9f8ca866c6f44d51c42f59b37281a18b855500f0fe8f5aec6683658"
   }
 }

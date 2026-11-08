@@ -32,8 +32,8 @@ Todas excluyen principales archivadas y conservan contexto archivado. Todo orden
 | tasks_inbox / Inbox | todo/doing sin relación Project local | created_at asc | Grupos por proyecto |
 | tasks_all / consulta histórica | Todas | created_at asc | Grupos por proyecto |
 | tasks_pending / All | todo/doing | created_at asc | Grupos por proyecto |
-| tasks_calendar_week / Week | Semana de Due, sin fecha y fecha inválida; todos los estados | fecha, sin fecha al final | Calendario semanal; páginas cargadas |
-| tasks_calendar_month / Month | Mes de Due, sin fecha y fecha inválida; todos los estados | fecha, sin fecha al final | Calendario mensual; páginas cargadas |
+| tasks_calendar_week / Week | Semana de Due, sin fecha y fecha inválida; todos los estados | fecha, sin fecha al final | Calendario semanal; hasta 100 tareas, sin Load more ni listado sin fecha |
+| tasks_calendar_month / Month | Mes de Due, sin fecha y fecha inválida; todos los estados | fecha, sin fecha al final | Calendario mensual; hasta 100 tareas, sin Load more ni listado sin fecha |
 | tasks_done / Done | done | updated_at desc | Grupos; menú Más vistas |
 | notes_all / Notes | Todas | updated_at desc | Lista |
 | notes_inbox / Inbox | notas activas sin relación Project local | created_at asc | Lista |
@@ -66,7 +66,7 @@ Abrir/crear workspace entra en Home con sidebar y ancho restante, sin entity-lis
 
 Guardar mantiene abierto el original; **Volver a Home** protege guardar/descartar/cancelar también para buffers de colección. Cancelar/fallar/conflicto no monta Home sobre el buffer. Guardar y continuar confirma una creación una sola vez: un fallo posterior en Home ofrece reintentar lectura, no repetir creación. Completar/reclasificar se hace en el editor con revisión esperada, no mediante checkbox decorativo en Home.
 
-Tabs son botones `aria-pressed` con Tab/Enter/Espacio del navegador; grupos usan details/summary plegables. Load more acumula páginas; una actualización correcta vuelve a la primera y avisa si había páginas adicionales. Actualizar por sección o Home y reactivar la ventana leen originales sin polling ni detector persistente. Las lecturas coordinadas comparten máximo **dos** IPC por workspace; generaciones descartan respuestas antiguas y cancelan encoladas sin liberar anticipadamente el cupo de una operación iniciada. Durante el refresco se conservan los resultados de la misma consulta; si falla, permanecen identificados como anteriores, con reintento y sin usar su cursor. Un cambio de vista, día o workspace retira la identidad anterior. El tablero no permite mover proyectos con datos pendientes o no verificados. Los borradores y el historial del editor se conservan, y una revisión externa con cambios locales produce conflicto.
+Tabs son botones `aria-pressed` con Tab/Enter/Espacio del navegador; grupos usan details/summary plegables. Load more acumula páginas; una actualización correcta vuelve a la primera sin aviso adicional. Actualizar por sección o Home y reactivar la ventana leen originales sin polling ni detector persistente. Las lecturas coordinadas comparten máximo **dos** IPC por workspace; generaciones descartan respuestas antiguas y cancelan encoladas sin liberar anticipadamente el cupo de una operación iniciada. Durante el refresco se conservan los resultados de la misma consulta; si falla, permanecen identificados como anteriores, con reintento y sin usar su cursor. Un cambio de vista, día o workspace retira la identidad anterior. El tablero no permite mover proyectos con datos pendientes o no verificados. Los borradores y el historial del editor se conservan, y una revisión externa con cambios locales produce conflicto.
 
 ## Cobertura y tema
 

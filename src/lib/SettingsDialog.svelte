@@ -1,10 +1,12 @@
 <script lang="ts">
+  import { liquidSurface, liquidTransition } from './liquid-overlay';
   import { onMount } from 'svelte';
   import AppIcon from './AppIcon.svelte';
   import PrimaryColorPicker from './PrimaryColorPicker.svelte';
   import type { ThemePreference } from './theme';
 
-  let { workspace, theme, themeError, smoothWheel, smoothWheelError, onsmoothwheelchange, primaryColor, primaryColorError, onprimarycolorchange, blocked, onthemechange, onworkspacechange, onclose }: {
+  let { anchor = null, workspace, theme, themeError, smoothWheel, smoothWheelError, onsmoothwheelchange, primaryColor, primaryColorError, onprimarycolorchange, blocked, onthemechange, onworkspacechange, onclose }: {
+    anchor?: HTMLElement | null;
     workspace: string;
     theme: ThemePreference;
     themeError: string;
@@ -49,6 +51,7 @@
   });
   function clearSearch() { query = ''; search.focus(); }
   function keydown(event: KeyboardEvent) {
+    if (event.key === 'Escape' && !event.isComposing) { event.preventDefault(); event.stopPropagation(); onclose(); return; }
     if (event.key !== 'Tab') return;
     const controls = [...dialog.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])')].filter(element => element.getClientRects().length);
     const first = controls[0], last = controls.at(-1);
@@ -67,7 +70,7 @@
   });
 </script>
 
-<dialog bind:this={dialog} id="settings-dialog" class="modal settings-dialog glass-popup" aria-labelledby="settings-title" onkeydown={keydown} oncancel={(event) => { event.preventDefault(); onclose(); }}>
+<dialog bind:this={dialog} id="settings-dialog" class="modal settings-dialog glass-popup" use:liquidSurface={{ anchor: () => anchor }} in:liquidTransition|global out:liquidTransition|global aria-labelledby="settings-title" onkeydowncapture={keydown} oncancel={(event) => { event.preventDefault(); onclose(); }}>
   <h2 id="settings-title" class="sr-only">Settings</h2>
   <aside class="settings-sidebar" aria-label="Settings navigation">
     <div class="settings-sidebar-heading"><AppIcon name="settings" size={18} /><span>Settings</span></div>

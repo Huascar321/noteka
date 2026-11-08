@@ -1,7 +1,7 @@
 import type { HomeGroup, HomePage, HomeQuery, HomeView } from './contracts.generated';
 import { ReadLifetime, ReadQueue } from './embedded-reads.ts';
 
-export type HomeReadState = { view: HomeView; page: HomePage | null; busy: boolean; error: string; stale: boolean; notice: string };
+export type HomeReadState = { view: HomeView; page: HomePage | null; busy: boolean; error: string; stale: boolean };
 type RefreshRun = { key: string; started: boolean; pending: boolean; promise: Promise<void> };
 
 // Translate system-generated empty groups by identity, never entity titles.
@@ -25,8 +25,6 @@ export class HomeReader {
   private identity = '';
   private selectedDate: string | undefined;
   private refresh: RefreshRun | null = null;
-  private loadedPages = 0;
-  private resetNotice = '';
   private disposed = false;
   private pageSize: number;
   private appendPages: boolean;
@@ -37,7 +35,7 @@ export class HomeReader {
     this.pageSize = pageSize; this.appendPages = appendPages;
     this.viewPageSizes = viewPageSizes;
     this.query = { view };
-    this.state = { view, page: null, busy: false, error: '', stale: false, notice: '' };
+    this.state = { view, page: null, busy: false, error: '', stale: false };
   }
   load(view?: HomeView, cursor?: string, date?: string): Promise<void> {
     if (this.disposed) return Promise.resolve();
@@ -82,11 +80,8 @@ export class HomeReader {
     const { view, cursor, as_of: date } = query;
     const same = this.identity === key;
     const previous = same && (!cursor || this.appendPages) ? this.state.page : null;
-    const previousPages = same ? this.loadedPages : 0;
-    if (!same) { this.loadedPages = 0; this.resetNotice = ''; }
-    if (cursor) this.resetNotice = '';
     this.query = query; this.identity = key; this.selectedDate = selectedDate;
-    this.state = { view, page: previous, busy: true, error: '', stale: !!previous, notice: this.resetNotice }; this.changed(this.state);
+    this.state = { view, page: previous, busy: true, error: '', stale: !!previous }; this.changed(this.state);
     try {
       const page = await this.queue.run(() => {
         if (run) run.started = true;
@@ -97,14 +92,12 @@ export class HomeReader {
       const append = !!cursor && !!previous;
       const groups = append ? [...previous.groups, ...page.groups.filter(group => !previous.groups.some(old => old.key === group.key))].map(group => ({ ...group, entity_ids: [...new Set([...group.entity_ids, ...(page.groups.find(next => next.key === group.key)?.entity_ids ?? [])])] })) : page.groups;
       const combined = append ? { ...page, groups, offset: previous.offset, items: [...previous.items, ...page.items.filter(item => !previous.items.some(old => old.entity.id === item.entity.id))] } : page;
-      this.loadedPages = append ? previousPages + 1 : 1;
-      if (!cursor && previousPages > 1) this.resetNotice = "Additional pages were reset. Load more if available.";
       const again = !!run?.pending;
-      this.state = { view, page: combined, busy: again, error: '', stale: again, notice: this.resetNotice }; this.changed(this.state);
+      this.state = { view, page: combined, busy: again, error: '', stale: again }; this.changed(this.state);
     } catch (error) {
       if (!this.lifetime.current(token)) return;
       const again = !!run?.pending;
-      this.state = { view, page: previous, busy: again, stale: !!previous, notice: this.resetNotice, error: error instanceof Error ? error.message : "Could not query Home." }; this.changed(this.state);
+      this.state = { view, page: previous, busy: again, stale: !!previous, error: error instanceof Error ? error.message : "Could not query Home." }; this.changed(this.state);
     }
   }
   retry() {

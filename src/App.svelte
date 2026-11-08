@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { liquidSurface, liquidTransition, hasLiquidOverlayWithin, liquidExitFinished } from './lib/liquid-overlay';
   import { onMount, tick, setContext, untrack } from 'svelte';
   import { isTauri } from '@tauri-apps/api/core';
   import { listen } from '@tauri-apps/api/event';
@@ -8,6 +9,7 @@
   import SettingsDialog from './lib/SettingsDialog.svelte';
   import SectionIcon from './lib/SectionIcon.svelte';
   import AppIcon from './lib/AppIcon.svelte';
+  import NotekaMark from './lib/NotekaMark.svelte';
   import WindowTitlebar from './lib/WindowTitlebar.svelte';
   import PanelResizeHandle from './lib/PanelResizeHandle.svelte';
   import { sidebarIconMotion } from './lib/sidebar-icon-motion';
@@ -158,14 +160,20 @@
     focusedId = activeId;
     await paneRefs[activeId]?.navigate(section);
   }
-  function openSearch(mode: 'current' | 'new') {
+  let searchAnchor = $state<HTMLElement | null>(null);
+  let settingsAnchor = $state<HTMLElement | null>(null);
+  function openSearch(mode: 'current' | 'new', anchor: HTMLElement | null = null) {
+    searchAnchor = anchor;
     if (workspace && !blocked && !settingsOpen && (mode === 'new' || !focusedTab?.state.busy)) { searchMode = mode; sidebarOpen = false; }
   }
-  function openSettings() {
+  function openSettings(event?: MouseEvent) {
+    settingsAnchor = event?.currentTarget instanceof HTMLElement ? event.currentTarget : null;
     if (workspace && !blocked && !searchMode) settingsOpen = true;
   }
   async function chooseTarget(target: NavigationTarget, newTab: boolean) {
+    const exit = liquidExitFinished(document.querySelector('.context-search'));
     searchMode = null;
+    await exit;
     await tick();
     if (newTab) addTab(target);
     else if (target.type === 'section') await navigate(target.section);
@@ -289,8 +297,10 @@
   }
   async function leaveWorkspace(closeHost = false) {
     if (blocked || searchMode) return;
+    const exit = liquidExitFinished(document.getElementById('settings-dialog'));
     preparing = true; error = ''; settingsOpen = false;
     try {
+      await exit;
       await tick();
       // Every mounted pane participates, including buffers in inactive tabs.
       const ordered = [...tabs.filter(tab => tab.id === activeId), ...tabs.filter(tab => tab.id !== activeId)];
@@ -315,7 +325,7 @@
       return;
     }
     const command = event.metaKey || event.ctrlKey;
-    if (event.key === 'Escape' && visiblePeek && !searchMode && !document.querySelector('dialog[open], .peek-mode-menu, .page-tool-panel:not([hidden]), .relation-picker')) {
+    if (event.key === 'Escape' && visiblePeek && !searchMode && !document.querySelector('dialog[open]') && !hasLiquidOverlayWithin(document.getElementById(`pane-${visiblePeek.id}`))) {
       // Let editor menus consume Escape before closing their containing peek.
       const id = visiblePeek.id; queueMicrotask(() => { if (!event.defaultPrevented && !event.isComposing) void closePeek(id); });
       return;
@@ -370,12 +380,12 @@
 
 <div class="app-window" class:resizing-panels={resizing !== null} style:--sidebar-width={`${sidebarWidth}px`} style:--side-peek-width={`${sidePeekWidth}px`}>
 <WindowTitlebar workspaceOpen={workspace !== null} {sidebarVisible} blocked={blocked || resizing !== null || searchMode !== null || settingsOpen || activePeek?.presentation === 'center'} ontoggle={toggleSidebar} onclose={() => leaveWorkspace(true)} onerror={(message) => { error = message; }}>
-    <div class="workspace-tabs" role="tablist" aria-label="Open tabs">{#each rootTabs as tab (tab.id)}<div class="workspace-tab" class:active={tab.id === activeId}><button role="tab" id={`tab-${tab.id}`} aria-selected={tab.id === activeId} aria-controls={`pane-${tab.id}`} tabindex={tab.id === activeId ? 0 : -1} disabled={blocked || activePeek?.presentation === 'center'} onclick={() => activateTab(tab.id)} onkeydown={(event) => tabKey(event, tab.id)} title={tab.state.title}>{#if tab.state.sectionPage}<SectionIcon section={tab.state.section} size={15} />{:else}<AppIcon name={tab.state.icon} color={tab.state.color} size={15} />{/if}<span class="tab-title">{tab.state.title}</span>{#if tab.state.dirty || tabs.some(child => child.ownerId === tab.id && child.state.dirty)}<span class="tab-dirty" aria-label="Unsaved changes">●</span>{/if}</button><button class="tab-close" aria-label={`Close tab ${tab.state.title}`} title="Close tab" disabled={blocked || activePeek?.presentation === 'center'} onclick={() => void closeTab(tab.id)}><AppIcon name="close" size={14} /></button></div>{/each}</div><button class="icon-button new-tab" aria-label="New tab" title="New tab (⌘/Ctrl T)" disabled={blocked || activePeek?.presentation === 'center'} onclick={() => openSearch('new')}><AppIcon name="plus" size={17} /></button>
+    <div class="workspace-tabs" role="tablist" aria-label="Open tabs">{#each rootTabs as tab (tab.id)}<div class="workspace-tab" class:active={tab.id === activeId}><button role="tab" id={`tab-${tab.id}`} aria-selected={tab.id === activeId} aria-controls={`pane-${tab.id}`} tabindex={tab.id === activeId ? 0 : -1} disabled={blocked || activePeek?.presentation === 'center'} onclick={() => activateTab(tab.id)} onkeydown={(event) => tabKey(event, tab.id)} title={tab.state.title}>{#if tab.state.sectionPage}<SectionIcon section={tab.state.section} size={15} />{:else}<AppIcon name={tab.state.icon} color={tab.state.color} size={15} />{/if}<span class="tab-title">{tab.state.title}</span>{#if tab.state.dirty || tabs.some(child => child.ownerId === tab.id && child.state.dirty)}<span class="tab-dirty" aria-label="Unsaved changes">●</span>{/if}</button><button class="tab-close" aria-label={`Close tab ${tab.state.title}`} title="Close tab" disabled={blocked || activePeek?.presentation === 'center'} onclick={() => void closeTab(tab.id)}><AppIcon name="close" size={14} /></button></div>{/each}</div><button class="icon-button new-tab" aria-label="New tab" title="New tab (⌘/Ctrl T)" disabled={blocked || activePeek?.presentation === 'center'} onclick={event => openSearch('new', event.currentTarget)}><AppIcon name="plus" size={17} /></button>
   </WindowTitlebar>
 
 {#if !workspace}
   <main class="welcome">
-    <div class="brandmark">n<span>.</span></div><p class="eyebrow">YOUR SPACE</p><h1>Noteka</h1>
+    <div class="brandmark"><NotekaMark size={68} /></div><p class="eyebrow">YOUR SPACE</p><h1 class="noteka-wordmark">Noteka</h1>
     <p>A place for your notes and what comes next.<br />No accounts. No models. Your data stays local.</p>
     <form onsubmit={(event) => { event.preventDefault(); void selectWorkspace(false); }}>
       <label for="workspace-path">Workspace path</label><input id="workspace-path" class="glass-field" bind:value={path} placeholder="Leave blank to use the Noteka data directory" disabled={working} />
@@ -388,8 +398,8 @@
     {#if compactSidebar}<button class="sidebar-backdrop" class:visible={sidebarOpen} aria-label="Close sidebar" aria-hidden={!sidebarOpen} inert={!sidebarOpen} tabindex="-1" onclick={() => { sidebarOpen = false; }}></button>{/if}
     <aside class="desktop-sidebar" class:sidebar-narrow={sidebarWidth < 230} id="workspace-sidebar" aria-label="Workspace" aria-hidden={!sidebarVisible} inert={!sidebarVisible || activePeek?.presentation === 'center'}>
       <div class="sidebar-scroll">
-      <div class="workspace-brand"><span class="tiny-mark">n.</span><strong>Noteka</strong></div>
-      <div class="sidebar-tools"><button use:sidebarIconMotion class="sidebar-search" aria-label="Search" title="Search (⌘/Ctrl K)" disabled={blocked || activeTab?.state.busy} onclick={() => openSearch('current')}><AppIcon name="search" size={15} /><span>Search</span><kbd>⌘ K</kbd></button><button use:sidebarIconMotion class="icon-button collections-shortcut" aria-label="Collections" title="Collections" disabled={blocked || activeTab?.state.busy} onclick={() => void navigate('collections')}><AppIcon name="collections" size={18} /></button></div>
+      <div class="workspace-brand"><NotekaMark size={28} /><span class="noteka-wordmark">Noteka</span></div>
+      <div class="sidebar-tools"><button use:sidebarIconMotion class="sidebar-search" aria-label="Search" title="Search (⌘/Ctrl K)" disabled={blocked || activeTab?.state.busy} onclick={event => openSearch('current', event.currentTarget)}><AppIcon name="search" size={15} /><span>Search</span><kbd>⌘ K</kbd></button><button use:sidebarIconMotion class="icon-button collections-shortcut" aria-label="Collections" title="Collections" disabled={blocked || activeTab?.state.busy} onclick={() => void navigate('collections')}><AppIcon name="collections" size={18} /></button></div>
       <p class="sidebar-caption">WORKSPACE</p>
       <nav aria-label="Sections">{#if activeSectionIndex >= 0}<span class="sidebar-nav-indicator" style={`--active-index:${activeSectionIndex}`} aria-hidden="true"></span>{/if}{#each PRIMARY_SECTIONS as section}<button use:sidebarIconMotion class:active={activeTab?.state.section === section.id} aria-current={activeTab?.state.section === section.id ? 'page' : undefined} title={section.label} disabled={blocked || activeTab?.state.busy} onclick={() => void navigate(section.id)}><span class="nav-icon" aria-hidden="true"><SectionIcon section={section.id} size={18} /></span><span class="sidebar-nav-label">{section.label}</span></button>{/each}</nav>
       <div class="sidebar-bottom"><button class="sidebar-settings" aria-haspopup="dialog" aria-controls={settingsOpen ? 'settings-dialog' : undefined} aria-expanded={settingsOpen} disabled={blocked} onclick={openSettings}><AppIcon name="settings" size={18} /><span>Settings</span></button></div>
@@ -406,15 +416,15 @@
           {@const shown = tab.ownerId ? tab.ownerId === activeId : tab.id === activeId}
           {@const visiblyShown = shown && !(tab.ownerId && tab.presentation === 'side' && (tab.sideHidden || tab.closing))}
           {@const covered = !tab.ownerId && activePeek?.presentation === 'full'}
-          <div class="workspace-tab-panel" class:active={tab.id === activeId} class:peek={!!tab.ownerId} class:peek-side={!!tab.ownerId && tab.presentation === 'side'} class:peek-center={!!tab.ownerId && tab.presentation === 'center'} class:peek-full={!!tab.ownerId && tab.presentation === 'full'} class:peek-hidden={!!tab.ownerId && tab.presentation === 'side' && !!(tab.sideHidden || tab.closing)} class:peek-narrow={sidePeekWidth < 480} id={`pane-${tab.id}`} role={tab.ownerId ? tab.presentation === 'center' ? 'dialog' : 'region' : 'tabpanel'} aria-modal={tab.ownerId && tab.presentation === 'center' ? true : undefined} aria-label={tab.ownerId ? `Details: ${tab.state.title}` : undefined} aria-labelledby={!tab.ownerId ? `tab-${tab.id}` : undefined} aria-hidden={(!visiblyShown || covered) && !tab.state.guarded ? true : undefined} hidden={!shown} inert={!visiblyShown || (!tab.ownerId && !tab.state.guarded && (covered || activePeek?.presentation === 'center'))} onfocusin={() => { focusedId = tab.id; }} onpointerdown={() => { focusedId = tab.id; }}>
-            <WorkspacePane bind:this={paneRefs[tab.id]} {workspace} paneId={tab.id} active={visiblyShown && focusedId === tab.id} visible={visiblyShown && !covered} sessionActive={shown} animateAlongsideSidePeek={!tab.ownerId && tab.id === activeId && sideVisible} blocked={searchMode !== null || preparing || settingsOpen} searchOpen={searchMode !== null} initialTarget={tab.initialTarget} onstate={updateTab} onrequestdetail={!tab.ownerId ? target => openDetail(tab.id, target) : undefined} onnavigatesection={tab.ownerId ? async section => { await navigate(section); } : undefined} peekMode={tab.presentation ?? 'full'} {defaultPeekMode} {peekPreferenceError} onpresent={mode => presentPane(tab.id, mode)} ondefaultpeek={changeDefaultPeekMode} onclosepeek={tab.ownerId ? () => { void closePeek(tab.id); } : undefined} />
+          <div class="workspace-tab-panel" use:liquidSurface={{ enabled: !!tab.ownerId && tab.presentation === 'center', anchor: () => tab.returnFocus }} in:liquidTransition|global out:liquidTransition|global class:active={tab.id === activeId} class:peek={!!tab.ownerId} class:peek-side={!!tab.ownerId && tab.presentation === 'side'} class:peek-center={!!tab.ownerId && tab.presentation === 'center'} class:peek-full={!!tab.ownerId && tab.presentation === 'full'} class:peek-hidden={!!tab.ownerId && tab.presentation === 'side' && !!(tab.sideHidden || tab.closing)} class:peek-narrow={sidePeekWidth < 480} id={`pane-${tab.id}`} role={tab.ownerId ? tab.presentation === 'center' ? 'dialog' : 'region' : 'tabpanel'} aria-modal={tab.ownerId && tab.presentation === 'center' ? true : undefined} aria-label={tab.ownerId ? `Details: ${tab.state.title}` : undefined} aria-labelledby={!tab.ownerId ? `tab-${tab.id}` : undefined} aria-hidden={(!visiblyShown || covered) && !tab.state.guarded ? true : undefined} hidden={!shown} inert={!visiblyShown || (!tab.ownerId && !tab.state.guarded && (covered || activePeek?.presentation === 'center'))} onfocusin={() => { focusedId = tab.id; }} onpointerdown={() => { focusedId = tab.id; }}>
+            <WorkspacePane bind:this={paneRefs[tab.id]} {workspace} paneId={tab.id} active={visiblyShown && focusedId === tab.id} visible={visiblyShown && !covered} sessionActive={shown} blocked={searchMode !== null || preparing || settingsOpen} initialTarget={tab.initialTarget} onstate={updateTab} onrequestdetail={!tab.ownerId ? target => openDetail(tab.id, target) : undefined} onnavigatesection={tab.ownerId ? async section => { await navigate(section); } : undefined} peekMode={tab.presentation ?? 'full'} {defaultPeekMode} {peekPreferenceError} onpresent={mode => presentPane(tab.id, mode)} ondefaultpeek={changeDefaultPeekMode} onclosepeek={tab.ownerId ? () => { void closePeek(tab.id); } : undefined} />
             {#if tab.ownerId && tab.presentation === 'side'}<PanelResizeHandle label="Resize side peek" controls={`pane-${tab.id}`} edge="left" width={sidePeekWidth} min={sidePeekLimits.min} max={sidePeekLimits.max} disabled={!visiblyShown || blocked || searchMode !== null || settingsOpen} onstart={() => beginResize('sidePeek')} onresize={width => resizePanel('sidePeek', width)} onend={endResize} />{/if}
           </div>
         {/each}
       </div>
     </section>
   </div>
-  {#if searchMode}<SearchDialog workspace={workspace.path} mode={searchMode} onclose={() => { searchMode = null; }} onchoose={chooseTarget} />{/if}
-  {#if settingsOpen}<SettingsDialog {primaryColor} {primaryColorError} onprimarycolorchange={changePrimaryColor} workspace={workspace.path} {theme} {themeError} {smoothWheel} {smoothWheelError} onsmoothwheelchange={changeSmoothWheel} {blocked} onthemechange={changeTheme} onworkspacechange={() => { void leaveWorkspace(); }} onclose={() => { settingsOpen = false; }} />{/if}
+  {#if searchMode}<SearchDialog anchor={searchAnchor} workspace={workspace.path} mode={searchMode} onclose={() => { searchMode = null; }} onchoose={chooseTarget} />{/if}
+  {#if settingsOpen}<SettingsDialog anchor={settingsAnchor} {primaryColor} {primaryColorError} onprimarycolorchange={changePrimaryColor} workspace={workspace.path} {theme} {themeError} {smoothWheel} {smoothWheelError} onsmoothwheelchange={changeSmoothWheel} {blocked} onthemechange={changeTheme} onworkspacechange={() => { void leaveWorkspace(); }} onclose={() => { settingsOpen = false; }} />{/if}
 {/if}
 </div>

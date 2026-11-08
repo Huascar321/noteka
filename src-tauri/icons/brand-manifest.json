@@ -1,0 +1,21 @@
+{
+  "generator": "scripts/generate-brand.mjs",
+  "xcode": "Xcode 27.2\nBuild version 27B52",
+  "sources": {
+    "src/lib/noteka-brand.json": "684b9ee3b8152529b2c1d527834dd1338078136e9b60983c4642435c8704745b",
+    "src-tauri/icons/Noteka.icon/icon.json": "a5eab871de82a0c2bff8124fad64ea26feae862ad318aad4392a8bd3a249e832",
+    "scripts/generate-brand.mjs": "a6d40c16f58c02eb2c95d982bc449c328f060dd2778622b285ecb04916c0fd77",
+    "scripts/normalize-icon-png.swift": "63d8c9f4b308ab0bc3397fd55264717903518278efc888ae7a9eb38859af63bc"
+  },
+  "outputs": {
+    "src-tauri/icons/Noteka.icon/Assets/note.svg": "e7c865c6cdc32cf1c60620d215dde5ca1dba2865fb238129f44e0c18060cdbdc",
+    "src-tauri/icons/Noteka.icon/Assets/peel.svg": "0ddb56e3c18f311c49964df35bdef7f949b73315a3fe11ae979b6adee2fc5556",
+    "public/noteka.svg": "a789fbfd067c0d76fdbc5dffe2081c1836af024311c13afd4cd9b0cc58d2f655",
+    "src-tauri/icons/32x32.png": "83d3801b3f7aea76ef0d39306513115533b599f0aaf8c6b7b2782bbee9a65c29",
+    "src-tauri/icons/128x128.png": "8f210f144432ae84132b819d62fa91eae71f7649658b208201d48419fe446bb9",
+    "src-tauri/icons/256x256.png": "38abcff2f972b1fbc325c8f2414a36889b780aecce00e1b261fe5f7d531c9e05",
+    "src-tauri/icons/icon.icns": "e9f2bf3ca5675ea075e2f9936e3b6a5381ac61f5721e0482f8fb058b912aa75a",
+    "src-tauri/icons/icon.ico": "e060ee7e7eaedf9dd971a64571d1d036c08d038f5ea547ff42410dab741d3e47",
+    "src-tauri/icons/Assets.car": "de53774524322b5dc322621ad28f3f3747db3e215289ae9169dc1113328a6bfe"
+  }
+}

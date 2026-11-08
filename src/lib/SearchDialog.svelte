@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { liquidSurface, liquidTransition } from './liquid-overlay';
   import { onMount, tick } from 'svelte';
   import { operate } from './api';
   import AppIcon from './AppIcon.svelte';
@@ -6,7 +7,8 @@
   import { entityIcon, entityIconColor } from './entity-appearance';
   import type { NavigationTarget } from './navigation';
   import type { EntityKind } from './contracts.generated';
-  let { workspace, mode, onclose, onchoose }: {
+  let { anchor = null, workspace, mode, onclose, onchoose }: {
+    anchor?: HTMLElement | null;
     workspace: string; mode: 'current' | 'new'; onclose: () => void;
     onchoose: (target: NavigationTarget, newTab: boolean) => Promise<void>;
   } = $props();
@@ -29,6 +31,7 @@
     if (result) void onchoose(resultTarget(result), newTab);
   }
   function keydown(event: KeyboardEvent) {
+    if (event.key === 'Escape' && !event.isComposing) { event.preventDefault(); event.stopPropagation(); onclose(); return; }
     if (event.isComposing || event.target instanceof HTMLSelectElement || (event.target instanceof HTMLInputElement && event.target !== input)) return;
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault(); reader?.move(event.key === 'ArrowDown' ? 1 : -1);
@@ -52,7 +55,7 @@
   });
 </script>
 
-<dialog bind:this={dialog} class="context-search glass-popup" aria-labelledby="context-search-title" oncancel={(event) => { event.preventDefault(); onclose(); }} onclick={(event) => { if (event.target === dialog) onclose(); }} onkeydown={keydown}>
+<dialog bind:this={dialog} class="context-search glass-popup" use:liquidSurface={{ anchor: () => anchor }} in:liquidTransition|global out:liquidTransition|global aria-labelledby="context-search-title" oncancel={(event) => { event.preventDefault(); onclose(); }} onclick={(event) => { if (event.target === dialog) onclose(); }} onkeydowncapture={keydown}>
   <h2 class="sr-only" id="context-search-title">{mode === 'new' ? "Open in a new tab" : "Search workspace"}</h2>
   <div class="context-search-input"><AppIcon name="search" size={16} /><input bind:this={input} bind:value={query} aria-label="Search workspace" role="combobox" aria-expanded="true" aria-controls="context-search-results" aria-activedescendant={selected ? `search-result-${searchState.selected}` : undefined} autocomplete="off" placeholder="Search" maxlength="256" /><button class="icon-button" aria-label="Close search" title="Close (Esc)" onclick={onclose}><AppIcon name="close" size={14} /></button></div>
   <div class="context-search-filters"><button class:active={filters} aria-expanded={filters} onclick={() => { filters = !filters; }}>Filters{kind || archived || related ? ' · activos' : ''}</button><span>{mode === 'new' ? "Open in new tab" : "Local search"}</span></div>

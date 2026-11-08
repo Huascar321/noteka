@@ -1,0 +1,78 @@
+{
+  "browser": "chromium",
+  "browserVersion": "156.0.8078.80",
+  "sourceHashes": {
+    "src/App.svelte": "22b8039fab593461a9124222e08764031db5bf3054429c57c69f7c384c3abc2c",
+    "src/style.css": "c59be41f24631b449803ad2c0674eb208d707d593e841c93f28b13613a516e73",
+    "src/lib/NotekaMark.svelte": "3f71840282793fb71013e346faaadd339f9ca96e5bd6bc7d66ab44d85007935a",
+    "src/lib/noteka-brand.json": "684b9ee3b8152529b2c1d527834dd1338078136e9b60983c4642435c8704745b",
+    "public/noteka.svg": "a789fbfd067c0d76fdbc5dffe2081c1836af024311c13afd4cd9b0cc58d2f655",
+    "scripts/capture-brand.mjs": "35a2e97549ef1a17cceafc2bdf5d042668fd9ed6c954529f3a0f17adecc166dc",
+    "scripts/capture-brand.cjs": "863574f4ff3a100985f9a5211a262bfce5bd75314a541965bc339de2a013702e"
+  },
+  "captures": [
+    {
+      "file": "welcome-light.png",
+      "sha256": "f991bdc56297c4f8b37cc0297ab6afcd5d450df972936433586bd5399213c6a9"
+    },
+    {
+      "file": "sidebar-light.png",
+      "sha256": "89863a38874c6092d5e2ea5cb9f76a09c4d62f6a51be5d5746069e0f2586e63d"
+    },
+    {
+      "file": "header-light.png",
+      "sha256": "9be834816aaa389e147f3f8dc7c4f1cb7785bd82b359d7219b2d78d95a72c82b"
+    },
+    {
+      "file": "sidebar-compact-light.png",
+      "sha256": "c6bbba185cc0e7452249c1fb406c6ce7147a96df21868fad21c4c55d684160cd"
+    },
+    {
+      "file": "header-contrast-light.png",
+      "sha256": "0c0f0be4cc697b986ee28eefa199b2baedafc65e4c2957a858c1897333e805df"
+    },
+    {
+      "file": "welcome-dark.png",
+      "sha256": "d4c1c93e623170da2f3d786c54042cdda2d6836902cabf3f31c31f6fbc99b80e"
+    },
+    {
+      "file": "sidebar-dark.png",
+      "sha256": "8d03e53b758346d621ee83288f65120a2d8bc67c3e089dc88cffbb577f4bd370"
+    },
+    {
+      "file": "header-dark.png",
+      "sha256": "ddde5c5f8ad13114c0c3867e3d3068f6a1d65e0be0a0146866bb4efda5f1c681"
+    },
+    {
+      "file": "sidebar-compact-dark.png",
+      "sha256": "4d0059598ab1e5906b99fb6941270c3522bd3ea29ba9f7666f22c17da6840e88"
+    },
+    {
+      "file": "header-contrast-dark.png",
+      "sha256": "76f848d8c52363c34d1b7fe3383b79bf6382b85b51677250f48e2fed2bc9b2a2"
+    }
+  ],
+  "checks": [
+    "light: welcome uses the SVG mark",
+    "light: lighter wordmark",
+    "light: sidebar identity",
+    "light: decorative mark does not add a keyboard stop",
+    "light: Notes navigation preserved",
+    "light: Search opens and closes",
+    "light: compact sidebar keeps the name",
+    "light: high contrast uses theme ink",
+    "light: brand visible at 420px",
+    "dark: welcome uses the SVG mark",
+    "dark: lighter wordmark",
+    "dark: sidebar identity",
+    "dark: decorative mark does not add a keyboard stop",
+    "dark: Notes navigation preserved",
+    "dark: Search opens and closes",
+    "dark: compact sidebar keeps the name",
+    "dark: high contrast uses theme ink",
+    "dark: brand visible at 420px",
+    "local favicon uses the new identity without the old dot",
+    "no page errors or external requests"
+  ],
+  "scope": "Compiled frontend + real CLI/SQLite synthetic workspace; no native screen or personal data."
+}

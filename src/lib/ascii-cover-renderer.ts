@@ -1,19 +1,26 @@
 import { AsciiOceanRenderer } from './ascii-ocean-renderer';
 import { AsciiCreaturesRenderer } from './ascii-creatures';
+import { DEFAULT_PRIMARY_COLOR } from './primary-color';
 import { coverSceneAt, type CoverScene } from './ascii-cover-scene';
 export class AsciiCoverRenderer {
   private ctx:CanvasRenderingContext2D;
   private canvases:Record<CoverScene,HTMLCanvasElement>={sharks:document.createElement('canvas'),koi:document.createElement('canvas'),jellyfish:document.createElement('canvas')};
   private sharks:AsciiOceanRenderer;private koi:AsciiCreaturesRenderer;private jellyfish:AsciiCreaturesRenderer;
-  private width=0;private height=0;private dpr=1;private seconds=0;
+  private width=0;private height=0;private dpr=1;private dark=true;private ink='';private seconds=0;
   constructor(private canvas:HTMLCanvasElement,private seed=Math.floor(Math.random()*2147483647)){
     const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas2D unavailable');this.ctx=ctx;
     this.sharks=new AsciiOceanRenderer(this.canvases.sharks);this.koi=new AsciiCreaturesRenderer(this.canvases.koi,'koi',seed);this.jellyfish=new AsciiCreaturesRenderer(this.canvases.jellyfish,'jellyfish',seed);
   }
-  resize(width:number,height:number,dpr:number,dark:boolean,ink:string){
-    this.width=Math.max(0,width);this.height=Math.max(0,height);this.dpr=Math.min(2,Math.max(1,dpr));
+  resize(width:number,height:number,dpr:number,dark:boolean,ink:string,primary=DEFAULT_PRIMARY_COLOR){
+    const scale=Math.min(2,Math.max(1,dpr));
+    // An accent change only needs the koi atlas; sizing, theme and ink keep the layers.
+    if(width===this.width&&height===this.height&&scale===this.dpr&&dark===this.dark&&ink===this.ink){
+      if(this.koi.setPrimary(primary))this.draw(this.seconds,0);
+      return;
+    }
+    this.width=Math.max(0,width);this.height=Math.max(0,height);this.dpr=scale;this.dark=dark;this.ink=ink;
     this.canvas.width=Math.round(width*this.dpr);this.canvas.height=Math.round(height*this.dpr);
-    this.sharks.resize(width,height,dpr,dark,ink);this.koi.resize(width,height,dpr,dark,ink);this.jellyfish.resize(width,height,dpr,dark,ink);this.draw(this.seconds,0);
+    this.sharks.resize(width,height,dpr,dark,ink);this.koi.resize(width,height,dpr,dark,ink,primary);this.jellyfish.resize(width,height,dpr,dark,ink);this.draw(this.seconds,0);
   }
   draw(seconds:number,delta:number){
     this.seconds=seconds;if(!this.width||!this.height)return;

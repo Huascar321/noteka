@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { liquidSurface, liquidTransition } from './liquid-overlay';
   import { tick } from 'svelte';
   import AppIcon from './AppIcon.svelte';
   import { PEEK_MODES, type PeekMode, type PeekPresentation } from './peek-mode';
@@ -41,7 +42,7 @@
 <div class="peek-mode-control" bind:this={root}>
   <button bind:this={trigger} class="icon-button" type="button" aria-label="Switch peek mode" title="Switch peek mode" aria-haspopup="menu" aria-expanded={open} aria-controls={open ? id : undefined} {disabled} onclick={toggle} onkeydown={event => { if (event.key === 'ArrowDown') { event.preventDefault(); open = true; defaults = false; void focusChoice(); } }}><AppIcon name={PEEK_MODES.find(item => item.id === mode)?.icon ?? 'expand'} size={18} /></button>
   {#if open}
-    <div bind:this={menu} id={id} class="peek-mode-menu glass-menu" role="menu" tabindex="-1" aria-label={defaults ? 'Default opening mode' : 'Peek mode'} onkeydown={keydown} style:left={`${position.left}px`} style:top={`${position.top}px`} style:max-height={`${position.maxHeight}px`}>
+    <div bind:this={menu} id={id} class="peek-mode-menu glass-menu" use:liquidSurface={{ anchor: () => trigger }} in:liquidTransition|global out:liquidTransition|global role="menu" tabindex="-1" aria-label={defaults ? 'Default opening mode' : 'Peek mode'} onkeydown={keydown} style:left={`${position.left}px`} style:top={`${position.top}px`} style:max-height={`${position.maxHeight}px`}>
       {#if defaults}<button type="button" role="menuitem" tabindex="-1" class="peek-menu-back" onclick={() => { defaults = false; void focusChoice(); }}><AppIcon name="arrow-left" size={17} />Default opening mode</button><p class="peek-default-scope">All views · New openings</p>{/if}
       {#each PEEK_MODES as item}
         <button type="button" role={item.id === 'tab' && !defaults ? 'menuitem' : 'menuitemradio'} aria-checked={item.id === 'tab' && !defaults ? undefined : (defaults ? defaultMode : mode) === item.id} tabindex="-1" onclick={() => choose(item.id)}><AppIcon name={item.icon} size={19} /><span>{item.label}</span>{#if (defaults ? defaultMode : mode) === item.id}<AppIcon name="check" size={17} />{/if}</button>

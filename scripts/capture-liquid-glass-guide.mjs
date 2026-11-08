@@ -18,7 +18,7 @@ if (!existsSync('dist/index.html') || !existsSync('target/debug/noteka')) {
 }
 const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex');
 const sources = ['src/style.css', 'src/lib/primary-color.ts', 'src/App.svelte',
-  ...readdirSync('src/lib').filter(name => name.endsWith('.svelte') || name === 'sliding-tabs.ts').map(name => 'src/lib/' + name),
+  ...readdirSync('src/lib').filter(name => name.endsWith('.svelte') || ['sliding-tabs.ts', 'liquid-overlay.ts', 'liquid-motion.ts'].includes(name)).map(name => 'src/lib/' + name),
   'scripts/capture-liquid-glass-guide.mjs', 'scripts/capture-liquid-glass-guide.cjs'];
 const sourceHashes = Object.fromEntries(sources.sort().map(path => [path, hash(path)]));
 const output = resolve('output/playwright/liquid-glass-guide', browser);

@@ -83,7 +83,7 @@ async (page) => {
     await notes.getByText('Updating; showing previous results.').waitFor();
     check(await noteRows().count() === 20, 'refresh keeps both pages visible');
     check(await notes.getByRole('button', { name: 'Load more', exact: true }).isDisabled(), 'old cursor disabled while refreshing');
-    await notes.getByText('Additional pages were reset. Load more if available.').waitFor();
+    await page.waitForFunction(() => document.querySelectorAll('.home [data-home-section="note"] .home-item').length === 10);
     check(await noteRows().count() === 10, 'successful refresh returns to the first page');
     await page.waitForFunction(() => document.activeElement?.matches('.home [data-home-section="note"] .home-tabs [aria-pressed="true"]'));
     check(true, 'keyboard focus returns to the current view when its row is removed');

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { liquidSurface, liquidTransition } from './liquid-overlay';
   import AppIcon from './AppIcon.svelte';
   import { ICON_COLORS, ICON_OPTIONS, iconColor } from './icon-set';
   import { visualIconName } from './visual-icon';
@@ -43,7 +44,7 @@
     style:width={`${size + 14}px`} style:height={`${size + 14}px`}
   ><AppIcon name={current} color={currentColor ?? undefined} {size} /></button>
   {#if open}
-    <div class="icon-panel glass-menu" role="dialog" aria-label="Page icon">
+    <div class="icon-panel glass-menu" use:liquidSurface={{ anchor: () => root?.querySelector('.icon-trigger') }} in:liquidTransition|global out:liquidTransition|global role="dialog" aria-label="Page icon">
       <p class="icon-caption">Icon</p>
       <div class="icon-grid">
         {#each ICON_OPTIONS as option}

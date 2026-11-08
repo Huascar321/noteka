@@ -54,7 +54,7 @@ test('20 refresh events coalesce before the read and retain at most one trailing
   second.resolve(page('notes_inbox')); await Promise.all([started, ...early, ...during]);
   assert.equal(calls.length, 2); assert.equal(reader.state.busy, false); assert.equal(reader.state.stale, false);
 });
-test('refresh preserves rows, rejects old cursors, reports resets and keeps stale rows on failure', async () => {
+test('refresh preserves rows, rejects old cursors and keeps stale rows on failure', async () => {
   const gate = deferred(), queries = []; let fail = false;
   const result = (ids, cursor) => ({ ...page('notes_all'), items: ids.map(id => ({ entity: { id } })), next_cursor: cursor });
   const reader = new HomeReader('notes_all', new ReadQueue(), async query => {
@@ -72,7 +72,6 @@ test('refresh preserves rows, rejects old cursors, reports resets and keeps stal
   gate.resolve(result(['fresh'], 'new-cursor')); await refresh;
   assert.deepEqual(reader.state.page.items.map(item => item.entity.id), ['fresh']);
   assert.equal(queries.at(-1).as_of, undefined, 'an implicit today stays implicit after pagination');
-  assert.match(reader.state.notice, /Additional pages were reset/);
   fail = true; await reader.load();
   assert.equal(reader.state.error, 'offline'); assert.equal(reader.state.stale, true); assert.equal(reader.state.page.items[0].entity.id, 'fresh');
   await reader.load(undefined, 'new-cursor'); assert.equal(queries.length, 4);

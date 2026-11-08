@@ -1,4 +1,46 @@
+> Extensión 07/11/2026: `share-liquid-overlay-transitions` comparte la transición
+> Due aceptada (400/200 ms) entre menús, pickers, herramientas, Nav/opciones,
+> Search, Settings, confirmaciones y Center peek. Los diálogos y Center peek
+> revelan contenido real desde el inicio, recortado al vidrio detrás del texto.
+> Material y texto separados,
+> buffers y foco conservados; nativos y disclosures documentales mantienen su
+> patrón. Ver [inventario y evidencia](verification-liquid-overlays.md).
+> Cambio local activo, sin sync/archivo ni publicación.
+
+> Ajuste 07/11/2026: `animate-due-calendar-liquid-morph` aproxima la continuidad
+> Liquid Glass de Apple en Due de Task: superficie desde el rectángulo del campo,
+> expansión elástica 400 ms, texto independiente y repliegue 200 ms desde el frame
+> actual. Conserva selección/guardado, teclado, foco y fallbacks accesibles.
+> Fuentes primarias y verificación en [evidencia](verification-due-liquid-morph.md).
+> Ensayo web local, sin equivalencia de refracción nativa ni sync/archivo.
+
 # Cómo desarrollar Noteka con OpenSpec
+
+Seguimiento 05/11/2026: `keep-ascii-animation-behind-popups` mantiene la portada
+ASCII de Home animándose cuando Settings, Search o Center peek están delante y
+Home sigue visible; `blocked` y el foco sólo deshabilitan controles. Conserva las
+pausas por pestaña inactiva, portada fuera de vista, documento oculto, movimiento
+reducido y Full page que cubre Home. La auditoría descarta otros popups con la
+conducta anterior. Ver [guía](ascii-cover-scenes.md), [diseño](design-system.md)
+y [evidencia](verification-ascii-popup-animation.md). Delta activo, sin
+sync/archivo.
+
+Seguimiento 05/11/2026: `add-random-ascii-cover-scenes` tiñe las manchas de los
+koi principales y secundarios con el color primario elegido, tomando el tono
+del acento con la mitad de su saturación y extremos de luminosidad contenidos
+por tema; aletas, cola, ojos y
+brillos mantienen el segundo tono neutro. Un cambio de acento repinta la portada
+en vivo desde `--primary-color` reconstruyendo sólo el atlas koi, sin remontar
+la escena, escribir datos o preferencias; un cambio de tema rehace las capas.
+Tiburones y medusas no cambian. Ver
+[guía](ascii-cover-scenes.md) y [evidencia](verification-ascii-cover-scenes.md).
+Delta activo, sin sync/archivo.
+
+Seguimiento 05/11/2026: `adopt-peeled-note-identity` integra la identidad aprobada
+de nota adhesiva en UI/favicon y recursos nativos de macOS, incluido el paquete
+temporal de desarrollo. Fuentes y comandos en [identidad](brand.md),
+capturas en [galería](design/brand/README.md) y evidencia/límites en
+[verificación](verification-brand.md). Delta activo, sin sync/archivo ni publicación.
 
 Consolidación 04/11/2026: el usuario autoriza un **commit local conjunto** de
 los siete cambios Liquid Glass aceptados, después del checkpoint `affca8a`.

@@ -1,5 +1,12 @@
 {
   "bundle": {
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/256x256.png",
+      "icons/icon.icns",
+      "icons/Assets.car"
+    ],
     "externalBin": [
       "binaries/noteka-pdf-worker",
       "binaries/noteka-xlsx-worker",

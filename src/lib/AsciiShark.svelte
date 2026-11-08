@@ -21,15 +21,15 @@
     function measure(){
       const rect=canvas.getBoundingClientRect();width=rect.width;height=rect.height;
       const styles=getComputedStyle(document.documentElement);
-      renderer.resize(width,height,devicePixelRatio||1,document.documentElement.dataset.theme!=='light',styles.getPropertyValue('--text').trim());
+      renderer.resize(width,height,devicePixelRatio||1,document.documentElement.dataset.theme!=='light',styles.getPropertyValue('--text').trim(),styles.getPropertyValue('--primary-color').trim());
       // A layout transition must not cancel the next frame or suspend active time.
       if(!frame)wake();
     }
     const resize=new ResizeObserver(measure);resize.observe(canvas);
     const intersection=new IntersectionObserver(entries=>{visible=entries[0]?.isIntersecting??true;wake();});intersection.observe(canvas);
-    const theme=new MutationObserver(measure);theme.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+    const appearance=new MutationObserver(measure);appearance.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','style']});
     media.addEventListener('change',wake);document.addEventListener('visibilitychange',wake);redraw=wake;measure();
-    return()=>{disposed=true;cancelAnimationFrame(frame);resize.disconnect();intersection.disconnect();theme.disconnect();media.removeEventListener('change',wake);document.removeEventListener('visibilitychange',wake);redraw=undefined;};
+    return()=>{disposed=true;cancelAnimationFrame(frame);resize.disconnect();intersection.disconnect();appearance.disconnect();media.removeEventListener('change',wake);document.removeEventListener('visibilitychange',wake);redraw=undefined;};
   });
 </script>
 <canvas bind:this={canvas} class="ascii-shark" aria-hidden="true"></canvas>

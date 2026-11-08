@@ -5,9 +5,12 @@ Tasks del menú lateral abre una página amplia con icono sobre el título,
 navegación Inbox/Today/Week/Month, el botón New y las vistas locales de Home.
 Today es la vista inicial y agrupa las tareas pendientes de proyectos
 Doing/Ongoing no archivados; All Active Projects agrega Planned. La vista core
-`tasks_today` conserva su filtro por vencimiento para CLI/MCP. Las primeras diez
-tareas se acumulan con Load more,
-sin duplicar IDs; cambiar vista o actualizar reinicia la página. Apertura y
+`tasks_today` conserva su filtro por vencimiento para CLI/MCP. Today e Inbox
+acumulan páginas de diez tareas con Load more; Scheduled, No Due y All usan
+páginas de catorce. Week y Month cargan hasta cien tareas por período, no
+ofrecen Load more ni un listado aparte de tareas sin fecha. Cambiar vista o
+actualizar reinicia la página, sin duplicar IDs. Inbox no agrega un aviso
+explicativo adicional. Apertura y
 captura pasan por las guardias de buffers existentes y crear no asigna fechas.
 El checkbox pendiente es un cuadrado vacío con borde neutro; el completado es un
 check verde, compartido con Home y contenidos de Project.

@@ -1,3 +1,21 @@
+> Extensión 07/11/2026: `share-liquid-overlay-transitions` comparte la transición
+> Due aceptada (400/200 ms) entre menús, pickers, herramientas, Nav/opciones,
+> Search, Settings, confirmaciones y Center peek. Los diálogos y Center peek
+> revelan contenido real desde el inicio, recortado al vidrio detrás del texto.
+> Material y texto separados,
+> buffers y foco conservados; nativos y disclosures documentales mantienen su
+> patrón. Ver [inventario y evidencia](verification-liquid-overlays.md).
+> Cambio local activo, sin sync/archivo ni publicación.
+
+> Ajuste 07/11/2026: `animate-due-calendar-liquid-morph` aproxima la continuidad
+> Liquid Glass de Apple en Due de Task: superficie desde el rectángulo del campo,
+> expansión elástica 400 ms, texto independiente y repliegue 200 ms desde el frame
+> actual. Conserva selección/guardado, teclado, foco y fallbacks accesibles.
+> Fuentes primarias y verificación en [evidencia](verification-due-liquid-morph.md).
+> Ensayo web local, sin equivalencia de refracción nativa ni sync/archivo.
+
+> Corrección de animación 5/11/2026: `keep-ascii-animation-behind-popups` mantiene la portada ASCII de Home animándose bajo Settings, Search y Center peek mientras Home siga visible; el foco y `blocked` no detienen el canvas. Full page, pestaña inactiva, documento oculto, portada fuera de vista y movimiento reducido conservan la pausa. Ver [verificación](verification-ascii-popup-animation.md). Delta activo sin sync/archivo.
+>
 > Revisión Inbox 5/11/2026: el usuario cambia la decisión PARA y convierte Inbox en un conjunto derivado. Tasks y Notes muestran activos sin relación Project; vincular a un proyecto los saca y quitar el vínculo los devuelve. Se retira la marca manual y la tab Unclassified de Tasks; Notes conserva Unclassified (biblioteca sin Tag/Project/People). `payload.inbox` queda inerte, sin migración. Ver [ADR0059](decisions/0059-derived-inbox.md) y [verificación](verification-derived-inbox.md).
 >
 > Revisión PARA 5/11/2026: el usuario conserva Inbox manual y elige una vista automática separada Unclassified. Tasks comprueba ausencia local de Project; Notes, de Tag/Project/People. Content no está modelado. Los tipos Daily y Journal son distintos y comparten la vista Journal; se incorporan los demás tipos observados y se corrige la recuperación explícita de Voice Note. Ver [revisión](verification-para-consistency.md). Sin recuperación de datos reales, sync, archivo ni push.
@@ -30,6 +48,13 @@
 
 # Noteka: plan de producto, arquitectura y desarrollo
 
+**Identidad aprobada e implementada 05/11/2026:** `adopt-peeled-note-identity`
+integra la «n» azul de nota adhesiva despegada, nombre liviano, marca local en
+bienvenida/sidebar/favicon y catálogo nativo por capas de macOS con fallback.
+No modifica datos, contratos ni navegación. Ver [identidad](brand.md),
+[galería de producción](design/brand/README.md) y [verificación](verification-brand.md).
+El delta permanece activo; no implica publicación, sync o archivo.
+
 > Continuidad visual 4/11/2026: `refine-save-guard-glass` extiende el material compartido a la guardia de cambios pendientes y sus acciones. Save/Retry y Save and continue comparten vidrio teñido; Cancel/Discard son neutros. Conserva guardias, datos y estados; ver [verificación](verification-save-guard-glass.md). Delta activo sin sincronización ni archivo.
 
 > Continuidad visual 4/11/2026: `refine-settings-and-search-glass` comparte vidrio translúcido entre Settings y Search, reemplaza los velos blancos acumulados y unifica sus campos Search con el acceso lateral (32 px/13 px). Conserva funciones, datos y alternativas accesibles; ver [verificación](verification-settings-and-search-glass.md). Delta activo sin sincronización ni archivo.
@@ -59,6 +84,18 @@ migración o modificación de entidades. Imágenes y colores conservados. Build,
 catálogo/movimiento Chromium y WebKit y UI de producción headless verificados;
 sin nueva aceptación nativa. [Guía](icons.md), [ADR0055](decisions/0055-local-icona-fill-bold.md)
 y [evidencia](verification-icona.md). Delta pendiente de sincronización/archivo.
+
+**Koi con el color primario al05/11/2026:** en `add-random-ascii-cover-scenes`,
+las manchas de los koi principales y secundarios adoptan el color primario
+elegido en Settings, tomando el tono del acento con la mitad de su saturación y
+extremos de luminosidad contenidos por tema; aletas, cola, ojos y brillos conservan el segundo tono neutro.
+La portada se repinta en vivo al cambiar acento o tema, sin remontar escena ni
+escribir datos/preferencias; un acento inválido recupera el azul inicial.
+Tiburones y medusas quedan intactos. Seis pruebas nuevas de paleta y las doce
+existentes aprobaron; svelte-check, matriz visual azul/naranja/violeta a
+1000/420px en ambos temas, actualización en vivo y preservación de las otras
+escenas verificadas. [Guía](ascii-cover-scenes.md) y
+[evidencia](verification-ascii-cover-scenes.md). Delta pendiente de sync/archivo.
 
 **Profundidad y ambiente de tiburones al26/10/2026:** tercer tiburón menor/tenue
 con la misma malla, profundidad mayor y ruta propia; cuatro actores originales
@@ -1191,6 +1228,10 @@ Home reserva 36 px junto al indicador en lugar de 68 px, con adaptación de tít
 ## Actualización 27/10/2026: animación junto a Side peek
 
 La portada ASCII de Home continúa animándose cuando permanece visible junto a Side peek, independientemente del foco de edición. Conserva las pausas por visibilidad, pestaña inactiva y movimiento reducido; ver [verification-ascii-side-peek.md](verification-ascii-side-peek.md).
+
+## Actualización 05/11/2026: animación bajo popups
+
+La portada ASCII de Home sigue animándose mientras su portada permanezca visible, aunque Settings, Search o Center peek estén en primer plano. El foco de edición y `blocked` pertenecen a los controles y ya no suspenden el canvas. Full page que cubre Home, la pestaña inactiva, el documento oculto, la portada fuera de vista y el movimiento reducido conservan la pausa. La auditoría de menús, pickers, paneles plegables y la guardia de cambios pendientes no encontró otros popups que detuvieran el renderer. Ver [verification-ascii-popup-animation.md](verification-ascii-popup-animation.md).
 
 ## Actualización 27/10/2026: menú de acciones de página
 

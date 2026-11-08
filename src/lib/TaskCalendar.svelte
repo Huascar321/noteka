@@ -2,21 +2,22 @@
   import AppIcon from './AppIcon.svelte';
   import { calendarDays, shiftDay, shiftMonth, weekDays } from './project-task-calendar';
   import type { HomeItem } from './contracts.generated';
-  let { items, date, mode, partial = false, busy = false, onopen, oncreate, ondate }: {
-    items: HomeItem[]; date: string; mode: 'week' | 'month'; partial?: boolean; busy?: boolean;
+  let { items, date, mode, busy = false, onopen, oncreate, ondate }: {
+    items: HomeItem[]; date: string; mode: 'week' | 'month'; busy?: boolean;
     onopen: (id: string) => Promise<void>; oncreate: (date: string) => void; ondate: (date?: string) => Promise<void>;
   } = $props();
   const days = $derived(mode === 'week' ? weekDays(date) : calendarDays(date.slice(0, 7)));
   const label = $derived.by(() => {
     const format = (d: string, options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('en-US', { ...options, timeZone:'UTC' }).format(new Date(`${d}T12:00:00Z`));
-    if (mode === 'month') return format(date, { month:'long', year:'numeric' });
-    const first = days.find(Boolean), last = [...days].reverse().find(Boolean);
-    return first && last ? `${format(first, { month:'short', day:'numeric', year:'numeric' })} – ${format(last, { month:'short', day:'numeric', year:'numeric' })}` : '';
+    // Both calendars title the period with month and year only. A week takes
+    // the month that owns most of its visible days: its Thursday, since the
+    // seven-day span can only cross one month boundary.
+    const anchor = mode === 'week' ? days[3] : date;
+    return anchor ? format(anchor, { month:'long', year:'numeric' }) : '';
   });
   const prev = $derived(mode === 'week' ? shiftDay(date, -7) : (shiftMonth(date.slice(0, 7), -1) ? `${shiftMonth(date.slice(0, 7), -1)}-01` : null));
   const next = $derived(mode === 'week' ? shiftDay(date, 7) : (shiftMonth(date.slice(0, 7), 1) ? `${shiftMonth(date.slice(0, 7), 1)}-01` : null));
   const ordered = $derived([...items].sort((a,b) => a.entity.title.localeCompare(b.entity.title) || a.entity.id.localeCompare(b.entity.id)));
-  const undated = $derived(ordered.filter(item => !item.metadata.due_date && !item.metadata.issues.some(issue => issue === 'due_date' || issue === 'payload')));
   const invalid = $derived(ordered.filter(item => item.metadata.issues.some(issue => issue === 'due_date' || issue === 'payload')));
 </script>
 <div class="task-calendar" aria-busy={busy}>
@@ -25,7 +26,6 @@
     <button disabled={busy} onclick={() => void ondate()}>Today</button>
     <button aria-label={`Next task ${mode}`} disabled={busy || !next} onclick={() => { if (next) void ondate(next); }}><AppIcon name="arrow-right" size={16} /></button>
   </div></div>
-  {#if partial}<p class="project-context-message">Calendar shows loaded tasks; load more to include remaining tasks.</p>{/if}
   <!-- svelte-ignore a11y_no_noninteractive_tabindex (The scrollable calendar needs keyboard access.) -->
   <div class="people-calendar" role="region" aria-label={`Tasks in ${label}`} tabindex="0"><div class="people-calendar-grid">
     {#each ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] as weekday}<div class="people-weekday">{weekday}</div>{/each}
@@ -35,6 +35,5 @@
       {/if}
     </div>{/each}
   </div></div>
-  <details class="project-calendar-undated"><summary>No date ({undated.length}){partial ? ' · loaded' : ''}</summary>{#each undated as item (item.entity.id)}<button class="project-calendar-unplaced" onclick={() => void onopen(item.entity.id)}>{item.entity.title}{item.metadata.state === 'done' ? ' · Done' : ''}</button>{/each}{#if !undated.length}<p>No loaded tasks without a due date.</p>{/if}</details>
   {#if invalid.length}<details class="project-calendar-undated"><summary>Date unavailable ({invalid.length})</summary><p>These tasks have an unrecognized date; their original data is preserved.</p>{#each invalid as item (item.entity.id)}<button class="project-calendar-unplaced" onclick={() => void onopen(item.entity.id)}>{item.entity.title}</button>{/each}</details>{/if}
 </div>
