@@ -1,0 +1,42 @@
+{
+  "date": "2026-11-10",
+  "scope": "Real compiled frontend with temporary CLI/SQLite workspace; no native Tauri verification",
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 2,
+  "sourceHashes": {
+    "src/style.css": "a0d3c301f37d2d98d13846b06463a36f58c79f7bd96d12fc1852c06485c262b5"
+  },
+  "captures": {
+    "before-search-light.png": "f156728fe22a34e6dd3884c1e84ebc077ce6d183870e75a171406a5cbef36c0f",
+    "before-settings-light.png": "13397d41640691aaf58d602d27a52499e920b9cb8f68fcafbe184fda7a0fdd75",
+    "chromium-menu-dark.png": "dc2d030440ff56a4150508b207d011c9b893c399dde78a0403fcd25f7600bba5",
+    "chromium-menu-light.png": "42be3ba7b7d723fe73eb74e59349b7a8f2022c568c70eab2f253adfeb88d5e67",
+    "chromium-search-dark.png": "b1df1fee5385cd0101c463c920925798ab27a02a4c09de4f6b871a6464704df5",
+    "chromium-search-light.png": "1a53ee4359dfa711b198514b9f47b694acab56e2b44937d3c935915eeddfc3c0",
+    "chromium-settings-dark.png": "a212b797e56e4e1136c57b4d01fea802b70220538887f24a8559452c351ad9c2",
+    "chromium-settings-light.png": "32b79ffcb75b044d3e73603df8218e7f42dc6e6ccc4cd62d06893093044b531d",
+    "webkit-menu-dark.png": "9886a9da86252388689112d46daae9898152c64558a906722f7a32e6f40fe74d",
+    "webkit-menu-light.png": "4bd059c1bd84dc71614ca8417595854000684f9ab6f11974bb0b20fd21aebfad",
+    "webkit-search-dark.png": "5614cce8a0b9e1b2d14943ffb51970a4806de62312e5e361fcc9baf40b91a26a",
+    "webkit-search-light.png": "f97faca9061189955bcb1192f036e49240896f23b0aefbc24f1afc607c455ab3",
+    "webkit-settings-dark.png": "0d8ad8bc09dedd9706e55803cd610a8de69e4dba4b4de31c3bb15158d4eaf4ab",
+    "webkit-settings-light.png": "64215862e395f6aa88823dd3305c3db211b9574fa1cd8278ee2fa84d2999882c"
+  },
+  "reports": {
+    "chromium": {
+      "checks": 22,
+      "groups": 14,
+      "regions": 340,
+      "minimum": 4.772695976461982
+    },
+    "webkit": {
+      "checks": 22,
+      "groups": 14,
+      "regions": 340,
+      "minimum": 4.914627941854041
+    }
+  }
+}

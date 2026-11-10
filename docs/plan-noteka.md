@@ -48,6 +48,21 @@
 
 # Noteka: plan de producto, arquitectura y desarrollo
 
+**Material compartido 10/11/2026:** `share-clear-popup-glass` extiende el vidrio
+gris transparente aceptado en Search a todos los popups que usaban el material
+anterior, incluidos Settings, confirmaciones, menús, pickers, editor, Due y
+tooltips. Sustituye la separación visual del primer ajuste de Search.
+Ver [design system](design-system.md) y [verificación](verification-clear-popup-glass.md).
+El refinamiento posterior aclara los blancos a `#eeeeeead` sin cambiar alfa,
+blur ni tema oscuro, por pedido del usuario.
+
+**Primer ajuste visual 10/11/2026:** `clarify-search-glass` dio a Search una variante
+gris transparente con desenfoque corto y sin velos blancos en sus hijos,
+inspirada en la cápsula de referencia del usuario. En ese paso Settings conservó su receta;
+la extensión compartida posterior la sustituye.
+Ver [design system](design-system.md) y [verificación](verification-search-clear-glass.md).
+Sin cambios de datos, operaciones ni transparencia de ventana al escritorio.
+
 **Identidad aprobada e implementada 05/11/2026:** `adopt-peeled-note-identity`
 integra la «n» azul de nota adhesiva despegada, nombre liviano, marca local en
 bienvenida/sidebar/favicon y catálogo nativo por capas de macOS con fallback.

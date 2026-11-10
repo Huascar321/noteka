@@ -5,7 +5,10 @@ en `src/style.css` y en los componentes de `src/lib/`; este documento define las
 decisiones compartidas. Si una pantalla necesita apartarse de ellas, registrá
 el motivo en su cambio de OpenSpec y actualizá esta guía junto con el código.
 
-Referencia consolidada de Liquid Glass al **04/11/2026**. Esta guía y la
+Receta de popups actualizada al **10/11/2026**: el vidrio gris transparente
+aprobado en Search es el material compartido de todos los overlays que usaban
+vidrio. [Inventario, capturas y verificación](verification-clear-popup-glass.md).
+La galería general del 04/11 conserva sus capturas históricas. Esta guía y la
 [galería de capturas](design/liquid-glass/README.md) permiten continuar el diseño
 sin consultar el chat. Las capturas ilustran el resultado; los tokens y estados
 del código son la fuente para implementarlo. Los documentos de verificación
@@ -68,8 +71,9 @@ conserva la identidad `n.` de su fecha de captura.
 
 `src/style.css` define `--bg`, `--surface`, `--text`, `--muted`, `--border`,
 `--accent`, `--focus` y `--selected` por tema. El acento personalizado se calcula
-en `src/lib/primary-color.ts`. Para overlays, reutilizá `--glass-surface`,
-`--glass-search-surface`, `--glass-breadcrumb-surface`, `--glass-breadcrumb-rim`,
+en `src/lib/primary-color.ts`. Para overlays, reutilizá `--glass-overlay-surface`,
+`--glass-overlay-sheen`, `--glass-overlay-filter`, `--glass-overlay-text` y
+`--glass-overlay-muted`. Las migas usan `--glass-breadcrumb-surface`, `--glass-breadcrumb-rim`,
 `--glass-breadcrumb-sheen`, `--glass-stroke` y `--glass-blur`. La navegación
 comparte la óptica de `--glass-sidebar-*` con las variantes `--glass-nav-*`,
 `--glass-crumb-shadow` y `--glass-action-*`. No copies colores
@@ -79,22 +83,53 @@ hexadecimales del material a componentes nuevos.
 | --- | --- | --- |
 | Contenido | Notas, Tasks, Projects, Boards, formularios, tablas y tarjetas | Fondo sólido `--bg` o `--surface`; texto con `--text` y `--muted`. |
 | Navegación persistente | Barra superior y sidebar | Gradientes neutros estáticos, borde fino y selección neutra; sin `backdrop-filter` grande. |
-| Superficie flotante | Búsqueda, menús, picker, tooltip visible y diálogo pequeño | Material translúcido `--glass-surface`, borde `--glass-stroke`, sombra exterior e interior; filtro local `--glass-blur` si el WebView lo admite. |
-| Popup de ajustes | Settings | Material compartido con Search, navegación translúcida y velo de lectura más denso en el contenido; un filtro local mientras está abierto. |
+| Superficie flotante | Búsqueda, menús, picker, tooltip visible y diálogo pequeño | Vidrio gris `--glass-overlay-*`, borde `--glass-stroke`, sombra exterior e interior; filtro local 6 px si el WebView lo admite. |
+| Popup de ajustes | Settings | Mismo material que Search; sidebar y main transparentes, sin velos blancos adicionales; un filtro local mientras está abierto. |
 | Side peek | Lectura/edición en paneles | Marco y navegación con acabado neutro; cuerpo documental sólido. |
 
 La barra de formato abierta del editor usa el tratamiento estático de
 navegación; las herramientas de selección y los menús de bloques flotantes usan
 el material de overlay.
 
-Search y Settings comparten `.glass-popup`, `--glass-search-surface` y
-`--glass-popup-sheen`: tinte neutro, reflejo tenue, borde luminoso al 80% y
-reflejo interior al 45%, con `blur(16px) saturate(1.35)` local. El tinte claro
-usa 56% y el oscuro 72%; se evita superponer otro radial blanco denso. Resultados,
-preview y navegación usan `--glass-popup-navigation`; Settings protege su
-contenido con `--glass-popup-content`, un velo algo más denso. Los hijos no
-agregan filtros. La transmisión del fondo y el contraste se verifican sobre
-píxeles compuestos, no sólo leyendo el alfa. Con transparencia reducida o
+Search, Settings, confirmaciones, Move project, menús, pickers, herramientas
+flotantes, popovers del editor, Due y tooltips de herramientas comparten
+`--glass-overlay-surface` (blanco suave `#eeeeeead` claro / `#202020a8` oscuro),
+`--glass-overlay-sheen` y `--glass-overlay-filter`:
+`blur(6px) saturate(1.15)`. El desenfoque corto conserva las formas reales
+detrás. Los hijos de Search y Settings son transparentes, sin películas blancas
+adicionales. Los diálogos `.glass-popup` conservan borde luminoso al 80% y
+reflejo interior al 45%; los menús `.glass-menu` mantienen su marco al 60%/35%.
+El ajuste posterior del 10/11 aclara el tinte de `#c2c2c2` a `#eeeeee` por
+pedido del usuario: los blancos deben sentirse luminosos, sin una película
+gris oscura. Conserva el mismo alfa al 68%, blur y transmisión de las formas;
+no agrega una capa blanca opaca ni cambia la receta del tema oscuro.
+Las [capturas del ajuste de luminosidad](verification-clear-popup-glass.md#ajuste-de-luminosidad)
+son la referencia más reciente del tema claro.
+
+La tinta compartida es `--glass-overlay-text` (`#171717`/`#fafafa`) y
+`--glass-overlay-muted` (`#1b1b1b`/`#f7f7f7`); campos transparentes heredan la
+principal. Placeholders y atajos `kbd` conservan tinta legible y opacidad 1,
+sin la atenuación genérica de los atajos de página. La selección de Search usa
+sheen de campo y tinte neutro de navegación. Due aplica la tinta al padre de material y contenido, que son
+hermanos. Hoy sin seleccionar mantiene un contorno de acento y tinta legible;
+el día elegido conserva fondo/tinta de acento. El enlace Load more de relaciones
+usa tinta legible y subrayado de acento. Errores destructivos/de formulario y
+avisos de Settings conservan sus fondos semánticos sólidos locales.
+Las acciones primarias planas dentro de overlays, como Done del selector de
+iconos, usan `--glass-action-tint` y texto blanco para conservar contraste;
+no toman el acento crudo como fondo.
+
+Los hijos no agregan filtros. El material se aplica sólo a popups abiertos,
+incluida la capa decorativa de su transición, sin cambiar geometría, anclaje,
+foco u operaciones. No se extiende a contenido documental ni a navegación
+persistente. `--glass-surface` sigue reservado a marcos estáticos que ya lo
+usaban. Se retiran los tokens exclusivos Search/confirmación y los velos
+`--glass-popup-navigation`/`--glass-popup-content`: no reintroducirlos como
+recetas alternativas. La transmisión y el contraste se verifican sobre píxeles
+compuestos. Mediciones históricas de CPU o de otros materiales no acreditan
+éste. Ver [inventario y evidencia actual](verification-clear-popup-glass.md) y
+el [primer ajuste de Search](verification-search-clear-glass.md).
+Con transparencia reducida o
 contraste aumentado, paneles y capas vuelven a superficies sólidas sin reflejos
 ni filtros. Search y Settings se abren como diálogos modales; en Search, el
 clic en el backdrop la cierra y los clics dentro del panel no. Mientras
@@ -119,9 +154,8 @@ La tinta neutra se adapta a la superficie del popup para lectura y los cierres
 se integran como botones circulares. Settings usa la misma cápsula en su
 búsqueda, selección de navegación con marco del sidebar y cierre circular.
 
-La guardia de cambios pendientes usa `.glass-popup` con
-`--glass-confirm-surface`, un tinte algo más denso (69% claro/76% oscuro) para
-leer su decisión y errores. Cancel/Discard son cápsulas neutras
+La guardia de cambios pendientes usa `.glass-popup` con el mismo material
+`--glass-overlay-*`, sin un tinte denso independiente. Cancel/Discard son cápsulas neutras
 `.glass-secondary`; Save and continue y Save/Retry de cabecera usan
 `.glass-action.primary`, con los tokens de New, texto/atajo blancos, borde al
 75% y reflejo al 50%. Guardado conserva 28 px mínimos en cabecera y 36 px en
@@ -136,7 +170,7 @@ PageTools usan `.glass-menu`: radio compartido de 14 px, borde anular del
 sidebar al 60%, reflejo interior al 35% y `--glass-menu-shadow`. La clase define
 el material; el componente dueño conserva posición, foco, scroll y cierre.
 Los paneles PageTools en el flujo de la página conservan su tratamiento propio.
-El desenfoque local existente queda en la superficie abierta. Con transparencia
+El desenfoque local compartido de 6 px queda en la superficie abierta. Con transparencia
 reducida o contraste aumentado, el marco es sólido, con borde definido y sin
 reflejos, sombras ni filtros.
 
@@ -283,11 +317,11 @@ Los radios de cápsula usan `999px`, salvo Tag con `16px` para admitir varias fi
 | Tag/Type de Note | 32 px con un valor/vacío; marco de campo | `NotePageProperties.svelte`; Tag envuelve lista, Type conserva select HTML |
 | Cabeceras de detalle | Radio 18 px, gap 4 px, padding 2 px 5 px; sin blur | `WorkspacePane.svelte`, `.note-page-actions`; Refresh, estado, guardado y menú |
 | Save/Retry | Cápsula teñida, mínimo 28 px en cabecera | `.glass-action.primary`; atajo blanco, estado por separado |
-| Menús/pickers | Radio 14 px, material overlay, blur local 10 px existente | `.glass-menu`; PageTools, PeekModeMenu, BlockEditor, IconPicker, RelationPicker |
-| Calendario de Due (Task) | Panel ≤ 292 px, días 30 px; material de menú con blur 10 px | `DueDatePicker.svelte`; anclaje debajo/arriba del botón Due, evento propio |
-| Search popup | 780 × 620 px, limitado por viewport; radio 20 px | `.context-search.glass-popup`; filtro único 16 px |
-| Settings | 1000 × 640 px, limitado por viewport; radio 20 px | `.settings-dialog.glass-popup`; velo de lectura más denso en panel principal |
-| Guardia y Move project | Radio 20 px, material confirmación; botones mínimos 36 px | `.glass-popup`, `.glass-secondary`, `.glass-action.primary` |
+| Menús/pickers | Radio 14 px, material `--glass-overlay-*`, blur local 6 px | `.glass-menu`; PageTools, PeekModeMenu, BlockEditor, IconPicker, RelationPicker |
+| Calendario de Due (Task) | Panel ≤ 292 px, días 30 px; material compartido con blur 6 px | `DueDatePicker.svelte`; tinta en el padre, anclaje debajo/arriba del botón Due |
+| Search popup | 780 × 620 px, limitado por viewport; radio 20 px | `.context-search.glass-popup`; vidrio gris, filtro único 6 px, sin velos blancos hijos |
+| Settings | 1000 × 640 px, limitado por viewport; radio 20 px | `.settings-dialog.glass-popup`; material compartido, sidebar/main transparentes |
+| Guardia y Move project | Radio 20 px, mismo material overlay; botones mínimos 36 px | `.glass-popup`, `.glass-secondary`, `.glass-action.primary` |
 | Calendario de cumpleaños | Grupo 32 px con controles interiores de 28 px; calendario sólido | `HomePersonSection.svelte`, `.birthday-tools` |
 | Campos cortos | 32 px; material de campo, controles HTML y etiquetas existentes | `.glass-field`, propiedades y relaciones compactas |
 | Bienvenida | Campo de path compacto; acciones mínimas de 36 px | `App.svelte`, `.glass-field`, `.glass-action`, `.glass-secondary` |
@@ -306,14 +340,14 @@ Subir el blur o poner blanco opaco no reproduce la receta del sidebar.
 | --- | --- | --- |
 | `--glass-sidebar-active` | `#bcbcbc70` / `#7373734d` | Selección lateral, alfa aproximado 44% / 30% |
 | `--glass-nav-surface` | `#bcbcbc4d` / `#7373733d` | Tabs y grupos, 30% / 24% |
-| `--glass-surface` | `#f7f7f7d9` / `#282828c7` | Menús y acciones de Note, 85% / 78% |
-| `--glass-search-surface` | `#f7f7f78f` / `#1c1c1cb8` | Search/Settings, 56% / 72% |
-| `--glass-confirm-surface` | `#f7f7f7b0` / `#1c1c1cc2` | Guardia, 69% / 76% |
+| `--glass-surface` | `#f7f7f7d9` / `#282828c7` | Marcos estáticos y acciones de Note; no define popups |
+| `--glass-overlay-surface` | `#eeeeeead` / `#202020a8` | Todos los popups con vidrio; blanco suave al 68% / oscuro al 66%, sin velo adicional |
+| `--glass-overlay-filter` | `blur(6px) saturate(1.15)` | Un filtro local por popup; `--glass-blur` es alias de esta receta |
+| `--glass-overlay-text` | `#171717` / `#fafafa` | Tinta principal sobre el material compuesto |
+| `--glass-overlay-muted` | `#1b1b1b` / `#f7f7f7` | Tinta secundaria sobre el mismo material |
 | `--glass-breadcrumb-surface` | `#f7f7f785` / `#2828282e` | Migas, 52% / 18%; ASCII usa 48% / 12% |
 | `--glass-field-surface` | `#d4d4d45c` / `#ffffff0f` | Campos, 36% / 6% |
 | `--glass-content-surface` | `#bcbcbc24` / `#7373731f` | Relaciones, 14% / 12% |
-| `--glass-popup-navigation` | `#ffffff29` / `#18181814` | Velo ligero de resultados/navegación |
-| `--glass-popup-content` | `#ffffff4d` / `#18181829` | Velo más denso de lectura de Settings |
 
 Estos valores documentan el estado actual. En código **referenciá el token**;
 si cambia la receta, actualizá esta tabla junto con CSS y capturas. El alfa no
@@ -392,9 +426,11 @@ contraste de texto y atajo blancos. La base 7:1 deja margen; el resultado
 compuesto debe alcanzar al menos 4,5:1. No sustituyas el tinte por el acento
 crudo ni atenúes el `<kbd>` por separado.
 
-Search/Settings/guardia aplican `blur(16px) saturate(1.35)` **al panel abierto**.
-Sus hijos agregan velos sin filtros. `::backdrop` sólo oscurece: claro
-`#0000001f`, oscuro `#00000040`. La superficie base es sólida y el material
+Todos los popups con vidrio aplican `blur(6px) saturate(1.15)` **al material
+abierto**, con `--glass-overlay-sheen` y `--glass-overlay-surface`. Search y
+Settings conservan transparentes sus cuerpos internos; no agregues velos.
+`::backdrop` sólo oscurece: claro
+`#00000014`, oscuro `#00000030`. La superficie base es sólida y el material
 translúcido se habilita con `@supports`; el fallback de accesibilidad está
 después. No introduzcas otra capa blanca densa que vuelva a tapar el fondo.
 
@@ -545,12 +581,12 @@ animación perpetua de brillo o renderer para dar sensación de vidrio.
   cursor; el hover no cambia alto, padding ni posición. Aplica a Home y a las
   páginas de sección que reutilizan la fila.
 - El campo Due del detalle de Task abre un calendario propio sobre `.glass-menu`
-  (`--glass-surface`, `--glass-sidebar-sheen`, borde/reflejos compartidos y
+  (`--glass-overlay-surface`, `--glass-overlay-sheen`, borde/reflejos compartidos y
   `--glass-blur`); no usa el popup nativo del WebView. Mide como máximo 292 px,
   se ancla debajo del campo (arriba si no cabe), se limita al viewport y se
   reposiciona con scroll y resize. La grilla va de lunes a domingo con días de
   30 px (36 px con puntero grueso); la selección usa `--accent`/`--accent-text`
-  y hoy se marca con tinta de acento. Teclado: flechas, Home/End,
+  y hoy sin seleccionar se marca con contorno de acento y tinta legible. Teclado: flechas, Home/End,
   PageUp/PageDown, Enter y Escape; el foco vuelve al campo. Abre con un
   morph de 400 ms desde el rectángulo real del campo, con expansión y
   asentamiento elástico. Sólo `.date-picker-material.glass-menu` se deforma:
@@ -613,7 +649,7 @@ previas y sus límites están enlazados debajo.
 
 - **Vidrio convertido en panel blanco:** acumular tintes opacos, radial blanco y
   velos en hijos tapa el fondo. Inspeccioná la composición completa; mantené un
-  material por popup y sus dos velos definidos.
+  material por popup, con cuerpos internos transparentes.
 - **Menús fixed desplazados:** `filter`, `backdrop-filter` o `transform` en un
   ancestro pueden cambiar su bloque contenedor. Las barras de herramientas y
   acciones de Note usan material estático sin filtro. Probá el menú abierto en
@@ -650,7 +686,13 @@ no incluye las notas/contactos privados de los adjuntos originales.
 
 ![Note con campos compactos, cápsulas y contenido sólido en tema oscuro](design/liquid-glass/chromium/note-dark.png)
 
-![Search con campo compacto y material compartido](design/liquid-glass/chromium/search-light.png)
+![Search con vidrio blanco luminoso y desenfoque corto, 10/11/2026](design/bright-glass/chromium-search-light.png)
+
+El primer ajuste de Search y su comparación antes/después están en la
+[verificación del vidrio transparente](verification-search-clear-glass.md).
+La [extensión actual a todos los popups](verification-clear-popup-glass.md)
+incluye Settings, menús, pickers y confirmaciones. El atlas del 04/11 conserva
+la receta de su fecha; no se usa como receta alternativa vigente.
 
 Para regenerar desde la raíz, con Node/npm, Rust y los prerrequisitos del
 [entorno de desarrollo](development.md):

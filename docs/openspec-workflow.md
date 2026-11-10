@@ -16,6 +16,20 @@
 
 # Cómo desarrollar Noteka con OpenSpec
 
+Extensión 10/11/2026: `share-clear-popup-glass` promueve el material gris
+transparente de Search a la receta compartida de Settings, confirmaciones,
+menús, pickers, editor, Due y tooltips. Sustituye su separación visual previa;
+ver [inventario y evidencia](verification-clear-popup-glass.md) y
+[design system](design-system.md). Delta local, sin sync/archivo.
+El ajuste posterior de luminosidad aclara sólo el tinte claro a `#eeeeeead`,
+con alfa y filtro conservados; la misma tarea registra verificación focal.
+
+Seguimiento 10/11/2026: `clarify-search-glass` separa el material de Search del
+de Settings: tinte gris neutro, blur corto y cuerpos transparentes, conservando
+funciones, transición y alternativas sólidas. Receta en
+[design system](design-system.md), evidencia y límites en
+[verificación](verification-search-clear-glass.md). Delta local sin sync/archivo.
+
 Seguimiento 05/11/2026: `keep-ascii-animation-behind-popups` mantiene la portada
 ASCII de Home animándose cuando Settings, Search o Center peek están delante y
 Home sigue visible; `blocked` y el foco sólo deshabilitan controles. Conserva las

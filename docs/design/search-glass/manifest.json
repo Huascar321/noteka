@@ -1,0 +1,35 @@
+{
+  "date": "2026-11-10",
+  "scope": "Frontend compilado, CLI Rust real y SQLite temporal; no Tauri nativo",
+  "viewport": {
+    "wide": [
+      1440,
+      900
+    ],
+    "narrow": [
+      420,
+      740
+    ],
+    "dpr": 2
+  },
+  "data": "Una nota ficticia; sin datos de usuario",
+  "sources": {
+    "src/style.css": "0a68d7c6366f609af79f0f9a120ddb03d2115b7acb42b6fa483fe34f30825c12",
+    "src/lib/SearchDialog.svelte": "d20587c40f9f9fb5e958558c8d8cd63854feebab60951e4fa1a6d3587e4b07f2",
+    "src/lib/liquid-overlay.ts": "8f08daa953079979d2d0cdfeed6b31641d99aec7663f3609c940d7981b8d4329"
+  },
+  "captures": {
+    "before-chromium-light.png": "e23bb813653260768d615ab1580a7db77a29faea3ef3addfa09fc36d7bdad7a9",
+    "before-chromium-dark.png": "ecb27f46b873e5b1248dc2b2e0a91c9dae12d4bd40d49d4053bd7080e6b4eeaf",
+    "after-chromium-light.png": "95a3471ef28f55f0a1eb18c469ca8c5af2b65c6b4fa9a4130e2a7708f865ad39",
+    "after-chromium-light-narrow.png": "ee4f5c2d478297c1b052e6b99bde35c3a92dc23bfbe139ddb2e260d70eb2ef98",
+    "after-chromium-light-results.png": "b63a0e319a89ba94226f1feb7a72a9c7bb4781722fbc657fdcebe96e7100580d",
+    "after-chromium-light-solid.png": "beed926c28de47ba8ee5c046eff59376116fbe639c92e41247701254763a37bf",
+    "after-chromium-dark.png": "e7e6fa11fff05a417aaae96413f9d7782d0033d4efc29c5b7d487402be772b87",
+    "after-chromium-dark-narrow.png": "c1c339f317afbd52e088c8a2fed2fdbe3ae69db7f5ec5c3574db89c7f7b0c425",
+    "after-chromium-dark-results.png": "4ff8a63a5f52c4796b85d76f0919144e7c8938986ff987e8149c79124460672a",
+    "after-chromium-dark-solid.png": "c53ac795c2f833ed3f5669128b19788b6166752567f1d18dfb99f8802b3a85dd",
+    "after-webkit-light.png": "53d555a1e58393132fcc5cf4ee6866f60ba44a6c4585f417f9ca8f6678964c2c",
+    "after-webkit-dark.png": "40de3121615c10a6ae6c7a0d126d30b884b31d5de4c5d0eba67f7830a572f8f0"
+  }
+}
