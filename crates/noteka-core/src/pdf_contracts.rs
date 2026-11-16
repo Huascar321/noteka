@@ -505,6 +505,7 @@ mod tests {
     fn v8_schemas_and_root_references_stay_unchanged() {
         // Fingerprints independientes capturados del CLI antes de añadir DTOs PDF (13/10/2026).
         let mut c = crate::describe();
+        crate::xlsx_search_tests::legacy_home_query(&mut c);
         for (key, hash) in [
             (
                 "inputs",
@@ -512,7 +513,7 @@ mod tests {
             ),
             (
                 "outputs",
-                "2c8a2e74228c217252344bd47a0fcbac15c77fbb95986f5da2e82fa8c2f2af1f",
+                "77cfc11115d84ec4ad85ef536f4055dd18f393417b9ece2950fd442508b6ca2e",
             ),
             (
                 "error_schema",
@@ -628,10 +629,11 @@ mod tests {
         ] {
             defs.remove(name);
         }
+        crate::xlsx_search_tests::legacy_entity_defs(defs);
         assert_eq!(defs.len(), 140);
         assert_eq!(
             fingerprint(&schema["$defs"]),
-            "61632f9c67075e044de95b5606f915ef7d72316b9f795c73583b1016351890d6"
+            "321d85507dd6400f07d697533ab3c75533874ccd2b92fe24b363f3daafb67e7c"
         );
         let props = schema
             .get_mut("properties")

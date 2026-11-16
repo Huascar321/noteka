@@ -1,0 +1,389 @@
+{
+  "Classification": {
+    "enum": [
+      "area",
+      "resource",
+      "topic"
+    ],
+    "type": "string"
+  },
+  "EntityRef": {
+    "properties": {
+      "archived_at": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "created_at": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "kind": {
+        "$ref": "#/$defs/EntityKind"
+      },
+      "revision": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "title": {
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "kind",
+      "title",
+      "revision",
+      "created_at",
+      "updated_at"
+    ],
+    "type": "object"
+  },
+  "HomeGroup": {
+    "properties": {
+      "classification": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Classification"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "entity_ids": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "key": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      },
+      "project_archived": {
+        "type": "boolean"
+      },
+      "project_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "project_state": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ProjectState"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "required": [
+      "key",
+      "label",
+      "entity_ids",
+      "project_archived"
+    ],
+    "type": "object"
+  },
+  "HomeMetadata": {
+    "properties": {
+      "classification": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "due_date": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "inbox": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "issues": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "planned_date": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "priority": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "state": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "updated_days_ago": {
+        "format": "int64",
+        "type": [
+          "integer",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "issues"
+    ],
+    "type": "object"
+  },
+  "HomeQuery": {
+    "additionalProperties": false,
+    "properties": {
+      "as_of": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "cursor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "limit": {
+        "format": "uint32",
+        "minimum": 0,
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "view": {
+        "$ref": "#/$defs/HomeView"
+      }
+    },
+    "required": [
+      "view"
+    ],
+    "type": "object"
+  },
+  "HomeSummary": {
+    "oneOf": [
+      {
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "done": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "kind": {
+            "const": "project",
+            "type": "string"
+          },
+          "overdue": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "pending": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "progress_percent": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "total": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "available"
+        ],
+        "type": "object"
+      },
+      {
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "tag",
+            "type": "string"
+          },
+          "last_note": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/EntityRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "note_count": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "available"
+        ],
+        "type": "object"
+      }
+    ]
+  },
+  "HomeView": {
+    "enum": [
+      "tasks_today",
+      "tasks_inbox",
+      "tasks_all",
+      "tasks_done",
+      "notes_all",
+      "notes_inbox",
+      "projects_active",
+      "projects_planned",
+      "projects_board",
+      "tags_recent",
+      "tags_alphabetical",
+      "tags_types",
+      "people_contacts",
+      "people_new",
+      "people_updated"
+    ],
+    "type": "string"
+  },
+  "NoteFields": {
+    "additionalProperties": false,
+    "properties": {
+      "inbox": {
+        "default": true,
+        "type": "boolean"
+      }
+    },
+    "type": "object"
+  },
+  "ProjectFields": {
+    "additionalProperties": false,
+    "properties": {
+      "end_date": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "purpose": {
+        "default": "",
+        "type": "string"
+      },
+      "start_date": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "state": {
+        "$ref": "#/$defs/ProjectState",
+        "default": "planned"
+      }
+    },
+    "type": "object"
+  },
+  "TagFields": {
+    "additionalProperties": false,
+    "properties": {
+      "classification": {
+        "$ref": "#/$defs/Classification"
+      }
+    },
+    "required": [
+      "classification"
+    ],
+    "type": "object"
+  },
+  "TaskFields": {
+    "additionalProperties": false,
+    "properties": {
+      "due_date": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "inbox": {
+        "default": true,
+        "type": "boolean"
+      },
+      "planned_date": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "priority": {
+        "$ref": "#/$defs/Priority",
+        "default": "normal"
+      },
+      "state": {
+        "$ref": "#/$defs/TaskState",
+        "default": "todo"
+      }
+    },
+    "type": "object"
+  },
+  "TaskState": {
+    "enum": [
+      "todo",
+      "done"
+    ],
+    "type": "string"
+  }
+}

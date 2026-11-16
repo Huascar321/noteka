@@ -905,6 +905,46 @@ fn xlsx_posting_fast_and_complete_paths_compare_the_same_fields() {
     }
 }
 
+// `home.query` ya existía cuando se fijaron los fingerprints históricos y siguió
+// creciendo con Home, metas y personas. Estos tests comparan su forma del
+// 19/10/2026 (commit 285ec29) para seguir verificando que el resto de las
+// operaciones previas no cambió; su comportamiento vigente lo cubre tests/home.rs.
+pub(crate) fn legacy_home_query(catalog: &mut Value) {
+    let legacy: Value = serde_json::from_str(include_str!(
+        "../../../tests/fixtures/contracts/home-query-2026-10-19.json"
+    ))
+    .unwrap();
+    for group in ["inputs", "outputs"] {
+        assert!(catalog[group].get("home.query").is_some());
+        catalog[group]["home.query"] = legacy[group].clone();
+    }
+}
+
+// Mismo criterio para los `$defs` raíz: entidades y Home sumaron campos, estados
+// y DTOs (metas, hitos, personas, tipos de nota, fuentes) después del 19/10/2026.
+// Se restauran sus formas de ese día y se quitan los DTOs agregados.
+pub(crate) fn legacy_entity_defs(defs: &mut serde_json::Map<String, Value>) {
+    let legacy: serde_json::Map<String, Value> = serde_json::from_str(include_str!(
+        "../../../tests/fixtures/contracts/entity-defs-2026-10-19.json"
+    ))
+    .unwrap();
+    for (name, shape) in legacy {
+        assert!(defs.insert(name, shape).is_some());
+    }
+    for name in [
+        "GoalActivitySnapshot",
+        "GoalFields",
+        "GoalState",
+        "MilestoneFields",
+        "NoteSource",
+        "NoteType",
+        "PersonFields",
+        "PersonPipelineStatus",
+    ] {
+        assert!(defs.remove(name).is_some());
+    }
+}
+
 // Sólo revierte las adiciones nombradas para conservar los fingerprints históricos,
 // nunca modifica sus constantes. La comparación independiente completa vive en Python.
 pub(crate) fn legacy_index_shapes(value: &mut Value) {

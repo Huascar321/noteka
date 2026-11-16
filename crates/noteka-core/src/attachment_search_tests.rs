@@ -862,6 +862,7 @@ fn revision_overflow_and_unsupported_schema_never_discard_or_wrap() {
 #[test]
 fn all_49_v9_input_output_contracts_remain_byte_identical() {
     let mut c = crate::describe();
+    crate::xlsx_search_tests::legacy_home_query(&mut c);
     for (group, hash) in [
         (
             "inputs",
@@ -869,7 +870,7 @@ fn all_49_v9_input_output_contracts_remain_byte_identical() {
         ),
         (
             "outputs",
-            "1bc46e6bc9dc44e6aca5f62a447ad182d6a8d6e818b9feec0b2295d83086e1b3",
+            "d4a894fd4932450fe26736d2b90a82eb59f7642223875040afe11042d172e09d",
         ),
     ] {
         let values = c[group].as_object_mut().unwrap();

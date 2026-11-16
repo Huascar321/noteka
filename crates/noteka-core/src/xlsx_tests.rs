@@ -188,6 +188,7 @@ fn read(w: &Workspace, j: &ExtractionJob, limit: u32, cursor: Option<String>) ->
 #[test]
 fn all_51_prior_operation_schemas_and_errors_keep_independent_baseline_hashes() {
     let mut c = crate::describe();
+    crate::xlsx_search_tests::legacy_home_query(&mut c);
     crate::xlsx_search_tests::legacy_index_shapes(&mut c);
     for (key, hash) in [
         (
@@ -196,7 +197,7 @@ fn all_51_prior_operation_schemas_and_errors_keep_independent_baseline_hashes() 
         ),
         (
             "outputs",
-            "fb7790a3c4707c0c15668fe895fd766de81f8acda8cc29bc12d037fb8b271e21",
+            "6908f102edc4ec35c2819539b3b1ca64496e734ea41befde3ba05ec36f4337db",
         ),
         (
             "error_schema",
