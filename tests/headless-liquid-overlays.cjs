@@ -33,7 +33,8 @@ async page => {
       const glass = node.querySelector(':scope > .liquid-morph-glass'), animation = glass?.getAnimations()[0];
       return { exists: !!glass, topLayer: glass?.matches(':popover-open'), inline: !!glass?.classList.contains('liquid-morph-inline'), duration: animation?.effect.getTiming().duration, transform: getComputedStyle(node).transform, first: animation?.effect.getKeyframes()[0]?.transform };
     });
-    check(result.exists && (result.topLayer || result.inline) && result.duration === 400, `${label}: 400 ms glass morph in its surface layer (${JSON.stringify(result)})`);
+    const expectedDuration = result.inline ? 400 : 160;
+    check(result.exists && (result.topLayer || result.inline) && result.duration === expectedDuration, `${label}: ${expectedDuration} ms glass morph in its surface layer (${JSON.stringify(result)})`);
     check(result.transform === 'none', `${label}: content owner never scales`);
     await surface.evaluate(async node => { const start=performance.now(); while(node.querySelector('.liquid-morph-glass') && performance.now()-start<2500) await new Promise(resolve=>setTimeout(resolve,30)); });
     check(await surface.locator('.liquid-morph-glass').count() === 0, `${label}: releases glass after settling (${await surface.evaluate(node=>JSON.stringify([...node.querySelectorAll('.liquid-morph-glass')].map(el=>el.getAnimations().map(a=>({id:a.id,state:a.playState,time:a.currentTime})))) )})`);
@@ -79,6 +80,7 @@ async page => {
       trigger.click(); await new Promise(requestAnimationFrame); await new Promise(requestAnimationFrame);
       const host = document.querySelector('.page-actions-menu');
       for (const a of window.__overlayAnimations.filter(a => a.effect?.target === host && !a.id)) a.pause();
+      for (const a of host.getAnimations({ subtree: true })) a.pause();
       await new Promise(requestAnimationFrame);
       const glass = host.querySelector(':scope > .liquid-morph-glass');
       glass.getAnimations()[0].currentTime = 90;
@@ -88,6 +90,7 @@ async page => {
     const departing = await menu.evaluate(async host => {
       await new Promise(requestAnimationFrame);
       for (const a of window.__overlayAnimations.filter(a => a.effect?.target === host && !a.id)) a.pause();
+      for (const a of host.getAnimations({ subtree: true })) a.pause();
       await new Promise(requestAnimationFrame);
       const glass = host.querySelector(':scope > .liquid-morph-glass'), a = glass.getAnimations()[0]; a.currentTime = 0;
       return { rect: glass.getBoundingClientRect().toJSON(), id: a.id, duration: a.effect.getTiming().duration, inert: host.inert };
@@ -161,12 +164,11 @@ async page => {
     for (const section of ['Tasks', 'Notes', 'Projects', 'Tags', 'Goals', 'People']) {
       await page.getByRole('navigation', { name: 'Sections', exact: true }).getByRole('button', { name: section, exact: true }).click();
       const root = page.locator('.workspace-tab-panel.active');
-      const nav = root.locator('.tasks-page-nav').first(); await nav.locator('summary').click();
-      await probe(nav.locator('.quick-nav-options'), `${section} Nav`); await close();
-      check(await nav.locator('.quick-nav-options').count() === 0, `${section}: Nav closes without navigation`);
-      await root.getByRole('button', { name: /view options$/i }).first().click();
-      const viewOptions = root.locator('.task-view-options').first(); await probe(viewOptions, `${section} options`);
-      await root.getByRole('button', { name: /view options$/i }).first().click(); await page.waitForTimeout(300);
+      if (!['Tasks', 'Notes'].includes(section)) {
+        const nav = root.locator('.tasks-page-nav').first(); await nav.locator('summary').click();
+        await probe(nav.locator('.quick-nav-options'), `${section} Nav`); await close();
+        check(await nav.locator('.quick-nav-options').count() === 0, `${section}: Nav closes without navigation`);
+      }
     }
 
     stage = 'themes and materials';
@@ -179,7 +181,9 @@ async page => {
       check(await settings.evaluate(node => getComputedStyle(node).transform === 'none'), `${theme}/${accent}: settled dialog keeps its natural geometry`);
       await settings.getByRole('button', { name: 'Close Settings', exact: true }).click(); await page.waitForTimeout(300);
     }
-    stage = 'narrow'; await page.setViewportSize({ width: 420, height: 740 }); await sidebar();
+    stage = 'narrow'; await page.setViewportSize({ width: 420, height: 740 });
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await sidebar();
     await page.getByRole('button', { name: 'Settings', exact: true }).click(); await wait();
     check(await settings.evaluate(node => { const r = node.getBoundingClientRect(); return r.x >= 0 && r.right <= innerWidth + 1 && r.y >= 0 && r.bottom <= innerHeight + 1; }), 'Settings fits at 420 px');
     await settings.screenshot({ path: `output/playwright/liquid-overlays/${browser}/settings-narrow.png` }); await close();

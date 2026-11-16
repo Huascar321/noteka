@@ -18,7 +18,7 @@ export function toEditor(document: Document): JSONContent {
     return { type: 'text', text: t.text, ...(t.marks?.length ? { marks: t.marks.map(m => ({ type: m.type, ...(m.href ? { attrs: { href: m.href } } : {}) })) } : {}) };
   }
   function block(b: Block): JSONContent {
-    if (!(b.type in names)) throw new Error(`Bloque no soportado: ${b.type}`);
+    if (!(b.type in names)) throw new Error(`Unsupported block: ${b.type}`);
     const attributes = b.attrs as Record<string, unknown> | undefined;
     if (b.type === 'collection_view' && (document.schema_version !== 3 || b.content.length || b.children?.length || !attributes || Object.keys(attributes).some(k => !keys.collection_view.includes(k)) || keys.collection_view.some(k => typeof attributes[k] !== 'string' || !attributes[k]))) throw new Error("Unrecognized view reference.");
     const content = containers.has(b.type) ? (b.children ?? []).map(block) : b.content.map(inline).filter((n): n is JSONContent => n !== null);

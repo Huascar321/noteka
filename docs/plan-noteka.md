@@ -48,6 +48,23 @@
 
 # Noteka: plan de producto, arquitectura y desarrollo
 
+**Claridad temprana 10/11/2026:** `accelerate-popup-content-reveal` responde al
+pedido posterior de reducir el tiempo borroso: menús/pickers pasan de 400 a
+160 ms de entrada y el contenido alcanza opacidad completa en 100 ms sin espera
+inicial. Diálogos/Due conservan material de 400 ms y todos los cierres 200 ms.
+La apariencia final y las mejoras de rendimiento se conservan. Ver
+[verificación](verification-popup-reveal.md).
+
+**Rendimiento 10/11/2026:** `improve-native-render-scheduling` prepara el recorte
+de overlays fuera del tick, reproduce WAAPI sin seeks por frame, clasifica rueda
+pasivamente y acota diagnóstico/composición del canvas. Side peek conserva
+260 ms, usa transform, agrupa resize de buffers y habilita el documento fresco
+sin esperar metadatos secundarios ni precargarlo dos veces desde una fila.
+Mantiene apariencia,
+400/200 ms y velocidad de la portada. Ver
+[verificación y límites](verification-render-scheduling.md). El vidrio y su guía
+están guardados por separado en `3115aeb`; la optimización sigue local.
+
 **Material compartido 10/11/2026:** `share-clear-popup-glass` extiende el vidrio
 gris transparente aceptado en Search a todos los popups que usaban el material
 anterior, incluidos Settings, confirmaciones, menús, pickers, editor, Due y

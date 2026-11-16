@@ -546,7 +546,7 @@ Home SHALL omitir el desplegable Navegación y el botón Actualizar Home y ofrec
 
 ### Requirement: Página Tasks del menú lateral
 
-Tasks SHALL abrir una página amplia con icono sobre título, navegación Inbox/Today/Week/Month, New Task y filas compactas con relaciones/fechas locales. Inbox MUST listar tareas pendientes sin relación Project local. MUST iniciar Today, acumular páginas únicas y mantener apertura/captura protegidas. MUST NOT ofrecer la vista Unclassified ni un control manual de Inbox. Recurring y Active Content se identifican como pendientes deshabilitadas.
+Tasks SHALL abrir una página amplia con icono sobre título, navegación Inbox/Today/Week/Month, New Task y filas compactas con relaciones/fechas locales. Inbox MUST listar tareas pendientes sin relación Project local. MUST iniciar Today, acumular páginas únicas y mantener apertura/captura protegidas. MUST NOT ofrecer la vista Unclassified ni un control manual de Inbox. Recurring y Active Content se identifican como pendientes deshabilitadas en More views; la tira de vistas envuelve sin ocultar vistas ni usar scroll horizontal.
 
 #### Scenario: Apertura y páginas independientes
 

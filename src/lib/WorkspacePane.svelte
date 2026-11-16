@@ -18,6 +18,7 @@
   import PersonPhoto from './PersonPhoto.svelte';
   import PersonContents from './PersonContents.svelte';
   import PageTools from './PageTools.svelte';
+  import { shortcutLabel } from './shortcuts';
   import DatabasePanel from './DatabasePanel.svelte';
   import HomePanel from './HomePanel.svelte';
   import TasksPage from './TasksPage.svelte';
@@ -83,6 +84,9 @@
   let relationReadController: AbortController | undefined;
   let dashboardReadController: AbortController | undefined;
   let detailRefreshController: AbortController | undefined;
+  let selectionGeneration = 0;
+  let externalReadGeneration = 0;
+  let externalReadController: AbortController | undefined;
   let externalResources = $state<ExternalResource[]>([]);
   let externalError = $state('');
   let externalBusy = $state(false);
@@ -143,7 +147,9 @@
   let goalSummaryBusy = $state(false);
   let goalSummaryError = $state('');
   let goalSummaryGeneration = 0;
-  let relationPicker = $state<{ kind: 'project' | 'tag' | 'person'; anchor: HTMLElement } | null>(null);
+  type RelationTarget = { kind: 'project' | 'tag' | 'person'; anchor: HTMLElement; sourceId: string };
+  let relationPicker = $state<RelationTarget | null>(null);
+  let relationSurface = $state<RelationTarget | null>(null);
   let relationError = $state('');
   let searchQuery = $state('');
   let searchScope = $state<'notes' | 'attachments' | 'combined'>('notes');
@@ -249,6 +255,7 @@
   }
   function clearSelection() {
     detailRefreshController?.abort(); relationReadController?.abort(); dashboardReadController?.abort();
+    externalReadController?.abort(); externalReadGeneration++; selectionGeneration++;
     temporaryUnlockFor = null;
     relationReadGeneration++;
     relationPicker = null; relationError = '';
@@ -280,9 +287,16 @@
     if ((draft?.kind === 'task' || plainNotePage) && !event.metaKey && !event.ctrlKey && !event.altKey) void tick().then(() => bodyEditor?.focusStart());
   }
   function openPageRelations(kind: 'project' | 'tag' | 'person', anchor: HTMLElement) {
+    if (relationPicker?.kind === kind && relationPicker.anchor === anchor) {
+      relationPicker = null;
+      void tick().then(() => { if (anchor.isConnected) anchor.focus(); });
+      return;
+    }
     if (noteReadOnly || !selected || working || status === 'saving') return;
     relationError = '';
-    relationPicker = { kind, anchor };
+    const target = { kind, anchor, sourceId: selected.id };
+    relationSurface = target;
+    relationPicker = target;
   }
   function initializeGoalEditors(body: Document) {
     const parts = splitGoalDocument(body);
@@ -521,13 +535,15 @@
   }
   async function loadExternal(entity: Entity) {
     if (!workspace) return;
-    const workspacePath = workspace.path;
+    const workspacePath = workspace.path, generation = ++externalReadGeneration;
+    externalReadController?.abort();
+    const controller = externalReadController = new AbortController();
     try {
-      const page = await operate<Contract['external_resources']>({ operation: 'external.list', input: { entity_id: entity.id, limit: 50 } }, workspacePath);
-      if (selected?.id === entity.id && workspace?.path === workspacePath) { externalResources = page.items; externalError = ''; }
+      const page = await operate<Contract['external_resources']>({ operation: 'external.list', input: { entity_id: entity.id, limit: 50 } }, workspacePath, { signal: controller.signal });
+      if (!disposed && generation === externalReadGeneration && selected?.id === entity.id && workspace?.path === workspacePath) { externalResources = page.items; externalError = ''; }
     } catch (e) {
-      if (selected?.id === entity.id && workspace?.path === workspacePath) externalError = report(e);
-    }
+      if (!disposed && !controller.signal.aborted && generation === externalReadGeneration && selected?.id === entity.id && workspace?.path === workspacePath) externalError = report(e);
+    } finally { if (externalReadController === controller) externalReadController = undefined; }
   }
   function externalMetadata(resource: ExternalResource): Record<string, unknown> {
     return resource.metadata !== null && typeof resource.metadata === 'object' && !Array.isArray(resource.metadata) ? resource.metadata as Record<string, unknown> : {};
@@ -615,17 +631,22 @@
   }
   async function openOriginal(id: string) {
       if (!workspace) return;
+      const workspacePath = workspace.path;
       viewMode = 'detail';
       working = true;
       try {
-        const fresh = await operate<Entity>({ operation: 'entity.get', input: { id } }, workspace.path);
+        const fresh = await operate<Entity>({ operation: 'entity.get', input: { id } }, workspacePath);
+        if (disposed || workspace?.path !== workspacePath) return;
         clearSelection(); selected = fresh;
         section = entitySection(fresh.kind,fresh.payload);
         loadDraft(fresh);
         await tick(); fitTitle();
-        await loadRelations(fresh);
-        await loadDashboard(fresh);
-        await loadExternal(fresh);
+        const generation = selectionGeneration;
+        // The fresh document is ready. Independent secondary reads must not
+        // keep its editor or close guard disabled while they finish.
+        void Promise.all([loadRelations(fresh), loadDashboard(fresh), loadExternal(fresh)]).catch(e => {
+          if (!disposed && generation === selectionGeneration && selected?.id === id && workspace?.path === workspacePath) error = report(e);
+        });
       } catch (e) { error = report(e); }
       finally { working = false; }
   }
@@ -633,11 +654,11 @@
     if (section === 'goals') await createHome('note',undefined,{inbox:false,icon:'trophy',goal:{state:'dream'}});
     else if (section === 'home') await createHome('note'); else await newEntity('note');
   }
-  async function openHome(id: string) {
+  async function openHome(id: string, hint?: Pick<Entity, 'kind' | 'title'>) {
     if (onrequestdetail) {
       if (working || blocked) return;
       working = true;
-      try { const entity = await operate<Entity>({ operation: 'entity.get', input: { id } }, workspace.path); await onrequestdetail({ type: 'entity', id, kind: entity.kind, title: entity.title }); }
+      try { const entity = hint ?? await operate<Entity>({ operation: 'entity.get', input: { id } }, workspace.path); await onrequestdetail({ type: 'entity', id, kind: entity.kind, title: entity.title }); }
       catch (e) { error = report(e); }
       finally { working = false; }
       return;
@@ -885,7 +906,7 @@
   }
   onMount(() => {
     void openTarget(initialTarget).finally(() => { ready = true; });
-    return () => { disposed = true; refreshCoordinator.dispose(); listGeneration++; relationReadGeneration++; listController?.abort(); relationReadController?.abort(); dashboardReadController?.abort(); detailRefreshController?.abort(); guard?.resolve(false); };
+    return () => { disposed = true; refreshCoordinator.dispose(); listGeneration++; relationReadGeneration++; externalReadGeneration++; selectionGeneration++; listController?.abort(); relationReadController?.abort(); dashboardReadController?.abort(); detailRefreshController?.abort(); externalReadController?.abort(); guard?.resolve(false); };
   });
 </script>
 
@@ -915,16 +936,16 @@
 
         {#snippet pageToolContent(name: string)}
           {#if name === 'export'}
-        {#if selected?.document && !dirty}<div class="export-tools"><label>New export directory<input class="glass-field" aria-label="Export destination" bind:value={exportPath} placeholder="/ruta/a/exportacion" /></label><button class="glass-secondary" disabled={!exportPath.trim()} onclick={() => void exportNote('json')}>Export JSON and originals</button><button class="glass-secondary" disabled={!selected.document_editable || !exportPath.trim()} onclick={() => void exportNote('markdown')}>Export Markdown</button>{#if exportMessage}<p role="status">{exportMessage}</p>{/if}</div>{/if}
+        {#if selected?.document && !dirty}<div class="export-tools"><label>New export directory<input class="glass-field" aria-label="Export destination" bind:value={exportPath} placeholder="/path/to/export" /></label><button class="glass-secondary" disabled={!exportPath.trim()} onclick={() => void exportNote('json')}>Export JSON and originals</button><button class="glass-secondary" disabled={!selected.document_editable || !exportPath.trim()} onclick={() => void exportNote('markdown')}>Export Markdown</button>{#if exportMessage}<p role="status">{exportMessage}</p>{/if}</div>{/if}
           {:else if name === 'resources'}
         {#if selected}
           <div class="external-resources" aria-label="External resources">
-            <div class="actions"><button class="glass-secondary" disabled={dirty || working || externalBusy || noteReadOnly} onclick={() => void linkGoogleDrive()}>{externalBusy ? 'Esperando Google Picker…' : "Link from Google Drive"}</button></div>
+            <div class="actions"><button class="glass-secondary" disabled={dirty || working || externalBusy || noteReadOnly} onclick={() => void linkGoogleDrive()}>{externalBusy ? 'Waiting for Google Picker…' : "Link from Google Drive"}</button></div>
             {#if externalError}<p class="error" role="alert">{externalError}</p>{/if}
             {#if externalResources.length}
               {#each externalResources as resource (resource.id)}
                 <div class="external-row">
-                  <div><strong>{externalTitle(resource)}</strong><small class="metadata">{resource.provider} · {resource.resource_type} · {resource.resource_id}</small></div>
+                  <div><strong>{externalTitle(resource)}</strong><small class="metadata" title={resource.resource_id}>{resource.provider} · {resource.resource_type}</small></div>
                   <div class="actions">
                     {#if externalCanPreview(resource)}<button class="glass-secondary" disabled={externalBusy || externalPreviewBusy} onclick={() => void previewResource(resource)}>Preview</button>{/if}
                     {#if externalLink(resource)}<button class="glass-secondary" disabled={externalBusy || externalPreviewBusy} onclick={() => void openResource(resource)}>Open</button>{/if}
@@ -941,7 +962,7 @@
                 <p class="metadata">{externalPreview.preview_mime === 'text/csv' ? "First sheet exported as CSV; formulas are not recalculated." : "Document exported as plain text."} Read-only preview; not saved to the workspace.</p>
               </section>
             {/if}
-            <p class="metadata">Google Picker usa `drive.file`; no descarga ni edita archivos.</p>
+            <p class="metadata">Google Picker uses the drive.file scope; it does not download or edit files.</p>
           </div>
         {/if}
 
@@ -957,7 +978,7 @@
     {:else if section === 'task' && overview}
       {#key workspace.path}<TasksPage bind:this={tasksPage} workspace={workspace.path} {active} {blocked} {error} onopen={openHome} oncreate={createHome} onhome={async () => { await navigate('home'); }} onprojects={async () => { await navigate('project'); }} />{/key}
     {:else if section === 'note' && overview}
-      {#key workspace.path}<NotesPage bind:this={notesPage} workspace={workspace.path} {active} {blocked} {error} onopen={openHome} oncreate={createHome} ontags={async () => { await navigate('tag'); }} />{/key}
+      {#key workspace.path}<NotesPage bind:this={notesPage} workspace={workspace.path} {active} {blocked} {error} onopen={openHome} oncreate={createHome} />{/key}
     {:else if section === 'project' && overview}
       {#key workspace.path}<ProjectsPage bind:this={projectsPage} workspace={workspace.path} {active} {blocked} {error} onopen={openHome} oncreate={createHome} />{/key}
     {:else if section === 'tag' && overview}
@@ -969,10 +990,10 @@
     {:else}
     {#if overview}<section class="entity-list" id={`entity-list-${paneId}`} aria-label={currentLabel}>
       <header><h2><span class="section-icon" aria-hidden="true"><AppIcon name={sectionIcon()} size={18} /></span>{currentLabel}</h2><button title="Refresh" aria-label="Refresh" onclick={() => void refresh()} disabled={loading || working}><AppIcon name="refresh" size={16} /></button></header>
-      {#if section !== 'archive' && section !== 'search' && section !== 'collections'}<button class="new-note" onclick={() => void newEntity(createKind)}><AppIcon name="plus" size={16} />{createLabel[createKind]} {#if createKind === 'note'}<kbd>⌘N</kbd>{/if}</button>{/if}
+      {#if section !== 'archive' && section !== 'search' && section !== 'collections'}<button class="new-note" onclick={() => void newEntity(createKind)}><AppIcon name="plus" size={16} />{createLabel[createKind]} {#if createKind === 'note'}<kbd>{shortcutLabel('N')}</kbd>{/if}</button>{/if}
       {#if section === 'search'}
         <label>Search scope<select class="glass-field" aria-label="Search scope" value={searchScope} disabled={working || status === 'saving'} onchange={(e) => changeSearchScope(e.currentTarget.value as 'notes' | 'attachments' | 'combined')}><option value="notes">Notes and entities</option><option value="attachments">Attachments</option><option value="combined">Notes and attachments (groups)</option></select></label>
-        {#if searchScope === 'notes'}<form class="search-form" onsubmit={(e) => { e.preventDefault(); void loadList(); }}><label>Local text<input class="glass-field" aria-label="Search text" bind:value={searchQuery} oninput={invalidateSearchCriteria} placeholder="1–16 terms" maxlength="256" /></label><label>Type<select class="glass-field" aria-label="Search type" bind:value={searchKind} onchange={invalidateSearchCriteria}><option value="">All</option>{#each ['note','task','project','tag','person'] as kind}<option value={kind}>{kind}</option>{/each}</select></label><label class="checkbox-label"><input type="checkbox" bind:checked={searchArchived} onchange={invalidateSearchCriteria} /> Archived only</label><label>ID contexto opcional<input class="glass-field" aria-label="Search context" bind:value={searchRelated} oninput={invalidateSearchCriteria} /></label><button class="glass-secondary" disabled={loading || working || !searchQuery.trim()}>Search</button><button class="glass-secondary" type="button" disabled={working || loading} onclick={() => void rebuildSearch()}>Rebuild index</button><p class="list-message">Titles and recognized blocks. Choose Attachments for selected file fragments. No models.</p>{#if searchMessage}<p class="list-message" role="status">{searchMessage}</p>{/if}</form>
+        {#if searchScope === 'notes'}<form class="search-form" onsubmit={(e) => { e.preventDefault(); void loadList(); }}><label>Local text<input class="glass-field" aria-label="Search text" bind:value={searchQuery} oninput={invalidateSearchCriteria} placeholder="1–16 terms" maxlength="256" /></label><label>Type<select class="glass-field" aria-label="Search type" bind:value={searchKind} onchange={invalidateSearchCriteria}><option value="">All</option>{#each ['note','task','project','tag','person'] as kind}<option value={kind}>{kind}</option>{/each}</select></label><label class="checkbox-label"><input type="checkbox" bind:checked={searchArchived} onchange={invalidateSearchCriteria} /> Archived only</label><label>Optional context ID<input class="glass-field" aria-label="Search context" bind:value={searchRelated} oninput={invalidateSearchCriteria} /></label><button class="glass-secondary" disabled={loading || working || !searchQuery.trim()}>Search</button><button class="glass-secondary" type="button" disabled={working || loading} onclick={() => void rebuildSearch()}>Rebuild index</button><p class="list-message">Titles and recognized blocks. Choose Attachments for selected file fragments. No models.</p>{#if searchMessage}<p class="list-message" role="status">{searchMessage}</p>{/if}</form>
         {:else if searchScope === 'attachments'}{#key workspace.path}<AttachmentSearchPanel bind:this={attachmentPanel} workspace={workspace.path} />{/key}{:else}{#key workspace.path}<GroupedSearchPanel bind:this={groupedPanel} workspace={workspace.path} onopen={openSearch} />{/key}{/if}
       {/if}
       {#if workflowDate}<p class="list-message">Calendar day {workflowDate} · {workspace.timezone}</p>{/if}
@@ -998,7 +1019,7 @@
             {#if pageLocked}<button bind:this={lockStatusButton} type="button" class="page-lock-status" class:temporarily-unlocked={!noteReadOnly} aria-label={noteReadOnly ? "Unlock page temporarily" : "Re-lock page"} title={noteReadOnly ? "Unlock temporarily to edit" : "Lock the page again"} disabled={blocked || working || status === 'saving'} onclick={() => void toggleTemporaryUnlock()}><AppIcon name={noteReadOnly ? "lock" : "lock-open"} size={13} /><span>{noteReadOnly ? "Locked" : "Re-lock"}</span></button>{/if}
           {/if}
           <button class="page-refresh" aria-label="Refresh page" title="Refresh page" disabled={working || loading || status === 'saving'} onclick={() => void refresh()}><AppIcon name="refresh" size={16} /></button>
-          {#if draft}<span class:warning={dirty} class="save-status" role="status">{({ saved: "Saved", dirty: "Unsaved changes", saving: "Saving…", error: "Error · Unsaved", conflict: "Conflict · Unsaved" })[status]}</span>{#if dirty}<button class="primary glass-action" onclick={() => void save()} disabled={working || status === 'saving'}>{status === 'error' ? "Retry" : "Save"} <kbd>⌘S</kbd></button>{/if}{/if}
+          {#if draft}<span class:warning={dirty} class="save-status" role="status">{({ saved: "Saved", dirty: "Unsaved changes", saving: "Saving…", error: "Error · Unsaved", conflict: "Conflict · Unsaved" })[status]}</span>{#if dirty}<button class="primary glass-action" onclick={() => void save()} disabled={working || status === 'saving'}>{status === 'error' ? "Retry" : "Save"} <kbd>{shortcutLabel('S')}</kbd></button>{/if}{/if}
           {#if selected || draft}<PageTools groups={toolGroups} bind:active={utilityPanel} content={pageToolContent} placement="header" actions={[
             ...(plainNotePage ? [{ id: 'lock', label: 'Lock page', icon: 'lock', checked: pageLocked, disabled: !selected || working || status === 'saving', reason: !selected ? 'Save the page to lock it' : undefined, onselect: () => { void togglePageLock(); } }] : []),
             ...(selected ? [{ id: 'archive', label: selected.archived_at ? 'Restore' : 'Archive', icon: selected.archived_at ? 'undo' : 'archive', disabled: working || status === 'saving' || noteReadOnly, reason: noteReadOnly ? 'Unlock the page first' : undefined, onselect: () => { void archive(); } }] : [])
@@ -1015,7 +1036,7 @@
           <DatabasePanel bind:this={databasePanel} workspace={workspace.path} onpending={(pending) => collectionPending = pending} onbusy={(busy) => working = busy} onguard={async action => { await guarded(action); }} onopen={openEntity} onerror={(message) => error = message} />
         {:else if draft}
           <div class="page-title-row">{#if draft.kind === 'task' && !draft.payload.icon}<div class="task-title-tools"><IconPicker size={18} icon="task" color={entityIconColor(draft.payload) ?? null} onchange={chooseIcon} /><span>Add icon</span></div>{:else}<IconPicker disabled={plainNotePage && noteEditingDisabled} size={draft.kind === 'project' ? 88 : draft.kind === 'tag' || draft.kind === 'person' ? 72 : 62} icon={entityIcon(draft.kind, draft.title, draft.payload)} color={entityIconColor(draft.payload) ?? null} onchange={chooseIcon} />{/if}<textarea class="title-input" readonly={noteReadOnly} rows="1" aria-label={draft.kind === 'note' ? draft.payload.goal ? "Goal title" : draft.payload.milestone ? "Milestone title" : "Note title" : "Entity title"} placeholder="Untitled" bind:this={titleInput} bind:value={draft.title} oninput={(e) => { edited(); fitTitle(); }} onkeydown={titleKeydown} disabled={status === 'saving' || working}></textarea></div>
-          <details class="page-details" bind:open={detailsOpen}><summary>View details</summary>
+          <details class="page-details" bind:open={detailsOpen}><summary>View details<AppIcon name="chevron-right" size={14} /></summary>
             {#if goalDetail}<EntityFields workspace={workspace.path} kind="note" payload={draft.payload} goalSecondaryOnly disabled={noteEditingDisabled} onchange={edited} />{:else if personDetail}<EntityFields workspace={workspace.path} kind="person" payload={draft.payload} disabled={noteEditingDisabled} onchange={edited} />{:else if draft.kind === 'task'}<EntityFields workspace={workspace.path} kind="task" payload={draft.payload} taskSecondaryOnly disabled={noteEditingDisabled} onchange={edited} />{:else if plainNotePage}<EntityFields workspace={workspace.path} kind="note" payload={draft.payload} noteSecondaryOnly disabled={noteEditingDisabled} onchange={edited} />{:else if draft.kind === 'project'}<EntityFields workspace={workspace.path} kind="project" payload={draft.payload} projectSecondaryOnly disabled={noteEditingDisabled} onchange={edited} />{:else if draft.kind === 'tag'}<EntityFields workspace={workspace.path} kind="tag" payload={draft.payload} tagSecondaryOnly disabled={noteEditingDisabled} onchange={edited} />{/if}
             {#if selected}<p class="metadata">Revision {selected.revision} · {new Date(selected.updated_at).toLocaleString('en-US', { timeZone: workspace.timezone })} · {workspace.timezone} · Local{selected.archived_at ? " · Archived" : ''}</p>{/if}
             {#if sourceLocator}<p class="source-locator" role="status">{sourceLocator}</p>{/if}
@@ -1071,8 +1092,8 @@
     {/if}
 </div>
 
-{#if relationPicker && selected && !noteReadOnly}
-  <RelationPicker workspace={workspace.path} sourceId={selected.id} kind={relationPicker.kind} anchor={relationPicker.anchor} {relationships} busy={working || status === 'saving'} error={relationError} onadd={addRelation} onremove={removeRelation} onclose={() => { relationPicker = null; }} />
+{#if relationPicker && relationSurface && selected && !noteReadOnly}
+  <RelationPicker workspace={workspace.path} sourceId={relationSurface.sourceId} kind={relationSurface.kind} anchor={relationSurface.anchor} {relationships} busy={working || status === 'saving'} error={relationError} onadd={addRelation} onremove={removeRelation} onclose={() => { relationPicker = null; }} />
 {/if}
 {#if guard}
     <dialog use:modal aria-labelledby={`pending-title-${paneId}`} class="modal unsaved-changes-dialog glass-popup" use:liquidSurface in:liquidTransition|global out:liquidTransition|global oncancel={(e) => { e.preventDefault(); void resolveGuard('cancel'); }}>

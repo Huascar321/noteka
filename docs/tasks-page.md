@@ -2,7 +2,7 @@
 
 El breadcrumb compartido muestra Home → Tasks y mantiene Home navegable.
 Tasks del menú lateral abre una página amplia con icono sobre el título,
-navegación Inbox/Today/Week/Month, el botón New y las vistas locales de Home.
+tabs de vistas (Inbox/Today/Week/Month…), el botón New y las vistas locales de Home.
 Today es la vista inicial y agrupa las tareas pendientes de proyectos
 Doing/Ongoing no archivados; All Active Projects agrega Planned. La vista core
 `tasks_today` conserva su filtro por vencimiento para CLI/MCP. Today e Inbox
@@ -15,8 +15,10 @@ captura pasan por las guardias de buffers existentes y crear no asigna fechas.
 El checkbox pendiente es un cuadrado vacío con borde neutro; el completado es un
 check verde, compartido con Home y contenidos de Project.
 
-Recurring y Active Content aparecen deshabilitadas como pendientes. No hay
-acciones ficticias de colaboración, backlinks o portada de Notion.
+Recurring y Active Content se listan deshabilitadas en More views; no ocupan
+la tira de tabs. La tira envuelve en varias filas cuando no entra, sin scroll
+horizontal ni vistas ocultas. No hay acciones ficticias de colaboración,
+backlinks o portada de Notion.
 
 ## Projects
 

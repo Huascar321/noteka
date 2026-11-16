@@ -1,0 +1,311 @@
+{
+  "date": "2026-11-10",
+  "records": [
+    {
+      "name": "before-chromium",
+      "transport": "headless-cli-not-native-ipc",
+      "theme": "light",
+      "phase": "main",
+      "ok": true,
+      "checks": [
+        "light: temporary layer released",
+        "light: Escape restores project trigger focus",
+        "dark: temporary layer released",
+        "dark: Escape restores project trigger focus",
+        "Reduced motion skips the reveal",
+        "No frontend errors: []",
+        "Opening/reveal does not mutate the original"
+      ],
+      "samples": [
+        {
+          "theme": "light",
+          "selector": ".relation-picker",
+          "duration": 400,
+          "opacities": [
+            0,
+            0
+          ],
+          "reveals": [
+            [
+              320
+            ],
+            [
+              320
+            ]
+          ]
+        },
+        {
+          "theme": "light",
+          "selector": "#settings-dialog",
+          "duration": 400,
+          "opacities": [
+            0.722208,
+            0.722208,
+            0.722208
+          ],
+          "reveals": [
+            [
+              220.00000000000003
+            ],
+            [
+              220.00000000000003
+            ],
+            [
+              220.00000000000003
+            ]
+          ]
+        },
+        {
+          "theme": "dark",
+          "selector": ".relation-picker",
+          "duration": 400,
+          "opacities": [
+            0,
+            0
+          ],
+          "reveals": [
+            [
+              320
+            ],
+            [
+              320
+            ]
+          ]
+        },
+        {
+          "theme": "dark",
+          "selector": "#settings-dialog",
+          "duration": 400,
+          "opacities": [
+            0.722208,
+            0.722208,
+            0.722208
+          ],
+          "reveals": [
+            [
+              220.00000000000003
+            ],
+            [
+              220.00000000000003
+            ],
+            [
+              220.00000000000003
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "after-chromium",
+      "transport": "headless-cli-not-native-ipc",
+      "theme": "light",
+      "phase": "main",
+      "ok": true,
+      "checks": [
+        "light: project picker completes in 160 ms",
+        "light: picker content opacity is complete at 100 ms",
+        "light: shared reveal endpoint is 100 ms",
+        "light: temporary layer released",
+        "light: Escape restores project trigger focus",
+        "light: dialog material retains 400 ms",
+        "light: dialog opacity is complete at 100 ms",
+        "dark: project picker completes in 160 ms",
+        "dark: picker content opacity is complete at 100 ms",
+        "dark: shared reveal endpoint is 100 ms",
+        "dark: temporary layer released",
+        "dark: Escape restores project trigger focus",
+        "dark: dialog material retains 400 ms",
+        "dark: dialog opacity is complete at 100 ms",
+        "Reduced motion skips the reveal",
+        "No frontend errors: []",
+        "Opening/reveal does not mutate the original"
+      ],
+      "samples": [
+        {
+          "theme": "light",
+          "selector": ".relation-picker",
+          "duration": 160,
+          "opacities": [
+            1,
+            1
+          ],
+          "reveals": [
+            [
+              100
+            ],
+            [
+              100
+            ]
+          ]
+        },
+        {
+          "theme": "light",
+          "selector": "#settings-dialog",
+          "duration": 400,
+          "opacities": [
+            1,
+            1,
+            1
+          ],
+          "reveals": [
+            [
+              100
+            ],
+            [
+              100
+            ],
+            [
+              100
+            ]
+          ]
+        },
+        {
+          "theme": "dark",
+          "selector": ".relation-picker",
+          "duration": 160,
+          "opacities": [
+            1,
+            1
+          ],
+          "reveals": [
+            [
+              100
+            ],
+            [
+              100
+            ]
+          ]
+        },
+        {
+          "theme": "dark",
+          "selector": "#settings-dialog",
+          "duration": 400,
+          "opacities": [
+            1,
+            1,
+            1
+          ],
+          "reveals": [
+            [
+              100
+            ],
+            [
+              100
+            ],
+            [
+              100
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "after-webkit",
+      "transport": "headless-cli-not-native-ipc",
+      "theme": "light",
+      "phase": "main",
+      "ok": true,
+      "checks": [
+        "light: project picker completes in 160 ms",
+        "light: picker content opacity is complete at 100 ms",
+        "light: shared reveal endpoint is 100 ms",
+        "light: temporary layer released",
+        "light: Escape restores project trigger focus",
+        "light: dialog material retains 400 ms",
+        "light: dialog opacity is complete at 100 ms",
+        "dark: project picker completes in 160 ms",
+        "dark: picker content opacity is complete at 100 ms",
+        "dark: shared reveal endpoint is 100 ms",
+        "dark: temporary layer released",
+        "dark: Escape restores project trigger focus",
+        "dark: dialog material retains 400 ms",
+        "dark: dialog opacity is complete at 100 ms",
+        "Reduced motion skips the reveal",
+        "No frontend errors: []",
+        "Opening/reveal does not mutate the original"
+      ],
+      "samples": [
+        {
+          "theme": "light",
+          "selector": ".relation-picker",
+          "duration": 160,
+          "opacities": [
+            1,
+            1
+          ],
+          "reveals": [
+            [
+              100
+            ],
+            [
+              100
+            ]
+          ]
+        },
+        {
+          "theme": "light",
+          "selector": "#settings-dialog",
+          "duration": 400,
+          "opacities": [
+            1,
+            1,
+            1
+          ],
+          "reveals": [
+            [
+              100
+            ],
+            [
+              100
+            ],
+            [
+              100
+            ]
+          ]
+        },
+        {
+          "theme": "dark",
+          "selector": ".relation-picker",
+          "duration": 160,
+          "opacities": [
+            1,
+            1
+          ],
+          "reveals": [
+            [
+              100
+            ],
+            [
+              100
+            ]
+          ]
+        },
+        {
+          "theme": "dark",
+          "selector": "#settings-dialog",
+          "duration": 400,
+          "opacities": [
+            1,
+            1,
+            1
+          ],
+          "reveals": [
+            [
+              100
+            ],
+            [
+              100
+            ],
+            [
+              100
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "sha256": {
+    "src/lib/liquid-motion.ts": "70f75c5db28d7513d201968082c741bc05f9e44a072ff0ba059d5e096b1c07c2",
+    "src/lib/liquid-overlay.ts": "91e315410f9353dadc78e313bc0c15761edb203f4d08aa8fa53063624fe23bdc"
+  }
+}

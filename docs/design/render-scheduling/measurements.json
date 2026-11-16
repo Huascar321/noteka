@@ -1,0 +1,263 @@
+{
+  "date": "2026-11-10",
+  "glassCommit": "3115aeb",
+  "baseline": "Working tree with accepted glass and earlier unrelated layout/weather/cadence changes retained. Random cover scenes, instrumented headless tests; no physical display FPS claim.",
+  "native": "macOS 27.2 / system WebKit 22625.2.8.11.9, normal debug desktop build with production frontend assets.",
+  "profiles": [
+    {
+      "browser": "chromium",
+      "stage": "before",
+      "results": [
+        {
+          "name": "home-idle",
+          "rects": 36,
+          "styles": 0,
+          "seeks": 0,
+          "mutations": 124,
+          "p95": 16.700000000000273,
+          "longFrames": 0,
+          "frameCount": 152
+        },
+        {
+          "name": "six-settings-cycles",
+          "rects": 1200,
+          "styles": 359,
+          "seeks": 1028,
+          "mutations": 317,
+          "p95": 16.799999999999272,
+          "longFrames": 1,
+          "frameCount": 323
+        }
+      ]
+    },
+    {
+      "browser": "chromium",
+      "stage": "after",
+      "results": [
+        {
+          "name": "home-idle",
+          "rects": 44,
+          "styles": 0,
+          "seeks": 0,
+          "mutations": 11,
+          "p95": 16.700000000000273,
+          "longFrames": 0,
+          "frameCount": 166
+        },
+        {
+          "name": "six-settings-cycles",
+          "rects": 220,
+          "styles": 90,
+          "seeks": 48,
+          "mutations": 21,
+          "p95": 16.799999999999727,
+          "longFrames": 1,
+          "frameCount": 316
+        }
+      ]
+    },
+    {
+      "browser": "webkit",
+      "stage": "before",
+      "results": [
+        {
+          "name": "home-idle",
+          "rects": 52,
+          "styles": 0,
+          "seeks": 0,
+          "mutations": 63,
+          "p95": 56,
+          "longFrames": 59,
+          "frameCount": 75
+        },
+        {
+          "name": "six-settings-cycles",
+          "rects": 736,
+          "styles": 243,
+          "seeks": 564,
+          "mutations": 126,
+          "p95": 65,
+          "longFrames": 118,
+          "frameCount": 202
+        }
+      ]
+    },
+    {
+      "browser": "webkit",
+      "stage": "after",
+      "results": [
+        {
+          "name": "home-idle",
+          "rects": 36,
+          "styles": 0,
+          "seeks": 0,
+          "mutations": 10,
+          "p95": 69,
+          "longFrames": 53,
+          "frameCount": 75
+        },
+        {
+          "name": "six-settings-cycles",
+          "rects": 220,
+          "styles": 90,
+          "seeks": 48,
+          "mutations": 22,
+          "p95": 59,
+          "longFrames": 120,
+          "frameCount": 190
+        }
+      ]
+    }
+  ],
+  "peeks": [
+    {
+      "browser": "chromium",
+      "stage": "before",
+      "checks": 3,
+      "samples": [
+        {
+          "kind": "note",
+          "titleMs": 1886.9000000059605,
+          "editableBeforeMetadata": false,
+          "reads": 2,
+          "transition": "right, opacity, visibility",
+          "duration": "0.26s, 0.26s, 0s",
+          "coverResizes": 15,
+          "cover": {
+            "css": 542,
+            "pixels": 1084,
+            "dpr": 2
+          }
+        },
+        {
+          "kind": "task",
+          "titleMs": 913.1999999880791,
+          "editableBeforeMetadata": false,
+          "reads": 2,
+          "transition": "right, opacity, visibility",
+          "duration": "0.26s, 0.26s, 0s",
+          "coverResizes": 16,
+          "cover": {
+            "css": 542,
+            "pixels": 1084,
+            "dpr": 2
+          }
+        }
+      ]
+    },
+    {
+      "browser": "chromium",
+      "stage": "after",
+      "checks": 19,
+      "samples": [
+        {
+          "kind": "note",
+          "titleMs": 637.5,
+          "editableBeforeMetadata": true,
+          "reads": 1,
+          "transition": "transform, opacity, visibility",
+          "duration": "0.26s, 0.26s, 0s",
+          "coverResizes": 1,
+          "cover": {
+            "css": 542,
+            "pixels": 1084,
+            "dpr": 2
+          }
+        },
+        {
+          "kind": "task",
+          "titleMs": 730.5,
+          "editableBeforeMetadata": true,
+          "reads": 1,
+          "transition": "transform, opacity, visibility",
+          "duration": "0.26s, 0.26s, 0s",
+          "coverResizes": 1,
+          "cover": {
+            "css": 542,
+            "pixels": 1084,
+            "dpr": 2
+          }
+        }
+      ]
+    },
+    {
+      "browser": "webkit",
+      "stage": "before",
+      "checks": 3,
+      "samples": [
+        {
+          "kind": "note",
+          "titleMs": 2568,
+          "editableBeforeMetadata": false,
+          "reads": 2,
+          "transition": "right, opacity, visibility",
+          "duration": "0.26s, 0.26s, 0s",
+          "coverResizes": 3,
+          "cover": {
+            "css": 532,
+            "pixels": 1064,
+            "dpr": 2
+          }
+        },
+        {
+          "kind": "task",
+          "titleMs": 1171,
+          "editableBeforeMetadata": false,
+          "reads": 2,
+          "transition": "right, opacity, visibility",
+          "duration": "0.26s, 0.26s, 0s",
+          "coverResizes": 4,
+          "cover": {
+            "css": 532,
+            "pixels": 1064,
+            "dpr": 2
+          }
+        }
+      ]
+    },
+    {
+      "browser": "webkit",
+      "stage": "after",
+      "checks": 19,
+      "samples": [
+        {
+          "kind": "note",
+          "titleMs": 733,
+          "editableBeforeMetadata": true,
+          "reads": 1,
+          "transition": "transform, opacity, visibility",
+          "duration": "0.26s, 0.26s, 0s",
+          "coverResizes": 1,
+          "cover": {
+            "css": 532,
+            "pixels": 1064,
+            "dpr": 2
+          }
+        },
+        {
+          "kind": "task",
+          "titleMs": 590,
+          "editableBeforeMetadata": true,
+          "reads": 1,
+          "transition": "transform, opacity, visibility",
+          "duration": "0.26s, 0.26s, 0s",
+          "coverResizes": 1,
+          "cover": {
+            "css": 532,
+            "pixels": 1064,
+            "dpr": 2
+          }
+        }
+      ]
+    }
+  ],
+  "sha256": {
+    "src/lib/liquid-overlay.ts": "de8fb860d98c3d9b523c468d495534b570d75684b6714b06964acaf610827e96",
+    "src/lib/liquid-clip.ts": "e4a08b07ae488ef26bcd82fadda562b50491520441d2890a2a3ea4a63cee5059",
+    "src/lib/smooth-wheel.ts": "c538e63eb40ac92d12fd501f62ab0bf7f769ac22f39e1a45d93951b96eb63183",
+    "src/lib/AsciiShark.svelte": "8af455cfcda4c10e2ac2b35953a3c94b52d9441d769bd23d281387bc0b1cf113",
+    "src/lib/WorkspacePane.svelte": "c5562a15d7f59b926b350960d0a58288bdc3ecf1afb09caaa6600414bfa117ee",
+    "src/lib/HomeItem.svelte": "dfbc6ee83166942c85a2c2179bd5bcb2e965e182e597266a44e0c8a243e0e232",
+    "src/style.css": "4f1468971416d138391e0d1c44a98f6c612c81dd26b65a276cf1727d457d43e9"
+  }
+}

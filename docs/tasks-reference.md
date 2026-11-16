@@ -38,8 +38,9 @@ archivado sigue contando. Done conserva su regla anterior. El núcleo conserva
 interfaz ya no muestra la tab Unclassified ni un control Inbox. Content aún no
 está modelado y no se comprueba en esta vista.
 
-Recurring y Active Content siguen pendientes. Cobertura, contexto de consulta y
-reglas se consultan en Opciones de vista y en el footer; los conteos de grupo son
+Recurring y Active Content siguen pendientes y se listan en More views. La
+ayuda de la vista (lámpara) y el footer documentan cobertura, contexto de
+consulta y reglas; los conteos de grupo son
 apariciones de esta página. No hay un total global inventado entre grupos.
 
 ## Imágenes originales

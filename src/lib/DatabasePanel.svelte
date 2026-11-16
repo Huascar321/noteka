@@ -165,7 +165,7 @@
     {#if mode !== 'collection'}<label>{mode === 'property' ? "Property definition JSON" : mode === 'view' ? "View configuration JSON" : mode === 'formula' ? "AST JSON: expression and optional property_id" : "Value patch JSON by property ID"}<textarea aria-label="Collection draft JSON" bind:value={jsonInput} disabled={busy} spellcheck="false"></textarea></label><p class="metadata">Decimal and monetary values are strings. Null clears a value; omission preserves it. Titles, timestamps and calculations are derived. No code or SQL is executed.</p>{/if}
     <div class="actions"><button disabled={busy}>{busy ? "Saving…" : "Save collection"}</button><button type="button" disabled={busy} onclick={discardPending}>Discard form</button><button type="button" onclick={copyBuffer}>Recover draft JSON</button></div>
   </form>{/if}
-  {#if recovery}<label>JSON recuperable<textarea readonly aria-label="Collection recovery" value={recovery}></textarea></label>{/if}
+  {#if recovery}<label>Recoverable JSON<textarea readonly aria-label="Collection recovery" value={recovery}></textarea></label>{/if}
   {#if current && resultsReady}
     <CollectionPresentation page={{ properties: current.properties, config: pageConfig, records: { items: records, next_cursor: recordCursor }, layout, matching_count: matchingCount, groups }} {busy} {onopen} onedit={(record) => begin('values', record)} />
     {#if recordCursor}<button disabled={busy} onclick={() => void nextPage('records')}>Next page</button>{/if}{#if recordOffset}<button disabled={busy} onclick={() => void refreshPanel()}>Back to the beginning</button>{/if}

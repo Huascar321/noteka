@@ -76,7 +76,7 @@ Portada CSS propia azul/verde, casa, navegación y orden **Tasks → Notes → P
 | --- | --- | --- |
 | Portada/nav | Jerarquía, enlaces locales, dos temas | Personalizar portada; Content |
 | Clima | Franja/aviso sin llamadas | Localidad/proveedor, opt-in/caché, siete días |
-| Tasks | Today (pendientes de proyectos Doing/Ongoing)/Inbox/All/Done | Week/Month/Scheduled/No Due/Recurring, All Active Projects/Active Content |
+| Tasks | Today/Inbox/Week/Month/Scheduled/No Due/All Active Projects/All/Done | Recurring y Active Content (More views) |
 | Notes | Notes/Inbox | Fav./Clips/Voice/Journal/Meetings/All diferenciada; Unclassified (biblioteca sin Tag/Project/People) |
 | Projects | Active/Planned/Board y resumen Noteka | Paridad con campos/fórmulas de referencia no inspeccionados |
 | Tags | Recent/A–Z/Types; Topic conservado | Fav.; tipo Entity requiere decisión/modelo propio |

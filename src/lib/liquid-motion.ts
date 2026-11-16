@@ -1,5 +1,7 @@
 /** Approved Due motion, shared by interactive transient surfaces. */
 export const LIQUID_OPEN_MS = 400;
+export const LIQUID_MENU_OPEN_MS = 160;
+export const LIQUID_CONTENT_REVEAL_MS = 100;
 export const LIQUID_CLOSE_MS = 200;
 
 export function liquidMaterialFrames(source: Keyframe, radius = '14px', drift = -3, overshoot = { x: 1.035, y: 1.025 }): Keyframe[] {
@@ -13,9 +15,8 @@ export function liquidMaterialFrames(source: Keyframe, radius = '14px', drift = 
 
 export function liquidContentFrames(drift = -3, opacity = 1): Keyframe[] {
   return [
-    { opacity: 0, transform: `translateY(${drift * 2}px)`, offset: 0 },
-    { opacity: 0, transform: `translateY(${drift * 2}px)`, offset: .3, easing: 'ease-out' },
-    { opacity, transform: 'none', offset: .8 },
+    { opacity: 0, transform: `translateY(${drift * 2}px)`, offset: 0, easing: 'ease-out' },
+    { opacity, transform: 'none', offset: LIQUID_CONTENT_REVEAL_MS / LIQUID_OPEN_MS },
     { opacity, transform: 'none', offset: 1 },
   ];
 }

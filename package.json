@@ -38,6 +38,9 @@
     "test:headless-task-paging": "node scripts/headless-task-paging-smoke.mjs",
     "test:headless-due-picker": "node scripts/headless-due-picker-smoke.mjs",
     "test:headless-liquid-overlays": "node scripts/headless-liquid-overlays-smoke.mjs",
+    "test:headless-render-scheduling": "node scripts/headless-render-scheduling-smoke.mjs",
+    "test:headless-popup-reveal": "node scripts/headless-popup-reveal-smoke.mjs",
+    "test:headless-side-peek-performance": "node scripts/headless-side-peek-performance-smoke.mjs",
     "icons:generate": "node scripts/generate-icons.mjs",
     "icons:check": "node scripts/generate-icons.mjs --check"
   },

@@ -32,7 +32,6 @@
   const displayedViews = $derived(pageMode ? [...views, { id: 'projects_calendar' as HomeView, label: 'Deadlines', icon: 'calendar' }, { id: 'projects_completed' as HomeView, label: 'Completed', icon: 'circle-check' }, ...(standalone ? [{ id: 'projects_on_hold' as HomeView, label: 'On Hold', icon: 'pause' }] : [])] : views);
   const columns = $derived(definitions.filter(c => readState?.view === 'projects_active' ? c.state === 'doing' || c.state === 'ongoing' : readState?.view === 'projects_planned' ? c.state === 'planned' : readState?.view === 'projects_completed' ? c.state === 'done' : readState?.view === 'projects_on_hold' ? c.state === 'on_hold' : true));
   const relationView = $derived(readState?.view === 'projects_by_tag' || readState?.view === 'projects_by_people');
-  let optionsOpen = $state(false);
   let root: HTMLElement;
   let board = $state<HTMLElement>();
   let alive = true;
@@ -118,7 +117,7 @@
   function create(state: ProjectState = 'planned') { return oncreate({ state }); }
 </script>
 
-<svelte:window onpointermove={movePointer} onpointerup={finishPointer} onpointercancel={endDrag} onblur={endDrag} onclickcapture={cancelClick} onkeydown={(event) => { if (event.key === 'Escape') { if (pointer?.started) suppressClick = true; endDrag(); if (root?.contains(document.activeElement)) optionsOpen = false; } }} />
+<svelte:window onpointermove={movePointer} onpointerup={finishPointer} onpointercancel={endDrag} onblur={endDrag} onclickcapture={cancelClick} onkeydown={(event) => { if (event.key === 'Escape') { if (pointer?.started) suppressClick = true; endDrag(); } }} />
 
 <section class="home-section home-tasks home-projects" class:task-page-projects={pageMode} class:tasks-page-section={standalone} data-home-section="project" aria-label="Projects" aria-busy={readState?.busy ?? true} bind:this={root}>
   {#if standalone}
@@ -129,12 +128,9 @@
     <div class="home-tabs task-view-tabs" use:slidingTabs role="group" aria-label="Projects views">{#each displayedViews as view}<button class:active={readState?.view === view.id} aria-pressed={readState?.view === view.id} disabled={moving} onclick={() => void onview(view.id)}><AppIcon name={view.icon} size={16} /><span>{view.label}</span></button>{/each}</div>
     <div class="task-view-actions"><HomeReadStatus state={readState} updating />
       <div class="glass-tool-group" role="group" aria-label="Projects tools"><button class="task-icon-action" aria-label="Refresh Projects" title="Refresh Projects" disabled={readState?.busy || moving} onclick={() => void onview()}><AppIcon name="refresh" size={16} /></button>
-      {#if !standalone}<button class="task-icon-action" aria-label="Open Projects list" title="Open Projects list" onclick={() => void onnavigate()}><AppIcon name="expand" size={16} /></button>{/if}
-      <button class="task-icon-action" aria-label="Projects view options" aria-expanded={optionsOpen} title="View options" onclick={() => optionsOpen = !optionsOpen}><AppIcon name="sliders" size={16} /></button>
       </div><button class="task-new primary" disabled={moving} onclick={() => void create()}><AppIcon name="plus" size={16} />New</button>
     </div>
   </div>
-  {#if optionsOpen}<div class="task-view-options" use:liquidSurface={{ anchor: () => root?.querySelector('[aria-label$="view options"]') }} in:liquidTransition|global out:liquidTransition|global><p>Active: Doing and Ongoing. Planned: planned projects. Board: all five statuses. Projects archived locally or in their imported source are excluded; general search keeps source-archived imports accessible.</p>{#if pageMode}<p>Deadlines: calendar of project end dates, including completed and undated projects. Completed: Done status. Dates are not derived from tasks.</p>{/if}{#if standalone}<p>On Hold: paused projects. By Tag and By People group all five statuses by local links; a project may appear in several groups. Groups and counts cover loaded projects. New page in a relation group prepares Planned with that link.</p>{/if}<p>Progress uses related local tasks: completed / total, rounded to one decimal place. Overdue: pending tasks due before the workspace calendar day. Goal references open their imported pages.</p>{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}
   {#if readState?.busy && !page}<p role="status" class="task-read-status">Loading Projects…</p>{/if}
   {#if readState?.error}<p class="error" role="alert">Read failed: {readState.error}</p><button onclick={() => void onretry()}>Retry Projects</button>{/if}
   <HomeReadStatus state={readState} />
@@ -149,11 +145,14 @@
         {#if relationView}
           <div class="project-relation-heading"><AppIcon name={readState?.view === 'projects_by_tag' ? 'tag' : 'person'} size={17} /><h2>{readState?.view === 'projects_by_tag' ? 'By Tag' : 'By People'}</h2></div>
           {#each page.groups as group (group.key)}
-            <details open class="project-relation-group" data-related-id={group.related_entity?.id}>
-              <summary>{#if group.related_entity}<button class="project-relation-title" onclick={(event) => { event.stopPropagation(); if (group.related_entity) void onopen(group.related_entity.id); }}><AppIcon name={group.related_entity.icon ?? (group.related_entity.kind === 'tag' ? 'tag' : 'person')} color={group.related_entity.icon_color ?? undefined} size={20} /><span>{homeGroupLabel(group, readState?.view)}{group.related_entity.archived_at ? " · archived" : ''}</span></button>{:else}<span>{homeGroupLabel(group, readState?.view)}</span>{/if}<span class="task-group-count" title="Projects on this page">{group.entity_ids.length}</span></summary>
-              {#each group.entity_ids as id (id)}{@const row = page.items.find(item => item.entity.id === id)}{#if row}<TaskPageProjectRow item={row} {onopen} showState />{/if}{/each}
-              <button class="home-new task-add-row" aria-label={`New page in ${homeGroupLabel(group, readState?.view)}`} onclick={() => void (ongroupcreate ? ongroupcreate(group) : create())}><AppIcon name="plus" size={16} />New page</button>
-            </details>
+            <div class="group-open-shell">
+              <details open class="project-relation-group" data-related-id={group.related_entity?.id}>
+                <summary>{#if group.related_entity}<span class="project-relation-title"><AppIcon name={group.related_entity.icon ?? (group.related_entity.kind === 'tag' ? 'tag' : 'person')} color={group.related_entity.icon_color ?? undefined} size={20} /><span>{homeGroupLabel(group, readState?.view)}{group.related_entity.archived_at ? " · archived" : ''}</span></span>{:else}<span>{homeGroupLabel(group, readState?.view)}</span>{/if}<span class="task-group-count" title="Projects on this page">{group.entity_ids.length}</span></summary>
+                {#each group.entity_ids as id (id)}{@const row = page.items.find(item => item.entity.id === id)}{#if row}<TaskPageProjectRow item={row} {onopen} showState />{/if}{/each}
+                <button class="home-new task-add-row" aria-label={`New page in ${homeGroupLabel(group, readState?.view)}`} onclick={() => void (ongroupcreate ? ongroupcreate(group) : create())}><AppIcon name="plus" size={16} />New page</button>
+              </details>
+              {#if group.related_entity}<button class="group-open" aria-label={`Open ${homeGroupLabel(group, readState?.view)}`} title={`Open ${homeGroupLabel(group, readState?.view)}`} onclick={() => { if (group.related_entity) void onopen(group.related_entity.id); }}><AppIcon name="arrow-up-right" size={15} /></button>{/if}
+            </div>
           {/each}
           {#if !page.items.length}<p class="home-empty">No projects in this view.</p>{/if}
         {:else if readState?.view === 'projects_calendar'}

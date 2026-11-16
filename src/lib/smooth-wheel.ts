@@ -22,8 +22,11 @@ export function installSmoothWheel(doc: Document): () => void {
   type Pending = { element: HTMLElement; target: number; direction: number; time: number };
   let pending: Pending | null = null;
   let expiry: ReturnType<typeof setTimeout> | undefined;
+  let listening: HTMLElement | null = null;
+  function detach() { listening?.removeEventListener('wheel', wheel); listening = null; }
   function stop() {
     if (expiry !== undefined) { clearTimeout(expiry); expiry = undefined; }
+    detach();
     if (!pending) return;
     const el = pending.element; pending = null;
     if (el.isConnected) el.scrollTo({ top: el.scrollTop, behavior: 'instant' });
@@ -46,9 +49,9 @@ export function installSmoothWheel(doc: Document): () => void {
     return null;
   }
   function wheel(event: WheelEvent) {
-    if (event.defaultPrevented || !event.cancelable || !isDiscreteWheel(event)) { stop(); return; }
-    const element = findScroller(event);
-    if (!element) { stop(); return; }
+    if (event.defaultPrevented || !event.cancelable || !isDiscreteWheel(event)) return;
+    const element = listening;
+    if (!element) return;
     const lineHeight = Number.parseFloat(getComputedStyle(element).lineHeight) || 16;
     const delta = event.deltaY * (event.deltaMode === 1 ? lineHeight : 1);
     const direction = Math.sign(delta), now = performance.now();
@@ -59,12 +62,22 @@ export function installSmoothWheel(doc: Document): () => void {
     event.preventDefault();
     pending = { element, target, direction, time: now };
     if (expiry !== undefined) clearTimeout(expiry);
-    expiry = setTimeout(() => { pending = null; expiry = undefined; }, 800);
+    expiry = setTimeout(() => { pending = null; expiry = undefined; detach(); }, 800);
     element.scrollTo({ top: target, behavior: 'smooth' });
   }
+  function classify(event: WheelEvent) {
+    if (event.defaultPrevented || !isDiscreteWheel(event)) { stop(); return; }
+    const element = findScroller(event);
+    if (!element) { stop(); return; }
+    if (listening !== element) { detach(); listening = element; element.addEventListener('wheel', wheel, { passive: false }); }
+    // Capturing precedes the target's bubble listener, including on this event.
+    // Non-cancelable native events stay native; never retain a global scroll barrier.
+    if (expiry !== undefined) clearTimeout(expiry);
+    expiry = setTimeout(() => { pending = null; expiry = undefined; detach(); }, 800);
+  }
   const interrupt = () => stop();
-  doc.addEventListener('wheel', wheel, { passive: false });
+  doc.addEventListener('wheel', classify, { passive: true, capture: true });
   doc.addEventListener('pointerdown', interrupt, { passive: true });
   doc.addEventListener('keydown', interrupt);
-  return () => { doc.removeEventListener('wheel', wheel); doc.removeEventListener('pointerdown', interrupt); doc.removeEventListener('keydown', interrupt); stop(); };
+  return () => { doc.removeEventListener('wheel', classify, true); doc.removeEventListener('pointerdown', interrupt); doc.removeEventListener('keydown', interrupt); stop(); };
 }

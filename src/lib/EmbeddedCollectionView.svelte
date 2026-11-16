@@ -40,7 +40,7 @@
 </script>
 
 <section bind:this={element} class="embedded-collection" aria-label="Embedded local view" data-view-id={viewId} aria-busy={busy}>
-  <h3>Embedded local view</h3><p class="metadata">Collection {collectionId} · vista {viewId} · reads the original, not a saved snapshot.</p>
+  <h3>Embedded local view</h3><p class="metadata">Collection {collectionId} · view {viewId} · reads the original, not a saved snapshot.</p>
   <button disabled={busy} onclick={() => void load()}>{busy ? "Loading view…" : page ? "Refresh embedded view" : "Load embedded view"}</button>
   {#if error}<p class="error" role="alert">{error}</p>{/if}
   {#if page}<CollectionPresentation {page} {busy} {onopen} />{#if page.records.next_cursor}<button disabled={busy} onclick={() => void load(page?.records.next_cursor ?? undefined)}>Next embedded page</button>{/if}{#if offset}<button disabled={busy} onclick={() => void load()}>First embedded page</button>{/if}{/if}

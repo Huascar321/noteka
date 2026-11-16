@@ -7,6 +7,7 @@ export class AsciiCoverRenderer {
   private canvases:Record<CoverScene,HTMLCanvasElement>={sharks:document.createElement('canvas'),koi:document.createElement('canvas'),jellyfish:document.createElement('canvas')};
   private sharks:AsciiOceanRenderer;private koi:AsciiCreaturesRenderer;private jellyfish:AsciiCreaturesRenderer;
   private width=0;private height=0;private dpr=1;private dark=true;private ink='';private seconds=0;
+  private scene='';private blend=-1;
   constructor(private canvas:HTMLCanvasElement,private seed=Math.floor(Math.random()*2147483647)){
     const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas2D unavailable');this.ctx=ctx;
     this.sharks=new AsciiOceanRenderer(this.canvases.sharks);this.koi=new AsciiCreaturesRenderer(this.canvases.koi,'koi',seed);this.jellyfish=new AsciiCreaturesRenderer(this.canvases.jellyfish,'jellyfish',seed);
@@ -27,6 +28,8 @@ export class AsciiCoverRenderer {
     const choice=coverSceneAt(this.seed,seconds),ctx=this.ctx;
     const render=(scene:CoverScene,alpha:number)=>{if(scene==='sharks')this.sharks.draw(seconds,delta);else this[scene].draw(seconds);ctx.globalAlpha=alpha;ctx.drawImage(this.canvases[scene],0,0,this.width,this.height);};
     ctx.setTransform(this.dpr,0,0,this.dpr,0,0);ctx.clearRect(0,0,this.width,this.height);render(choice.current,1-choice.blend);if(choice.blend>0)render(choice.next,choice.blend);ctx.globalAlpha=1;
-    this.canvas.dataset.scene=choice.current;this.canvas.dataset.sceneBlend=choice.blend.toFixed(3);
+    // Escribir sólo cuando cambia evita invalidar estilo y asignar cadenas en cada frame.
+    if(this.scene!==choice.current){this.scene=choice.current;this.canvas.dataset.scene=choice.current;}
+    if(this.blend!==choice.blend){this.blend=choice.blend;this.canvas.dataset.sceneBlend=choice.blend.toFixed(3);}
   }
 }

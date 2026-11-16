@@ -46,9 +46,9 @@ async (page) => {
     const select = async id => page.getByLabel("Managed ID to prepare", { exact: true }).fill(id);
     await page.goto(origin);
     await page.getByLabel("Workspace path", { exact: true }).fill(workspace); await button("Open workspace").click();
-    await page.locator('.home [data-home-section="person"] .home-coverage').waitFor().catch(async e => { throw new Error(e.message + '\nUI: ' + await page.locator('body').innerText()); });
+    await page.locator('.home [data-home-section="person"]').waitFor().catch(async e => { throw new Error(e.message + '\nUI: ' + await page.locator('body').innerText()); });
     await page.getByRole('button', { name: 'Settings', exact: true }).click(); await page.getByLabel("Theme", { exact: true }).selectOption(theme); await page.getByRole('button', { name: "Close Settings", exact: true }).click(); await page.getByRole('navigation', { name: "Sections" }).getByRole('button', { name: 'Notes', exact: true }).click();
-    await page.locator('.list-items button').filter({ hasText: 'Preparación sintética' }).click();
+    await page.locator('.notes-page .home-note-row').filter({ hasText: 'Preparación sintética' }).first().click();
     await page.getByLabel("Note title", { exact: true }).fill('Buffer pendiente conservado');
     const before = await ctl('prep_snapshot');
     await page.locator('.document-utilities > summary').click();await page.locator('.local-tools > summary').click();await page.locator('.preparation-panel > summary').click();
@@ -94,11 +94,11 @@ async (page) => {
     await select(f.sources['literal.txt'].attachment.id); await list();
     await page.getByLabel("Preparation extractor").selectOption('utf8_text');
     const dedupe = await receipt("Enqueue extraction"); expect(dedupe.deduplicated && dedupe.job.id === jobs['literal.txt'].id && dedupe.job.attempts === 1, 'Dedupe conserva ID e intentos');
-    await inspect(); const retried = await receipt('Reencolar trabajo elegido'); expect(retried.state === 'queued' && retried.result_from_previous_attempt, 'Retry conserva generación anterior sin ejecutar');
+    await inspect(); const retried = await receipt('Requeue selected job'); expect(retried.state === 'queued' && retried.result_from_previous_attempt, 'Retry conserva generación anterior sin ejecutar');
     await inspect(); const cancelled = await receipt("Cancel selected job"); expect(cancelled.state === 'cancelled' && cancelled.result_from_previous_attempt, 'Cancel conserva generación anterior');
     await inspect();
     const latest = await cli('extraction.retry', { id: cancelled.id, expected_revision: cancelled.revision });
-    await button('Reencolar trabajo elegido').click(); await page.locator('.preparation-error').waitFor();
+    await button('Requeue selected job').click(); await page.locator('.preparation-error').waitFor();
     expect((await page.locator('.preparation-error').textContent()).includes('revision_conflict'), 'CAS job obsoleto falla sin rebase');
     expect((await cli('extraction.get', { id: latest.id })).revision === latest.revision, 'No se repite retry');
     await inspect();
@@ -122,7 +122,7 @@ async (page) => {
     await select(f.jobs['queued.txt'].attachment_id); await list();
     const ids1 = await page.locator('.preparation-job').allTextContents(); expect(ids1.length === 20, 'Primera página 20 trabajos');
     await page.locator('.preparation-job').first().click(); await inspect();
-    expect(await button("Run selected job").isDisabled() && await button('Reencolar trabajo elegido').isDisabled(), 'Config futura visible sin ejecutar ni convertir');
+    expect(await button("Run selected job").isDisabled() && await button('Requeue selected job').isDisabled(), 'Config futura visible sin ejecutar ni convertir');
     await button("Next jobs page").click(); await page.locator('.preparation-page').filter({ hasText: 'Página 2' }).waitFor();
     const ids2 = await page.locator('.preparation-job').allTextContents(); expect(ids2.length === 2 && new Set([...ids1, ...ids2]).size === 22, 'Segunda página reemplaza sin pérdidas/duplicación');
     await select('invalid-id'); await button("Query jobs").click(); await page.locator('.preparation-error').waitFor();
@@ -141,7 +141,7 @@ async (page) => {
     await ctl('prep_instrument', { instrument: {} });
     // Fallo de transporte después de una mutación confirmada: no repetir.
     await select(f.sources['bad.txt'].attachment.id); await list(); await page.locator('.preparation-job').first().click(); await inspect();
-    await receipt('Reencolar trabajo elegido'); await inspect();
+    await receipt('Requeue selected job'); await inspect();
     const bad = await cli('extraction.get', { id: jobs['bad.txt'].id });
     await ctl('prep_instrument', { instrument: { operation: 'extraction.cancel', transport_after: true } });
     await button("Cancel selected job").click(); await page.locator('.preparation-error').waitFor();
@@ -182,7 +182,7 @@ async (page) => {
     expect(await page.locator('.preparation-receipt, .preparation-error').count() === 0, 'Mutación tardía no publica en Search tras desmontar');
     const countBeforeRemount = (await ops()).filter(o => o.operation.startsWith('extraction.')).length;
     await page.getByRole('navigation', { name: "Sections" }).getByRole('button', { name: 'Notes', exact: true }).click();
-    await page.locator('.list-items button').filter({ hasText: 'Preparación sintética' }).click();
+    await page.locator('.notes-page .home-note-row').filter({ hasText: 'Preparación sintética' }).first().click();
     await page.locator('.document-utilities > summary').click();await page.locator('.local-tools > summary').click();await page.locator('.preparation-panel > summary').click();
     expect(await page.getByLabel("Managed ID to prepare").inputValue() === '' && (await ops()).filter(o => o.operation.startsWith('extraction.')).length === countBeforeRemount, 'Remount no reutiliza inspección ni repite mutación');
     await ctl('prep_report', { theme, ok: true, checks, external_requests: external.length, operation_count: recorded.length });

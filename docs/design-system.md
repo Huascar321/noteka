@@ -239,8 +239,11 @@ elástica más contenida que la del sidebar. La tab activa no pinta su propio
 fondo: el indicador usa el mismo tinte neutro, borde y reflejos que la pestaña
 superior activa, con sombra corta; se desplaza y se redimensiona con el ancho
 de la nueva tab. El
-indicador vive en el toolbar, fuera del contenedor con scroll, para que la sombra
-no se recorte; sigue a la tab activa y se oculta si queda fuera del área visible.
+indicador vive en el toolbar; sigue a la tab activa también cuando la tira
+envuelve en varias filas. Las tabs no usan scroll horizontal: si no entran, la
+tira envuelve para que ninguna vista quede fuera del área visible. `More views`
+(botón de puntos del grupo de herramientas) reúne las vistas pendientes
+Recurring y Active Content, y Done fuera de la página Tasks.
 El icono de la tab clickeada reproduce el mismo Jelly de un ciclo que el sidebar,
 con un wrapper genérico que conserva su figura. Con movimiento reducido el cambio
 es inmediato y con transparencia reducida el indicador vuelve a una superficie
@@ -306,8 +309,8 @@ Los radios de cápsula usan `999px`, salvo Tag con `16px` para admitir varias fi
 | Selección lateral | Fila 34 px, gap 4 px; tinte sidebar; sin blur | `App.svelte`, `.sidebar-nav-indicator`; un único indicador |
 | Pestaña superior | Alto 32 px; tinte nav, selección neutra | `App.svelte`, `.workspace-tab.active`; +/× sólo elevan en hover/foco |
 | Breadcrumb | Cápsulas independientes, blur 3 px; sombra corta | `PageBreadcrumb.svelte`; barra transparente sobre scroll |
-| Vistas de sección y Collections | Indicador ajusta posición y tamaño; sin blur, alojado fuera del área desplazable | `sliding-tabs.ts`, `.sliding-tabs-indicator`; no duplicar fondo activo |
-| Herramientas | Grupo 32 px, botones 28 px; sin blur | `Home*Section.svelte`, `MilestonesPanel.svelte`, `.glass-tool-group` |
+| Vistas de sección y Collections | Indicador ajusta posición y tamaño, también entre filas; la tira envuelve; sin blur | `sliding-tabs.ts`, `.sliding-tabs-indicator`; no duplicar fondo activo |
+| Herramientas | Grupo 32 px, botones 28 px; Refresh y, en Tasks, More views | `Home*Section.svelte`, `MilestonesPanel.svelte`, `.glass-tool-group` |
 | New | Cápsula teñida con texto blanco e ícono `+` de 16 px | `.task-new.primary`; fuera del grupo de herramientas |
 | Search lateral | 32 px, fuente 13 px, gap 8 px, padding horizontal 11 px | `.sidebar-search`, botón que abre Search |
 | Search en popups | Misma geometría/tipografía; input interior 30 px sin padding extra | `SearchDialog.svelte`, `SettingsDialog.svelte`; cierres 24 px |
@@ -470,8 +473,9 @@ En relaciones, nombre y × no se anidan como botones entre sí.
 | Icono lateral o tab de vista al clic | Jelly compartido, un ciclo de 1000 ms, limpieza 1050 ms; ver [iconos](icons.md) |
 | Breadcrumb | Entrada/retorno compartidos, sin otra fila ni cambio de destino |
 | Movimiento reducido | Cambio inmediato de indicadores y sin animación decorativa |
-| Calendario de Due | Morph del material desde el rectángulo Due, 400 ms con asentamiento elástico; contenido independiente sin compresión; retorno 200 ms desde el frame actual; desmontaje al terminar o fallback 280 ms |
-| Menús, pickers, herramientas y popups | Mismos tiempos/curvas de Due; origen en control o selección; expansión central contenida si no hay ancla visible. Texto sin escala; salida inerte desde el frame actual. |
+| Calendario de Due | Morph del material desde el rectángulo Due, 400 ms con asentamiento elástico; contenido independiente completo en 100 ms sin compresión; retorno 200 ms desde el frame actual; desmontaje al terminar o fallback 280 ms |
+| Menús, pickers y herramientas flotantes | Curvas de Due con entrada de 160 ms y contenido completo en 100 ms sin espera inicial; origen en control o selección; expansión central contenida sin ancla visible. Texto sin escala; salida inerte de 200 ms desde el frame actual. |
+| Diálogos y Center peek | Material de entrada de 400 ms, contenido completo en 100 ms detrás de su recorte, cierre de 200 ms. |
 
 La extensión aprobada el 07/11/2026 se implementa explícitamente con
 `liquidSurface` y transiciones de entrada/salida de `liquid-overlay.ts`; los
@@ -489,24 +493,38 @@ una capa decorativa del material copia la óptica local:
 mediante un popover manual para evitar recortes por sus ancestros. La capa
 incluye el sheen breve y no contiene controles ni contenido del usuario. El
 material del dueño se suspende durante esos frames para evitar dos filtros;
-su texto aparece por opacidad, sin heredar la escala. Al terminar se retiran la
+su texto aparece por opacidad, sin heredar la escala. Desde
+`accelerate-popup-content-reveal`, menús/pickers completan la entrada en 160 ms,
+retirando antes la capa temporal que puede filtrar su propio texto. El contenido
+alcanza opacidad completa en 100 ms, sin espera inicial deliberada. Al terminar se retiran la
 capa, efectos y observadores; la superficie recupera exactamente su material.
 Scroll/resize y cambios de altura reposicionan la capa sólo mientras existe.
 Sin soporte de popovers los menús/pickers aparecen sin morph.
 
 Los diálogos y Center peek colocan el vidrio local detrás de sus controles:
 el blur nunca tapa su propio texto. El contenido real arranca al 24% de su
-opacidad original y alcanza claridad completa al 55% de la entrada (220 ms).
+opacidad original y alcanza opacidad completa en 100 ms.
 Se recorta a los límites redondeados del vidrio en movimiento, sin escalar texto,
 clonar controles ni mostrar un panel deliberadamente vacío. Conservan 400/200 ms;
-Due y los menús/pickers mantienen su receta. El recorte original se restaura
-al terminar o cancelar el efecto. El reloj es finito y compartido con Svelte.
+Due conserva material de 400 ms y también revela contenido en 100 ms; los
+menús/pickers usan 160 ms. Los cierres siguen en 200 ms. El recorte original se restaura
+al terminar o cancelar el efecto. Svelte conserva la presencia y el navegador
+reproduce la interpolación finita.
+
+Desde `improve-native-render-scheduling`, material, opacidad y recorte se
+reproducen con Web Animations en un reloj compartido del navegador. La geometría
+de recorte se prepara al abrir y sólo se recalcula por resize/scroll real durante
+la transición: no se leen rectángulos ni se fuerza `currentTime` en cada tick.
+Se muestrean las curvas del material para mantener las esquinas del recorte
+alineadas sin escalar el texto. Una salida interrumpida captura el estado
+actual una sola vez; las preferencias cancelan y limpian los efectos.
 
 Los nodos condicionales usan entrada/salida separadas de Svelte, con preparación
 diferida después de posicionar o `showModal`. Una salida captura el estado visual
 actual. PageTools usa presencia persistente: conserva la sección y su buffer;
 la representación saliente permanece como `hidden`/inert/`aria-hidden` hasta
-terminar. Nav conserva `<details>` y su disposición en el flujo; el adaptador
+terminar. La presencia persistente espera `Animation.finished`, sin otro tween
+de JavaScript. Nav conserva `<details>` y su disposición en el flujo; el adaptador
 demora el cierre visual, sin convertir sus opciones en un menú flotante.
 
 Search y las decisiones de la guardia esperan el desmontaje modal antes de
@@ -575,6 +593,15 @@ animación perpetua de brillo o renderer para dar sensación de vidrio.
   la diferencia no depende solo del color. El toggle actualiza `state` mediante
   `entity.update`, refresca la vista y se deshabilita mientras hay una operación
   en curso. No anides el checkbox dentro del botón de apertura.
+- En listas agrupadas por proyecto, la fila no repite el chip del proyecto que
+  ya identifica la cabecera del grupo; conservá estado y fecha en un eje estable.
+- Las cabeceras de grupo no anidan controles: `<summary>` alterna el grupo y un
+  botón `Open` separado (icono ↗ de 28 px, al extremo derecho) abre el proyecto,
+  la etiqueta o la persona relacionada.
+- Las etiquetas de atajo se generan con `src/lib/shortcuts.ts` (`⌘` en macOS,
+  `Ctrl` en Windows); no hardcodees el modificador en el markup.
+- Un disparador de popover lo cierra al activarse de nuevo: relaciones (chevron
+  y Add tag/person), Due, icono y menús. El foco queda en el disparador.
 - Las filas de listas (`.home-item`) pintan un único fondo `--hover` en todo su
   ancho, incluida la columna del checkbox y la meta. El botón de apertura, el
   checkbox y las referencias internas no agregan un segundo fondo al pasar el
@@ -623,6 +650,46 @@ restaures las pausas de Search, Settings ni Center peek para satisfacer una
 expectativa de pruebas anterior a esa decisión. Full page, la pestaña inactiva,
 el documento oculto, la portada fuera de vista y el movimiento reducido sí
 suspenden el render.
+
+El renderer ASCII es el único consumo sostenido de Home en reposo. En una
+medición WebKit (Playwright, 1512×982, dpr 1, portada visible y sin
+interacción) ocultar el canvas lleva WebContent de ~13% a ~0,2% de un núcleo y
+al proceso GPU de ~29% a ~0,1%: el costo es del render, no del shell. La
+cadencia se adapta sin cambiar la escena: 120 FPS como máximo mientras la
+ventana tiene foco y el intervalo real se sostiene (diez frames tardíos seguidos
+bajan el objetivo a 60 y después a 30), 30 FPS con la ventana sin foco, y pausa
+mientras se recorre Home, con reanudación 160 ms después del último scroll. El
+contador de frames del canvas se publica como máximo cada 250 ms; no forma
+parte de la presentación. Las escenas y mezclas siguen su tiempo activo; el
+canvas usa contención de pintura/layout/estilo y solicita una capa de composición
+sin modificar dimensiones o cadencia. El foco
+se sigue con `focus`/`blur` del documento y `onFocusChanged` de la ventana Tauri.
+Estas condiciones se suman a las pausas ya exigidas (movimiento reducido,
+documento oculto, pestaña inactiva, portada fuera de vista); un popup que deja la
+portada visible sigue sin pausarla.
+
+Side peek conserva su deslizamiento de 260 ms, anchos y protección de borradores.
+Animá su `transform`, no `right`, y volvé a `none` al terminar para conservar el
+posicionamiento de menús fijos respecto del viewport. Durante transiciones de ancho o resize continuo,
+la portada sigue dibujando con su buffer existente y actualiza buffers/cachés
+una vez transcurridos 90 ms sin cambios de tamaño. El primer tamaño y el modo
+de movimiento reducido se aplican de inmediato; el tamaño final conserva DPR y
+nitidez. Evitá recrear las tres escenas por cada frame de una transición del shell.
+La pista kind/title de una fila sólo describe el destino: el panel obtiene el
+original fresco una vez y habilita la edición sin esperar relaciones, dashboard
+o recursos externos. Esas lecturas secundarias respetan la selección/generación
+vigentes y no pueden reemplazar un borrador ni desactivar su guardia de cierre.
+
+Las animaciones decorativas sobre hijos de `svg` (`g`, `path`) obligan a WebKit a
+rearmar el layout del documento en cada frame: en la misma medición, los nueve
+iconos del clima con 17 animaciones de `transform` produjeron ~148 muestras de
+relayout en 3 s, con `RenderView::layout()` completo por cuadro. Cada pieza
+animada se dibuja como un elemento `svg` propio, posicionado de forma absoluta
+dentro del icono, y las distancias de las keyframes se expresan en porcentaje del
+icono para conservar la escala. Con esa estructura el relayout es 0 y la
+transformación se compone; una animación equivalente de opacidad también mide 0.
+No animes `transform` sobre hijos de `svg`: movelo al elemento `svg` o a un
+contenedor HTML.
 
 Para texto normal buscá contraste de al menos 4,5:1 sobre el fondo compuesto.
 Medí el resultado real o probá extremos claros y oscuros detrás de un overlay;

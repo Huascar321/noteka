@@ -3,7 +3,7 @@ window.notekaHomeSmoke = async (h, stage) => {
   const { control, assert, wait, click, fill, change, delay, allEntities, openListed, info } = h;
   const panel = kind => document.querySelector(`[data-home-section="${kind}"]`);
   const rowIds = kind => [...new Set([...panel(kind).querySelectorAll('[data-entity-id]')].map(r => r.dataset.entityId))];
-  const ready = kind => panel(kind)?.querySelector('.home-coverage');
+  const ready = kind => panel(kind)?.getAttribute('aria-busy') === 'false';
   const settled = () => ['task','note','project','tag','person'].every(ready);
   const refreshHome = async () => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F5', bubbles: true, cancelable: true })); await delay(); };
   const changeTheme = async value => { await click('Settings'); await change("[aria-label=\"Theme\"]", value); await click("Close Settings"); };
@@ -61,8 +61,7 @@ window.notekaHomeSmoke = async (h, stage) => {
     await view('task', 'All');
     const task = (await allEntities()).find(e => e.title === 'Home tarea original');
     while(!panel('task').querySelector(`[data-entity-id="${task.id}"]`)) {
-      const coverage=panel('task').querySelector('.home-coverage').textContent;
-      await within(panel('task'),'Siguiente Tasks');await wait(()=>ready('task')&&panel('task').querySelector('.home-coverage').textContent!==coverage,'página de tarea reabierta');
+      await within(panel('task'),'Siguiente Tasks');await wait(()=>ready('task'),'página de tarea reabierta');await delay();
     }
     assert(panel('task').querySelectorAll(`[data-entity-id="${task.id}"]`).length === 2, 'Reapertura/restauración conserva dos referencias de tarea original');
     for (const v of ['tasks_today','tasks_inbox','tasks_all','tasks_done','notes_all','notes_inbox','projects_active','projects_planned','projects_board','tags_recent','tags_alphabetical','tags_types','people_contacts','people_new','people_updated']) assert((await control('home', { view: v })).view === v, 'Home CLI reabierto/restaurado: ' + v);
@@ -142,10 +141,11 @@ window.notekaHomeSmoke = async (h, stage) => {
   await control('home_seed',{date:day}); await refreshHome(); await wait(settled,'corpus Home 51');
   assert(![...panel('task').querySelectorAll('.home-tabs button')].some(b => b.textContent.trim() === 'Active Projects (In Progress)'), 'Sin tab duplicada Active Projects (In Progress)');
   for (const [kind,label,v] of [['task','Today','tasks_projects_in_progress'],['task','All Active Projects','tasks_active_projects'],['task','Inbox','tasks_inbox'],['task','All','tasks_all'],['task','Done','tasks_done'],['note','Notes','notes_all'],['note','Inbox','notes_inbox'],['project','Active','projects_active'],['project','Planned','projects_planned'],['project','Board','projects_board'],['tag','Recent','tags_recent'],['tag','A–Z','tags_alphabetical'],['tag','Types','tags_types'],['person','Contacts','people_contacts'],['person','New','people_new'],['person','Updated','people_updated']]) {
-    if(label==='Done') panel('task').querySelector('.home-tabs details').open=true;
-    await view(kind,label);const expected=await control('home',{view:v});const first=rowIds(kind);
+    if(label==='Done') { await within(panel('task'),'More views'); await within(panel('task'),'Done'); await wait(()=>ready('task'),'vista Done'); }
+    else await view(kind,label);
+    const expected=await control('home',{view:v});const first=rowIds(kind);
     assert(first.length===50 && first.every(id=>expected.items.some(i=>i.entity.id===id)),`${v}: primera página UI/CLI acotada y mismos IDs`);
-    await within(panel(kind),'Siguiente '+panel(kind).getAttribute('aria-label'));await wait(()=>ready(kind)&&panel(kind).querySelector('.home-coverage').textContent.includes('desde 51'),'segunda página '+v);
+    await within(panel(kind),'Siguiente '+panel(kind).getAttribute('aria-label'));await wait(()=>ready(kind)&&rowIds(kind).length>0&&rowIds(kind).every(id=>!first.includes(id)),'segunda página '+v);
     const second=rowIds(kind);assert(second.length>0 && second.every(id=>!first.includes(id)),`${v}: segunda página reemplazada, sin duplicar ni acumular`);
     await within(panel(kind),'Inicio '+panel(kind).getAttribute('aria-label'));await wait(()=>ready(kind)&&rowIds(kind).length===50,'inicio '+v);
     assert(rowIds(kind).every((id,i)=>id===first[i]),`${v}: inicio conserva orden e identidad`);

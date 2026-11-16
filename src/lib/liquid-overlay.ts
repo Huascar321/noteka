@@ -1,7 +1,7 @@
 import { tick } from 'svelte';
 import type { TransitionConfig } from 'svelte/transition';
-import { tweened } from 'svelte/motion';
-import { LIQUID_OPEN_MS, LIQUID_CLOSE_MS, liquidMaterialFrames } from './liquid-motion';
+import { LIQUID_OPEN_MS, LIQUID_MENU_OPEN_MS, LIQUID_CONTENT_REVEAL_MS, LIQUID_CLOSE_MS, liquidMaterialFrames } from './liquid-motion';
+import { clippingFrames, materialShapes } from './liquid-clip';
 
 type Rect = { left: number; top: number; width?: number; height?: number; right?: number; bottom?: number };
 export type LiquidOptions = {
@@ -10,12 +10,14 @@ export type LiquidOptions = {
   /** Presence for panels which must remain mounted (PageTools). */
   visible?: boolean;
 };
-type Content = { node: HTMLElement; opacity: string; clip: string; clipPriority: string; animation?: Animation };
-type Motion = { glass: HTMLDivElement; material: Animation; content: Content[]; direction: 'in' | 'out'; radius: string; reveal: () => void; driveStop?: () => void; stop: () => void; dispose: () => void };
+type Content = { node: HTMLElement; opacity: string; clip: string; clipPriority: string; animation?: Animation; clipping?: Animation };
+type Motion = { glass: HTMLDivElement; material: Animation; content: Content[]; direction: 'in' | 'out'; radius: string; reveal: () => void; stop: () => void; dispose: () => void };
 const options = new WeakMap<HTMLElement, LiquidOptions>();
 const motions = new WeakMap<HTMLElement, Motion>();
 const visibility = new WeakMap<HTMLElement, string>();
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const inlineSurface = (node: HTMLElement) => node instanceof HTMLDialogElement || node.classList.contains('peek-center');
+const openDuration = (node: HTMLElement) => inlineSurface(node) ? LIQUID_OPEN_MS : LIQUID_MENU_OPEN_MS;
 
 function restoreVisibility(node: HTMLElement) {
   if (!visibility.has(node)) return;
@@ -57,7 +59,7 @@ function sourceFrame(node: HTMLElement, getAnchor?: LiquidOptions['anchor']): Ke
 
 function begin(node: HTMLElement, direction: 'in' | 'out'): Motion | null {
   if (direction === 'in') restoreVisibility(node);
-  const inline = node instanceof HTMLDialogElement || node.classList.contains('peek-center');
+  const inline = inlineSurface(node);
   if (options.get(node)?.enabled === false || reduced() || !node.isConnected || !node.getClientRects().length || (!inline && typeof node.showPopover !== 'function')) return null;
   let previous = motions.get(node);
   const source = sourceFrame(node, options.get(node)?.anchor);
@@ -86,35 +88,35 @@ function begin(node: HTMLElement, direction: 'in' | 'out'): Motion | null {
   const children: Content[] = previous?.content ?? [...node.children].filter((child): child is HTMLElement => child instanceof HTMLElement && child !== glass).map(child => ({ node: child, opacity: getComputedStyle(child).opacity, clip: child.style.getPropertyValue('clip-path'), clipPriority: child.style.getPropertyPriority('clip-path') }));
   node.classList.add('liquid-morph-active');
   if (inline) node.classList.add('liquid-inline-active');
-  const duration = direction === 'in' ? LIQUID_OPEN_MS : LIQUID_CLOSE_MS;
-  const material = glass.animate(direction === 'in'
+  const duration = direction === 'in' ? openDuration(node) : LIQUID_CLOSE_MS;
+  const frames = direction === 'in'
     ? liquidMaterialFrames(from ?? source, radius, -3, { x: Math.max(1, Math.min(1.035, (innerWidth - rect.left - 6) / rect.width)), y: Math.max(1, Math.min(1.025, (innerHeight - rect.top - 6) / rect.height)) })
-    : [from ?? { transform: 'none', borderRadius: radius }, source],
+    : [from ?? { transform: 'none', borderRadius: radius }, source];
+  const material = glass.animate(frames,
   { duration, easing: direction === 'out' ? 'cubic-bezier(.4,0,.25,1)' : 'linear', fill: 'both' });
   material.id = `liquid-overlay-${direction}`;
   material.pause(); material.currentTime = 0;
   children.forEach((item, index) => {
-    const entry: Keyframe[] = inline ? [
-      { opacity: opacities?.[index] ?? Number(item.opacity) * .24, offset: 0, easing: 'ease-out' },
-      { opacity: item.opacity, offset: .55 }, { opacity: item.opacity, offset: 1 },
-    ] : [
-      { opacity: opacities?.[index] ?? 0, offset: 0 }, { opacity: opacities?.[index] ?? 0, offset: .3, easing: 'ease-out' }, { opacity: item.opacity, offset: .8 }, { opacity: item.opacity, offset: 1 },
+    const entry: Keyframe[] = [
+      { opacity: opacities?.[index] ?? (inline ? Number(item.opacity) * .24 : 0), offset: 0, easing: 'ease-out' },
+      { opacity: item.opacity, offset: LIQUID_CONTENT_REVEAL_MS / duration }, { opacity: item.opacity, offset: 1 },
     ];
     item.animation = item.node.animate(direction === 'in' ? entry : [{ opacity: opacities?.[index] ?? getComputedStyle(item.node).opacity }, { opacity: 0 }],
     { duration: direction === 'in' ? duration : duration / 2, fill: 'both' });
     item.animation.id = 'liquid-overlay-content';
     item.animation.pause(); item.animation.currentTime = 0;
   });
-  // Reveal the actual controls inside the moving shape. Keeping the glass
-  // behind them prevents its backdrop blur from veiling the dialog's own text.
+  // Cache geometry outside playback. The browser interpolates the clip with
+  // the material, rather than JS seeking animations and forcing layout per RAF.
+  const shapes = materialShapes(frames.map(frame => direction === 'out' ? { ...frame, easing: 'cubic-bezier(.4,0,.25,1)' } : frame), radius);
   const reveal = () => {
     if (!inline) return;
-    const bounds = glass.getBoundingClientRect(), style = getComputedStyle(glass);
-    const matrix = new DOMMatrixReadOnly(style.transform);
-    const radii = style.borderTopLeftRadius.split(' ');
-    const rx = parseFloat(radii[0]) * Math.abs(matrix.a), ry = parseFloat(radii[1] ?? radii[0]) * Math.abs(matrix.d);
-    const clips = children.map(item => { const r = item.node.getBoundingClientRect(); return `inset(${bounds.top-r.top}px ${r.right-bounds.right}px ${r.bottom-bounds.bottom}px ${bounds.left-r.left}px round ${rx}px / ${ry}px)`; });
-    children.forEach((item, index) => item.node.style.setProperty('clip-path', clips[index]));
+    const surface = node.getBoundingClientRect();
+    const clips = children.map(item => clippingFrames(shapes, surface, item.node.getBoundingClientRect()));
+    children.forEach((item, index) => {
+      if (item.clipping) (item.clipping.effect as KeyframeEffect).setKeyframes(clips[index]);
+      else { item.clipping = item.node.animate(clips[index], { duration, fill: 'both', easing: 'linear' }); item.clipping.id = 'liquid-overlay-clip'; item.clipping.pause(); }
+    });
   };
   const place = () => {
     if (!node.isConnected || !node.getClientRects().length) { motion.dispose(); return; }
@@ -124,8 +126,7 @@ function begin(node: HTMLElement, direction: 'in' | 'out'): Motion | null {
   };
   const observer = new ResizeObserver(place);
   const motion: Motion = { glass, material, content: children, direction, radius, reveal, stop() {
-    motion.driveStop?.();
-    material.cancel(); children.forEach(item => item.animation?.cancel());
+    material.cancel(); children.forEach(item => { item.animation?.cancel(); item.clipping?.cancel(); item.clipping = undefined; });
     observer.disconnect();
     document.removeEventListener('scroll', place, true);
     window.removeEventListener('resize', place);
@@ -137,6 +138,10 @@ function begin(node: HTMLElement, direction: 'in' | 'out'): Motion | null {
   } };
   motions.set(node, motion);
   reveal();
+  const start = document.timeline.currentTime;
+  for (const animation of [material, ...children.flatMap(item => [item.animation, item.clipping].filter((value): value is Animation => !!value))]) {
+    animation.play(); if (start !== null) animation.startTime = start;
+  }
   observer.observe(node);
   document.addEventListener('scroll', place, true);
   window.addEventListener('resize', place);
@@ -169,22 +174,10 @@ export function liquidSurface(node: HTMLElement, initial: LiquidOptions = {}) {
       if (disposed || token !== generation) return;
       const motion = begin(node, visible ? 'in' : 'out');
       if (!motion) { if (!visible) clearExit(); return; }
-      // Use Svelte's finite clock for persistent panels too, so clipping and
-      // material share the same progress without a separate perpetual renderer.
-      const duration = visible ? LIQUID_OPEN_MS : LIQUID_CLOSE_MS;
-      const clock = tweened(0, { duration });
-      let value = 0, stopped = false;
-      const unsubscribe = clock.subscribe(progress => {
-        value = progress;
-        motion.material.currentTime = progress * duration;
-        motion.content.forEach(item => { if (item.animation) item.animation.currentTime = progress * duration; });
-        motion.reveal();
-      });
-      motion.driveStop = () => { stopped = true; unsubscribe(); void clock.set(value, { duration: 0 }); };
-      void clock.set(1).then(() => {
-        if (stopped || token !== generation) return;
+      void motion.material.finished.then(() => {
+        if (token !== generation || disposed) return;
         motion.dispose(); if (!visible) clearExit();
-      });
+      }).catch(() => {});
     });
   }
   if (current.visible === true && current.enabled !== false) presence(true);
@@ -205,13 +198,9 @@ export function liquidTransition(node: HTMLElement, _params: unknown, _context: 
   return ({ direction = 'in' }: { direction?: 'in' | 'out' } = {}): TransitionConfig => {
     const motion = begin(node, direction);
     if (!motion) return { duration: 0 };
-    const duration = direction === 'in' ? LIQUID_OPEN_MS : LIQUID_CLOSE_MS;
+    const duration = direction === 'in' ? openDuration(node) : LIQUID_CLOSE_MS;
     return { duration, tick(t) {
       if (motions.get(node) !== motion) return;
-      const progress = direction === 'in' ? t : 1 - t;
-      motion.material.currentTime = progress * duration;
-      motion.content.forEach(item => { if (item.animation) item.animation.currentTime = progress * duration; });
-      motion.reveal();
       if ((direction === 'in' && t === 1) || (direction === 'out' && t === 0)) motion.dispose();
     } };
   };

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { liquidSurface, liquidTransition } from './liquid-overlay';
   import AppIcon from './AppIcon.svelte';
+  import { shortcutLabel } from './shortcuts';
   import { onMount, untrack, mount, unmount } from 'svelte';
   import { Editor, Node } from '@tiptap/core';
   import { NodeSelection, TextSelection } from '@tiptap/pm/state';
@@ -573,16 +574,16 @@
   {#if !pageStyle}
   <details class="format-controls"><summary>Formatting and blocks</summary>
   <div class="format-toolbar" role="toolbar" aria-label="Formatting and blocks">
-    <button disabled={disabled} title="Negrita · ⌘B" onclick={() => editor?.chain().focus().toggleBold().run()}><b>B</b></button>
-    <button disabled={disabled} title="Cursiva · ⌘I" onclick={() => editor?.chain().focus().toggleItalic().run()}><i>I</i></button>
+    <button disabled={disabled} title={`Bold · ${shortcutLabel('B')}`} onclick={() => editor?.chain().focus().toggleBold().run()}><b>B</b></button>
+    <button disabled={disabled} title={`Italic · ${shortcutLabel('I')}`} onclick={() => editor?.chain().focus().toggleItalic().run()}><i>I</i></button>
     <button disabled={disabled} title="Strikethrough" onclick={() => editor?.chain().focus().toggleStrike().run()}>S̶</button>
     {#each blocks as block}<button disabled={disabled} onclick={() => command(block.command)}>{block.label}</button>{/each}
     <button disabled={disabled} onclick={() => editor?.commands.undo()}>Undo</button><button disabled={disabled} onclick={() => editor?.commands.redo()}>Redo</button>
     <button disabled={disabled || !viewSelected} onclick={removeView}>Remove selected view</button>
   </div>
   <details class="editor-tools"><summary>Insert link or attachment</summary>
-    <label>Link for selected text<input class="glass-field" aria-label="Link" bind:value={link} placeholder="https://…" disabled={disabled} /></label><button class="glass-secondary" disabled={disabled} onclick={setLink}>Aplicar enlace</button>
-    <label>Original local<input class="glass-field" aria-label="Attachment path" bind:value={attachmentPath} placeholder="/path/to/file" disabled={disabled || importing} /></label><button class="glass-secondary" disabled={disabled || importing || !attachmentPath.trim()} onclick={() => void attach()}>{importing ? 'Copiando…' : "Insert attachment"}</button>
+    <label>Link for selected text<input class="glass-field" aria-label="Link" bind:value={link} placeholder="https://…" disabled={disabled} /></label><button class="glass-secondary" disabled={disabled} onclick={setLink}>Apply link</button>
+    <label>Original local<input class="glass-field" aria-label="Attachment path" bind:value={attachmentPath} placeholder="/path/to/file" disabled={disabled || importing} /></label><button class="glass-secondary" disabled={disabled || importing || !attachmentPath.trim()} onclick={() => void attach()}>{importing ? 'Copying…' : "Insert attachment"}</button>
   </details>
   </details>
   {/if}
@@ -598,8 +599,8 @@
     <div class="selection-toolbar editor-popover glass-menu" use:liquidSurface={{ anchor: () => selectionRect() }} in:liquidTransition|global out:liquidTransition|global role="toolbar" aria-label="Text formatting" tabindex="-1" style:left={`${bubble.left}px`} style:top={`${bubble.top}px`} onmousedown={event => event.preventDefault()}>
       <button type="button" class="selection-block-type" aria-haspopup="listbox" onclick={() => openCommands('turn')} title="Turn into">{currentBlock}<AppIcon name="chevron-down" size={13} /></button>
       <span class="toolbar-separator"></span>
-      <button type="button" aria-label="Bold" aria-pressed={activeMarks.bold} title="Bold · ⌘B / Ctrl+B" onclick={() => editor?.chain().focus().toggleBold().run()}><b>B</b></button>
-      <button type="button" aria-label="Italic" aria-pressed={activeMarks.italic} title="Italic · ⌘I / Ctrl+I" onclick={() => editor?.chain().focus().toggleItalic().run()}><i>I</i></button>
+      <button type="button" aria-label="Bold" aria-pressed={activeMarks.bold} title={`Bold · ${shortcutLabel('B')}`} onclick={() => editor?.chain().focus().toggleBold().run()}><b>B</b></button>
+      <button type="button" aria-label="Italic" aria-pressed={activeMarks.italic} title={`Italic · ${shortcutLabel('I')}`} onclick={() => editor?.chain().focus().toggleItalic().run()}><i>I</i></button>
       <button type="button" aria-label="Strikethrough" aria-pressed={activeMarks.strike} title="Strikethrough" onclick={() => editor?.chain().focus().toggleStrike().run()}><s>S</s></button>
       <button type="button" aria-label="Inline code" aria-pressed={activeMarks.code} title="Inline code" onclick={() => editor?.chain().focus().toggleCode().run()}><span class="inline-code-symbol">{'<>'}</span></button>
       <span class="toolbar-separator"></span>

@@ -16,6 +16,21 @@
 
 # Cómo desarrollar Noteka con OpenSpec
 
+Pedido posterior 10/11/2026: `accelerate-popup-content-reveal` acorta la fase
+borrosa de menús/pickers a 160 ms y revela contenido en 100 ms; conserva material
+de diálogos/Due de 400 ms y cierres de 200 ms. Ver
+[evidencia](verification-popup-reveal.md). Sustituye sólo esas temporizaciones
+anteriores; no cambia el vidrio ni las optimizaciones de planificación.
+
+Rendimiento 10/11/2026: `improve-native-render-scheduling` conserva el ritmo
+aprobado y reduce trabajo del hilo de UI en recorte, scroll y diagnóstico del
+canvas. Side peek conserva 260 ms, desliza con transform, agrupa resize de buffers
+y habilita el original fresco sin esperar metadatos secundarios; usa perfil
+nativo y medición instrumental antes/después. Ver
+[evidencia](verification-render-scheduling.md). El commit local `3115aeb`
+guarda sólo vidrio/documentación; cambios de rendimiento y otros previos siguen
+sin commit, sync o archivo.
+
 Extensión 10/11/2026: `share-clear-popup-glass` promueve el material gris
 transparente de Search a la receta compartida de Settings, confirmaciones,
 menús, pickers, editor, Due y tooltips. Sustituye su separación visual previa;

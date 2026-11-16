@@ -1,6 +1,4 @@
 <script lang="ts">
-  import QuickNavMenu from './QuickNavMenu.svelte';
-  import { liquidSurface, liquidTransition } from './liquid-overlay';
   import SectionIcon from './SectionIcon.svelte';
   import AppIcon from './AppIcon.svelte';
   import HomeRow from './HomeItem.svelte';
@@ -8,8 +6,8 @@
   import HomeReadStatus from './HomeReadStatus.svelte';
   import type { HomeView } from './contracts.generated';
   import { slidingTabs } from './sliding-tabs';
-  let { readState, onview, onnext, onretry, onopen, oncreate, onnavigate, pageMode = false, ontags = () => {} }: {
-    pageMode?: boolean; ontags?: () => void;
+  let { readState, onview, onnext, onretry, onopen, oncreate, onnavigate, pageMode = false }: {
+    pageMode?: boolean;
     readState?: HomeReadState; onview: (view?: HomeView) => Promise<void>; onnext: () => Promise<void>;
     onretry: () => Promise<void>; onopen: (id: string) => Promise<void>;
     oncreate: (seed?: Record<string, unknown>) => Promise<void>; onnavigate: () => Promise<void>;
@@ -26,20 +24,15 @@
     { id: 'notes_unclassified', label: 'Unclassified', icon: 'circle-dot' },
   ];
   const page = $derived(readState?.page);
-  let optionsOpen = $state(false);
-  let root: HTMLElement;
   function create() {
     const type = ({ notes_clips: 'web_clip', notes_voice: 'voice', notes_diary: 'journal', notes_meetings: 'meeting' } as Record<string, string>)[readState?.view ?? ''];
     return oncreate({ ...(type ? { note_type: type } : {}), ...(readState?.view === 'notes_favorites' ? { favorite: true } : {}) });
   }
 </script>
 
-<svelte:window onkeydown={(event) => { if (event.key === 'Escape' && root?.contains(document.activeElement)) optionsOpen = false; }} />
-
-<section class="home-section home-tasks home-notes" class:tasks-page-section={pageMode} data-home-section="note" aria-label="Notes" aria-busy={readState?.busy ?? true} bind:this={root}>
+<section class="home-section home-tasks home-notes" class:tasks-page-section={pageMode} data-home-section="note" aria-label="Notes" aria-busy={readState?.busy ?? true}>
   {#if pageMode}
     <header class="tasks-page-heading"><span class="tasks-page-emblem" aria-hidden="true"><SectionIcon section="note" size={68} /></span><h1>Notes</h1></header>
-    <nav class="tasks-page-nav" aria-label="Notes quick navigation"><QuickNavMenu>{#each views.filter(view => !['notes_inbox', 'notes_favorites', 'notes_all'].includes(view.id)) as view}<button onclick={() => void onview(view.id)}>{view.label}</button>{/each}</QuickNavMenu><span aria-hidden="true">|</span><button onclick={() => void onview('notes_inbox')}>Inbox</button><span aria-hidden="true">|</span><button onclick={() => void onview('notes_favorites')}>Fav</button><span aria-hidden="true">|</span><button onclick={() => void onview('notes_all')}>All</button><span aria-hidden="true">|</span><button onclick={ontags}>Tags</button></nav>
   {:else}<header><h2><span class="task-heading-icon" aria-hidden="true"><SectionIcon section="note" size={31} /></span><button onclick={() => void onnavigate()}>Notes</button></h2></header>{/if}
   <div class="task-view-toolbar">
     <div class="home-tabs task-view-tabs" use:slidingTabs role="group" aria-label="Notes views">
@@ -47,17 +40,12 @@
     </div>
     <div class="task-view-actions"><HomeReadStatus state={readState} updating />
       <div class="glass-tool-group" role="group" aria-label="Notes tools"><button class="task-icon-action" aria-label="Refresh Notes" title="Refresh Notes" disabled={readState?.busy} onclick={() => void onview()}><AppIcon name="refresh" size={16} /></button>
-      {#if !pageMode}<button class="task-icon-action" aria-label="Open Notes list" title="Open Notes list" onclick={() => void onnavigate()}><AppIcon name="expand" size={16} /></button>{/if}
-      <button class="task-icon-action" aria-label="Notes view options" aria-expanded={optionsOpen} title="View options" onclick={() => optionsOpen = !optionsOpen}><AppIcon name="sliders" size={16} /></button>
       </div><button class="task-new primary" onclick={() => void create()}><AppIcon name="plus" size={16} />New</button>
     </div>
   </div>
-  {#if optionsOpen}<div class="task-view-options" use:liquidSurface={{ anchor: () => root?.querySelector('[aria-label$="view options"]') }} in:liquidTransition|global out:liquidTransition|global><p>Notes: local and imported library notes, including Voice, excluding those archived at the source. Clips, Voice, Journal and Meetings use their explicit type. Fav. uses the favorite flag; Inbox shows active notes without a Project relation (Tag or People links do not remove them). All includes every active local page.</p><p>Imported URL filters are not fully represented. Imported age uses the last recorded source modification; local notes use their local modification. Voice does not record or transcribe audio.</p>{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}
   {#if readState?.busy && !page}<p role="status" class="task-read-status">Loading Notes…</p>{/if}
   {#if readState?.error}<p class="error" role="alert">Read failed: {readState.error}</p><button onclick={() => void onretry()}>Retry Notes</button>{/if}
   <HomeReadStatus state={readState} />
-  {#if readState?.view === 'notes_inbox'}<p class="task-read-status">Active notes without a local Project relation. Tag or People links do not remove them.</p>{/if}
-  {#if readState?.view === 'notes_unclassified'}<p class="task-read-status">Library notes without local Tag, Project or People relations. Content is not yet modeled, so this does not check for Content.</p>{/if}
   {#if page}
     {#if page.unavailable_count}<p class="home-unavailable">{page.unavailable_count} notes with uninterpretable metadata for this view.</p>{/if}
     <div class="home-rows note-rows">{#each page.items as row (row.entity.id)}<HomeRow item={row} {onopen} noteStyle />{/each}{#if !page.items.length}<p class="home-empty">No Notes in this view.</p>{/if}</div>

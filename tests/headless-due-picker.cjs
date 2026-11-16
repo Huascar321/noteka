@@ -97,6 +97,7 @@ async page => {
     const clip={x:Math.max(0,Math.min(box.x,buttonBox.x)-24),y:Math.max(0,Math.min(box.y,buttonBox.y)-24),width:box.width+48,height:box.y+box.height-Math.min(box.y,buttonBox.y)+48};
     for(const time of [0,50,100,150,200,250,317,400]){
       await picker.evaluate((el,t)=>{for(const node of [el.querySelector('.date-picker-material'),el.querySelector('.date-picker-content'),el.querySelector('.date-picker-sheen')])for(const a of node.getAnimations({subtree:true})){a.pause();a.currentTime=t;}},time);
+      if(time===100)check(await picker.locator('.date-picker-content').evaluate(el=>Number(getComputedStyle(el).opacity)>.99),`${theme}: Due content reaches full opacity in 100 ms`);
       await page.screenshot({path:`output/playwright/due-liquid-morph/${browser}/${theme}-${String(time).padStart(3,'0')}.png`,clip,animations:'allow'});
     }
     neutralMaterials[theme]=await material.evaluate(el=>getComputedStyle(el).background);

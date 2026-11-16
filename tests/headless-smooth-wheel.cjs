@@ -76,10 +76,16 @@ async (page) => {
   await page.getByRole('checkbox', { name: 'Smooth mouse scrolling' }).check();
   check(await page.getByText('Scrolling preference applied. It could not be saved on this device.').isVisible(), 'storage error is visible and session choice remains active');
   await page.getByRole('button', { name: 'Close Settings' }).click();
+  await page.getByRole('dialog', { name: 'Settings', exact: true }).waitFor({ state: 'detached' });
   await run(() => { const t = window.__wheelTest; t.outer.style.display = ''; t.inner.scrollTop = 0; });
   check(await run(() => window.__wheelTest.fire(window.__wheelTest.inner, { legacy: -120 })), 'session preference still works after failed save');
   await run(() => { const t = window.__wheelTest; document.dispatchEvent(new Event('keydown')); t.outer.scrollTop = 0; t.inner.scrollTop = 0; t.calls = []; });
-  await page.mouse.move(100, 100); await page.mouse.wheel(0, 120); await page.waitForTimeout(40);
+  await page.mouse.move(100, 100);
+  // The first event can be non-cancelable while the global classifier is passive.
+  // It identifies the device/scroller; the following mouse step is cancelable locally.
+  await page.mouse.wheel(0, 120); await page.waitForTimeout(250);
+  await run(() => { const t = window.__wheelTest; t.inner.scrollTop = 0; t.calls = []; });
+  await page.mouse.wheel(0, 120); await page.waitForTimeout(40);
   const during = await run(() => window.__wheelTest.inner.scrollTop);
   await page.waitForTimeout(500); const after = await run(() => window.__wheelTest.inner.scrollTop);
   const wheelCall = await run(() => window.__wheelTest.calls.find(call => call.behavior === 'smooth'));

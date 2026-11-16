@@ -1,6 +1,5 @@
 <script lang="ts">
   import QuickNavMenu from './QuickNavMenu.svelte';
-  import { liquidSurface, liquidTransition } from './liquid-overlay';
   import SectionIcon from './SectionIcon.svelte';
   import AppIcon from './AppIcon.svelte';
   import HomePersonCard from './HomePersonCard.svelte';
@@ -22,8 +21,6 @@
     { id: 'people_active_projects', label: 'Active Projects', icon: 'project' },
   ];
   const page = $derived(readState?.page);
-  let optionsOpen = $state(false);
-  let root: HTMLElement;
   const month = $derived(page ? new Date(`${page.date}T00:00:00Z`) : null);
   const monthLabel = $derived(month ? new Intl.DateTimeFormat("en-US", { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(month) : '');
   const calendarDays = $derived.by(() => {
@@ -43,9 +40,7 @@
   }
 </script>
 
-<svelte:window onkeydown={(event) => { if (event.key === 'Escape' && root?.contains(document.activeElement)) optionsOpen = false; }} />
-
-<section class="home-section home-tasks home-people" class:tasks-page-section={pageMode} data-home-section="person" aria-label="People" aria-busy={readState?.busy ?? true} bind:this={root}>
+<section class="home-section home-tasks home-people" class:tasks-page-section={pageMode} data-home-section="person" aria-label="People" aria-busy={readState?.busy ?? true}>
   {#if pageMode}
     <header class="tasks-page-heading"><span class="tasks-page-emblem" aria-hidden="true"><SectionIcon section="person" size={68} /></span><h1>People</h1></header>
     <nav class="tasks-page-nav" aria-label="People quick navigation"><QuickNavMenu>{#each views as view}<button onclick={() => void onview(view.id)}>{view.label}</button>{/each}</QuickNavMenu><span aria-hidden="true">|</span><button onclick={() => void onview('people_contacts')}>Contacts</button><span aria-hidden="true">|</span><button onclick={() => void onview('people_pipeline')}>Pipeline</button><span aria-hidden="true">|</span><button aria-label="Cal: birthday calendar" title="Birthday calendar" onclick={() => void onview('people_birthdays')}>Cal</button></nav>
@@ -54,12 +49,9 @@
     <div class="home-tabs task-view-tabs" use:slidingTabs role="group" aria-label="People views">{#each views as view}<button class:active={readState?.view === view.id} aria-pressed={readState?.view === view.id} onclick={() => void onview(view.id)}><AppIcon name={view.icon} size={16} /><span>{view.label}</span></button>{/each}</div>
     <div class="task-view-actions"><HomeReadStatus state={readState} updating />
       <div class="glass-tool-group" role="group" aria-label="People tools"><button class="task-icon-action" aria-label="Refresh People" title="Refresh People" disabled={readState?.busy} onclick={() => void onview()}><AppIcon name="refresh" size={16} /></button>
-      {#if !pageMode}<button class="task-icon-action" aria-label="Open People list" title="Open People list" onclick={() => void onnavigate()}><AppIcon name="expand" size={16} /></button>{/if}
-      <button class="task-icon-action" aria-label="People view options" aria-expanded={optionsOpen} title="View options" onclick={() => optionsOpen = !optionsOpen}><AppIcon name="sliders" size={16} /></button>
       </div><button class="task-new primary" onclick={() => void oncreate()}><AppIcon name="plus" size={16} />New</button>
     </div>
   </div>
-  {#if optionsOpen}<div class="task-view-options" use:liquidSurface={{ anchor: () => root?.querySelector('[aria-label$="view options"]') }} in:liquidTransition|global out:liquidTransition|global><p>Contacts includes local contacts and the People collection. Imported workspace members keep their original page and local search access. New/Updated use the last calendar month; Check-Ins includes dates up to one month ahead, including overdue dates.</p><p>Birthdays shows the chosen month; February 29 appears on February 28 in non-leap years. Pipeline uses the saved status, editable in the detail page. Active Projects groups Doing/Ongoing projects linked to people. Source photos and metadata are a local copy without continuous synchronization.</p>{#if page}<p class="home-coverage">Loaded: {page.items.length}. In this view: {page.matching_count}.</p>{/if}</div>{/if}
   {#if readState?.busy && !page}<p role="status" class="task-read-status">Loading People…</p>{/if}
   {#if readState?.error}<p class="error" role="alert">Read failed: {readState.error}</p><button onclick={() => void onretry()}>Retry People</button>{/if}
   <HomeReadStatus state={readState} />
@@ -80,7 +72,7 @@
       <!-- svelte-ignore a11y_no_noninteractive_tabindex (Scrollable calendar needs keyboard focus.) -->
       <div class="people-calendar" role="region" aria-label={`Birthdays in ${monthLabel}`} tabindex="0"><div class="people-calendar-grid">{#each ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as day}<div class="people-weekday">{day}</div>{/each}{#each calendarDays as date, index (index)}<div class="people-calendar-day" class:people-calendar-outside={!date}>{#if date}<time datetime={date}>{Number(date.slice(8))}</time>{#each page.items.filter(item => item.metadata.birthday_occurrence === date) as item (item.entity.id)}<button class="people-birthday" onclick={() => void onopen(item.entity.id)}><AppIcon name={item.entity.icon ?? 'circle-user'} color={item.entity.icon_color ?? 'var(--section-icon)'} size={16} /><span>{item.entity.title}</span></button>{/each}{/if}</div>{/each}</div></div>
     {:else if readState?.view === 'people_active_projects'}
-      <div class="people-project-groups">{#each page.groups as group (group.key)}<details open class="task-group people-project-group"><summary><button class="task-group-title" onclick={(event) => { event.preventDefault(); void onopen(group.key.slice(7)); }}><SectionIcon section="person" size={18} />{homeGroupLabel(group, readState?.view)}</button><span class="project-column-count">{group.entity_ids.length}</span></summary><div class="people-project-list">{#each group.entity_ids as id (id)}{@const item = page.items.find(row => row.entity.id === id)}{#if item}<HomePersonProjectRow {item} {onopen} />{/if}{/each}</div></details>{/each}{#if !page.items.length}<p class="home-empty">No active projects linked to contacts.</p>{/if}</div>
+      <div class="people-project-groups">{#each page.groups as group (group.key)}<div class="group-open-shell"><details open class="task-group people-project-group"><summary><span class="task-group-title"><SectionIcon section="person" size={18} />{homeGroupLabel(group, readState?.view)}</span><span class="project-column-count">{group.entity_ids.length}</span></summary><div class="people-project-list">{#each group.entity_ids as id (id)}{@const item = page.items.find(row => row.entity.id === id)}{#if item}<HomePersonProjectRow {item} {onopen} />{/if}{/each}</div></details>{#if group.key}<button class="group-open" aria-label={`Open ${homeGroupLabel(group, readState?.view)}`} title={`Open ${homeGroupLabel(group, readState?.view)}`} onclick={() => void onopen(group.key.slice(7))}><AppIcon name="arrow-up-right" size={15} /></button>{/if}</div>{/each}{#if !page.items.length}<p class="home-empty">No active projects linked to contacts.</p>{/if}</div>
     {:else}
       <div class="people-list">{#each page.items as item (item.entity.id)}<HomePersonCard {item} {onopen} layout="list" checkIn={readState?.view === 'people_check_ins'} />{/each}{#if !page.items.length}<p class="home-empty">No contacts in this view.</p>{/if}</div>
     {/if}

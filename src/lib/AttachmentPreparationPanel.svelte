@@ -14,7 +14,7 @@
 </script>
 
 <details class="preparation-panel">
-  <summary>Prepare local attachments</summary>
+  <summary>Attachment extraction (advanced)</summary>
   <p>Choose an existing managed original. Each step is explicit: enqueue → resume if needed → run → query → select generation. Search only searches.</p>
   <p>Leaving this panel does not cancel an active operation. There is no polling. Query again to see changes made by other clients.</p>
   {#if refs.length}
@@ -39,26 +39,26 @@
     <p class="preparation-page">Page {view.pageNumber} · {view.jobs.items.length} jobs for this attachment. Snapshot per call.</p>
     {#if !view.jobs.items.length}<p>No jobs for this ID. This does not confirm that the original exists.</p>{/if}
     <div class="preparation-jobs">{#each view.jobs.items as job (job.id)}
-      <button class="preparation-job" disabled={view.busy} aria-pressed={view.jobId === job.id} onclick={() => controller.chooseJob(job.id)}>{job.id} · {job.extractor} v{job.extractor_version} · {job.state} · r{job.revision} · intentos {job.attempts}{!job.supported ? ' · incompatible' : ''}{job.result_from_previous_attempt ? " · previous result" : ''}</button>
+      <button class="preparation-job" disabled={view.busy} aria-pressed={view.jobId === job.id} onclick={() => controller.chooseJob(job.id)}>{job.id} · {job.extractor} v{job.extractor_version} · {job.state} · r{job.revision} · attempts {job.attempts}{!job.supported ? ' · incompatible' : ''}{job.result_from_previous_attempt ? " · previous result" : ''}</button>
     {/each}</div>
     {#if view.jobs.next_cursor}<button class="glass-secondary" disabled={view.busy} onclick={() => void controller.list(true)}>Next jobs page</button>{/if}
   {/if}
   {#if view.jobId}<p>Selected job: <code>{view.jobId}</code></p><button class="glass-secondary" disabled={view.busy} onclick={() => void controller.inspect()}>Query selected job</button>{/if}
   {#if view.job && view.control && view.index}
     {@const job = view.job}
-    <section class="preparation-inspection" aria-label="Procesamiento consultado">
-      <h3>Procesamiento consultado</h3>
+    <section class="preparation-inspection" aria-label="Queried processing">
+      <h3>Queried processing</h3>
       <p>Consecutive queries are independent and may differ. Writes verify revisions and generation in Rust.</p>
-      <p>Status <strong data-preparation="state">{job.state}</strong> · revision <span data-preparation="revision">{job.revision}</span> · intentos {job.attempts} · soporte {job.supported ? 'compatible' : 'incompatible'} {job.unsupported_reason ?? ''}</p>
-      <p>Ownership activo: {String(job.ownership_active)} · recuperable: {String(job.recoverable)} · result from an earlier attempt: {String(job.result_from_previous_attempt)}</p>
+      <p>Status <strong data-preparation="state">{job.state}</strong> · revision <span data-preparation="revision">{job.revision}</span> · attempts {job.attempts} · support {job.supported ? 'compatible' : 'incompatible'} {job.unsupported_reason ?? ''}</p>
+      <p>Ownership active: {String(job.ownership_active)} · recoverable: {String(job.recoverable)} · result from an earlier attempt: {String(job.result_from_previous_attempt)}</p>
       {#if job.error}<div role="alert"><strong>Job error: {job.error.code}</strong><p>{job.error.message}</p><pre>{json(job.error.details)}</pre></div>{/if}
       <details><summary>Job provenance and configuration</summary><pre>{json(job)}</pre></details>
-      <p class="preparation-control">Cola global {view.control.paused ? 'pausada' : 'habilitada'} · revision {view.control.revision}. Resuming does not run jobs. Running by ID may also recover expired attempts in the workspace.</p>
+      <p class="preparation-control">Global queue {view.control.paused ? 'paused' : 'enabled'} · revision {view.control.revision}. Resuming does not run jobs. Running by ID may also recover expired attempts in the workspace.</p>
       <div class="actions">
         <button class="glass-secondary" disabled={view.busy} onclick={() => void controller.setPaused()}>{view.control.paused ? "Resume global queue" : "Pause global queue"}</button>
         <button class="glass-secondary" disabled={view.busy || !job.supported || job.state !== 'queued'} onclick={() => void controller.jobAction('run')}>Run selected job</button>
         <button class="glass-secondary" disabled={view.busy || !['queued', 'running', 'cancelled'].includes(job.state)} onclick={() => void controller.jobAction('cancel')}>Cancel selected job</button>
-        <button class="glass-secondary" disabled={view.busy || !job.supported || ['queued', 'running'].includes(job.state)} onclick={() => void controller.jobAction('retry')}>Reencolar trabajo elegido</button>
+        <button class="glass-secondary" disabled={view.busy || !job.supported || ['queued', 'running'].includes(job.state)} onclick={() => void controller.jobAction('retry')}>Requeue selected job</button>
       </div>
       <h3>Queried generation and index</h3>
       {#if job.generation}<p>Generation <code data-preparation="generation">{job.generation.id}</code> · intento {job.generation.attempt} · completa {String(job.generation.complete)} · {job.generation.fragment_count} internal fragments. For XLSX/OCR these are internal JSON chunks, not cells or regions.</p>{:else}<p>No published generation.</p>{/if}

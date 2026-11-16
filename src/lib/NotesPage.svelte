@@ -7,11 +7,10 @@
   import { ReadQueue } from './embedded-reads';
   import type { HomePage, HomeView, EntityKind, ContextLink } from './contracts.generated';
 
-  let { workspace, active = true, blocked = false, error = '', onopen, oncreate, ontags }: {
+  let { workspace, active = true, blocked = false, error = '', onopen, oncreate }: {
     workspace: string; active?: boolean; blocked?: boolean; error?: string;
     onopen: (id: string) => Promise<void>;
     oncreate: (kind: EntityKind, context?: ContextLink, seed?: Record<string, unknown>) => Promise<void>;
-    ontags: () => Promise<void>;
   } = $props();
   let noteState = $state<HomeReadState>();
   let tagState = $state<HomeReadState>();
@@ -62,9 +61,9 @@
 <main class="tasks-page notes-page" aria-label="Notes page" aria-keyshortcuts="Meta+R Control+R F5" bind:this={root}>
   <div class="tasks-page-content notes-page-content">
     {#if error}<p class="error" role="alert">{error}</p>{/if}
-    <HomeNoteSection pageMode readState={noteState} onview={(view) => load(notes, 'note', view)} onnext={() => load(notes, 'note', undefined, true)} onretry={() => load(notes, 'note', undefined, false, true)} {onopen} oncreate={(seed) => oncreate('note', undefined, seed)} onnavigate={async () => { await load(notes, 'note'); }} ontags={scrollToTags} />
+    <HomeNoteSection pageMode readState={noteState} onview={(view) => load(notes, 'note', view)} onnext={() => load(notes, 'note', undefined, true)} onretry={() => load(notes, 'note', undefined, false, true)} {onopen} oncreate={(seed) => oncreate('note', undefined, seed)} onnavigate={async () => { await load(notes, 'note'); }} />
     <div class="notes-page-tags-anchor" bind:this={tagsAnchor}>
-      <HomeTagSection pageMode readState={tagState} onview={(view) => load(tags, 'tag', view)} onnext={() => load(tags, 'tag', undefined, true)} onretry={() => load(tags, 'tag', undefined, false, true)} {onopen} oncreate={(seed) => oncreate('tag', undefined, seed)} onnavigate={ontags} />
+      <HomeTagSection pageMode readState={tagState} onview={(view) => load(tags, 'tag', view)} onnext={() => load(tags, 'tag', undefined, true)} onretry={() => load(tags, 'tag', undefined, false, true)} {onopen} oncreate={(seed) => oncreate('tag', undefined, seed)} onnavigate={async () => { scrollToTags(); }} />
     </div>
   </div>
 </main>

@@ -3,9 +3,9 @@
   import AppIcon from './AppIcon.svelte';
   import { visualIconName } from './visual-icon';
   import { noteTypeLabels as noteLabels } from './note-types';
-  let { item, onopen, taskStyle = false, noteStyle = false, ontoggle, toggleDisabled = false }: {
-    item: HomeItem; onopen: (id: string) => Promise<void>; taskStyle?: boolean; noteStyle?: boolean;
-    ontoggle?: (item: HomeItem) => Promise<void>; toggleDisabled?: boolean;
+  let { item, onopen, taskStyle = false, noteStyle = false, ontoggle, toggleDisabled = false, omitContextId }: {
+    item: HomeItem; onopen: (id: string, hint?: Pick<HomeItem['entity'], 'kind' | 'title'>) => Promise<void>; taskStyle?: boolean; noteStyle?: boolean;
+    ontoggle?: (item: HomeItem) => Promise<void>; toggleDisabled?: boolean; omitContextId?: string;
   } = $props();
   let toggling = $state(false);
   const done = $derived(item.metadata.state === 'done');
@@ -16,6 +16,8 @@
     try { await ontoggle(item); } finally { toggling = false; }
   }
   const contexts = $derived(noteStyle ? [...item.context].sort((a, b) => ({ tag: 0, project: 1, person: 2, note: 3, task: 4 })[a.kind] - ({ tag: 0, project: 1, person: 2, note: 3, task: 4 })[b.kind]) : item.context);
+  const visibleContexts = $derived(omitContextId ? contexts.filter(context => context.id !== omitContextId) : contexts);
+  const ageLabel = (days: number) => days < 0 ? `Modified in the future (${Math.abs(days)} days)` : `Updated ${days} day${days === 1 ? '' : 's'} ago`;
   const lastNote = $derived(item.summary?.kind === 'tag' ? item.summary.last_note : null);
   function fallbackIcon(entity: HomeItem['entity']) {
     const title = entity.title.trim().toLowerCase();
@@ -40,40 +42,40 @@
       <button type="button" class="task-status-toggle" role="checkbox" aria-checked={done} aria-label={`${done ? 'Mark pending' : 'Mark complete'}: ${item.entity.title}`} title={done ? "Completed · mark pending" : "Pending · mark complete"} disabled={toggling || toggleDisabled} onclick={() => void toggle()}>
         <span class="task-status-mark" class:complete={done} aria-hidden="true">{done ? '✓' : ''}</span>
       </button>
-      <button class="home-open" onclick={() => void onopen(item.entity.id)} aria-label={`Open ${item.entity.title}`}>
+      <button class="home-open" onclick={() => void onopen(item.entity.id, item.entity)} aria-label={`Open ${item.entity.title}`}>
         {#if !defaultTaskIcon}<span class="home-kind" aria-hidden="true"><AppIcon name={icon} color={color} size={16} /></span>{/if}
         <span title={item.entity.title}>{item.entity.title}</span>
       </button>
     </div>
   {:else}
-    <button class="home-open" onclick={() => void onopen(item.entity.id)} aria-label={`Open ${item.entity.title}`}>
+    <button class="home-open" onclick={() => void onopen(item.entity.id, item.entity)} aria-label={`Open ${item.entity.title}`}>
       <span class="home-kind" aria-hidden="true"><AppIcon name={icon} color={color} size={16} /></span>
       <span title={item.entity.title}>{item.entity.title}</span>
     </button>
   {/if}
   <div class="home-item-meta">
     {#if taskStyle || noteStyle}
-      {#each contexts as context (context.id)}<button class="home-context task-project-reference" onclick={() => void onopen(context.id)}><AppIcon name={visualIconName(context.icon, context.kind === 'project' ? 'project' : context.kind === 'person' ? 'person' : 'tag')} color={context.icon_color ?? undefined} size={19} /><span>{context.title}{context.archived_at ? " · archived" : ''}</span></button>{/each}
+      {#each visibleContexts as context (context.id)}<button class="home-context task-project-reference" onclick={() => void onopen(context.id)}><AppIcon name={visualIconName(context.icon, context.kind === 'project' ? 'project' : context.kind === 'person' ? 'person' : 'tag')} color={context.icon_color ?? undefined} size={19} /><span>{context.title}{context.archived_at ? " · archived" : ''}</span></button>{/each}
     {/if}
     {#if item.metadata.state && (!taskStyle || item.metadata.state === 'doing')}<span class="home-badge" class:done={item.metadata.state === 'done'} class:doing={item.metadata.state === 'doing'}>{item.metadata.state === 'doing' ? 'Doing' : item.metadata.state}</span>{/if}
     {#if item.metadata.classification}<span class="home-badge">{item.metadata.classification}</span>{/if}
-    {#if item.metadata.due_date}<time datetime={item.metadata.due_date}>{taskStyle ? dateLabel(item.metadata.due_date) : `Vence ${item.metadata.due_date}`}</time>{/if}
+    {#if item.metadata.due_date}<time datetime={item.metadata.due_date}>{taskStyle ? dateLabel(item.metadata.due_date) : `Due ${item.metadata.due_date}`}</time>{/if}
     {#if noteStyle}
       {#if item.metadata.note_type}<span class="note-type" class:plan={item.metadata.note_type === 'plan'}>{noteLabels[item.metadata.note_type] ?? item.metadata.note_type}</span>{/if}
-      {#if noteDays != null}<span class="note-age" title={`${item.metadata.source_updated_at ? "Imported source last modified" : "Last modified locally"}: ${item.metadata.source_updated_at ?? item.entity.updated_at}`} aria-label={`${noteDays < 0 ? "Future modification" : 'Actualizada hace'} ${Math.abs(noteDays)} days`}>{noteDays < 0 ? '→' : ''}{Math.abs(noteDays)}d</span>{/if}
+      {#if noteDays != null}<span class="note-age" title={`${item.metadata.source_updated_at ? "Imported source last modified" : "Last modified locally"}: ${item.metadata.source_updated_at ?? item.entity.updated_at}`} aria-label={ageLabel(noteDays)}>{noteDays < 0 ? '→' : ''}{Math.abs(noteDays)}d</span>{/if}
     {:else if item.entity.kind === 'note'}
-      <span>{item.metadata.updated_days_ago == null ? "Age unavailable" : item.metadata.updated_days_ago < 0 ? "Modification date is in the future" : `Actualizada hace ${item.metadata.updated_days_ago} days`}</span>
+      <span>{item.metadata.updated_days_ago == null ? "Age unavailable" : item.metadata.updated_days_ago < 0 ? "Modification date is in the future" : `Updated ${item.metadata.updated_days_ago} day${item.metadata.updated_days_ago === 1 ? '' : 's'} ago`}</span>
     {/if}
     {#if item.metadata.issues.length}<span class="home-unavailable">Metadata unavailable: {item.metadata.issues.join(', ')}</span>{/if}
     {#if item.summary?.kind === 'project'}
       {#if !item.summary.available}<span class="home-unavailable">Summary unavailable</span>
       {:else if item.summary.total === 0}<span>No tasks</span>
-      {:else}<span>{item.summary.pending} pending · {item.summary.overdue} vencidas · {item.summary.done}/{item.summary.total} completas</span><span class="home-progress"><progress max="100" value={item.summary.progress_percent ?? 0} aria-label={`Progress for ${item.entity.title}`}></progress>{item.summary.progress_percent}%</span>{/if}
+      {:else}<span>{item.summary.pending} pending · {item.summary.overdue} overdue · {item.summary.done}/{item.summary.total} complete</span><span class="home-progress"><progress max="100" value={item.summary.progress_percent ?? 0} aria-label={`Progress for ${item.entity.title}`}></progress>{item.summary.progress_percent}%</span>{/if}
     {:else if item.summary?.kind === 'tag'}
       {#if !item.summary.available}<span class="home-unavailable">Summary unavailable</span>
       {:else}<span>{item.summary.note_count} notes</span>{#if lastNote}<button class="home-context" onclick={() => void onopen(lastNote!.id)}>Latest note: {lastNote.title}</button>{/if}{/if}
     {/if}
-    {#if !taskStyle && !noteStyle}{#each contexts as context (context.id)}<button class="home-context" onclick={() => void onopen(context.id)}><AppIcon name={visualIconName(context.icon, context.kind === 'project' ? 'project' : context.kind === 'person' ? 'person' : 'tag')} color={context.icon_color ?? undefined} size={14} />{context.title}{context.archived_at ? " · archived" : ''}</button>{/each}{/if}
-    {#if item.context_total > item.context.length}<span>+{item.context_total - item.context.length} references when opening the original</span>{/if}
+    {#if !taskStyle && !noteStyle}{#each visibleContexts as context (context.id)}<button class="home-context" onclick={() => void onopen(context.id)}><AppIcon name={visualIconName(context.icon, context.kind === 'project' ? 'project' : context.kind === 'person' ? 'person' : 'tag')} color={context.icon_color ?? undefined} size={14} />{context.title}{context.archived_at ? " · archived" : ''}</button>{/each}{/if}
+    {#if !omitContextId && item.context_total > item.context.length}<span>+{item.context_total - item.context.length} references when opening the original</span>{/if}
   </div>
 </article>
