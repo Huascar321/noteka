@@ -20,3 +20,4 @@ dirs = "6"
 ureq = { version = "3.5", features = ["json"] }
 jsonwebtoken = { version = "11.1", features = ["rust_crypto"] }
 keyring = "4.2"
+noteka-workspace-hack = { version = "0.1", path = "../noteka-workspace-hack" }

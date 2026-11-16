@@ -2880,6 +2880,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "noteka-core",
+ "noteka-workspace-hack",
  "rusqlite",
  "serde_json",
  "tempfile",
@@ -2902,6 +2903,7 @@ dependencies = [
  "noteka-pdfium-protocol",
  "noteka-pdfkit-protocol",
  "noteka-pdfkit-runtime",
+ "noteka-workspace-hack",
  "noteka-xlsx-protocol",
  "rusqlite",
  "schemars 1.2.2",
@@ -2918,6 +2920,7 @@ version = "0.1.0"
 dependencies = [
  "noteka-core",
  "noteka-providers",
+ "noteka-workspace-hack",
  "rusqlite",
  "serde_json",
  "tauri",
@@ -2929,6 +2932,7 @@ name = "noteka-mcp"
 version = "0.1.0"
 dependencies = [
  "noteka-core",
+ "noteka-workspace-hack",
  "rmcp",
  "serde",
  "serde_json",
@@ -2942,6 +2946,7 @@ dependencies = [
 name = "noteka-ocr-protocol"
 version = "0.1.0"
 dependencies = [
+ "noteka-workspace-hack",
  "schemars 1.2.2",
  "serde",
  "serde_json",
@@ -2967,6 +2972,7 @@ name = "noteka-pdf-table"
 version = "0.1.0"
 dependencies = [
  "noteka-ocr-protocol",
+ "noteka-workspace-hack",
  "serde",
  "serde_json",
 ]
@@ -3008,6 +3014,7 @@ dependencies = [
 name = "noteka-pdfkit-protocol"
 version = "0.1.0"
 dependencies = [
+ "noteka-workspace-hack",
  "schemars 1.2.2",
  "serde",
  "serde_json",
@@ -3019,6 +3026,7 @@ version = "0.1.0"
 dependencies = [
  "libc",
  "noteka-pdfkit-protocol",
+ "noteka-workspace-hack",
  "serde_json",
  "sha2 0.10.9",
  "tempfile",
@@ -3033,11 +3041,60 @@ dependencies = [
  "dirs 6.0.0",
  "jsonwebtoken",
  "keyring",
+ "noteka-workspace-hack",
  "serde",
  "serde_json",
  "sha2 0.10.9",
  "ureq",
  "uuid",
+]
+
+[[package]]
+name = "noteka-workspace-hack"
+version = "0.1.0"
+dependencies = [
+ "base64 0.23.1",
+ "bitflags 2.13.2",
+ "block2",
+ "chrono",
+ "core-foundation-sys",
+ "crc32fast",
+ "digest 0.10.7",
+ "fastrand",
+ "foldhash",
+ "generic-array",
+ "hashbrown 0.17.1",
+ "http",
+ "indexmap 2.14.2",
+ "memchr",
+ "num-traits",
+ "objc2",
+ "objc2-core-foundation",
+ "objc2-foundation",
+ "once_cell",
+ "percent-encoding",
+ "phf_shared 0.13.1",
+ "proc-macro2",
+ "schemars 0.8.22",
+ "schemars 1.2.2",
+ "semver",
+ "serde",
+ "serde_core",
+ "serde_json",
+ "sha2 0.10.9",
+ "simd-adler32",
+ "smallvec",
+ "stable_deref_trait",
+ "subtle",
+ "syn 2.0.119",
+ "syn 3.0.8",
+ "tauri-build",
+ "tauri-utils",
+ "thiserror 2.0.21",
+ "time",
+ "tokio",
+ "uuid",
+ "zeroize",
 ]
 
 [[package]]

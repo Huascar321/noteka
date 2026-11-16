@@ -182,6 +182,10 @@ npm run test:headless-project-board
 npx --yes @fission-ai/openspec@1.14.1 validate --all --strict
 ```
 
+Los tests de integración de `noteka-core` y `noteka-cli` forman un único binario por crate (`--test integration`): cada archivo de `tests/` es un módulo declarado en `tests/main.rs`. Para correr uno solo, filtrá por módulo, por ejemplo `cargo test -p noteka-core --test integration home::`. Los archivos nuevos se agregan como `mod` en `tests/main.rs`; si no, no se compilan.
+
+`crates/noteka-workspace-hack` lo genera `cargo-hakari` (configuración en `.config/hakari.toml`). Unifica las features de las dependencias para que abrir la app y correr tests reutilicen los mismos artefactos de `target/`. Después de agregar o actualizar dependencias, ejecutá `cargo hakari generate` y `cargo hakari manage-deps`. Los workers PDF/XLSX/PDFium, `noteka-parser-runtime` y sus protocolos quedan excluidos para no alterar su árbol auditado. `tauri` y `tauri-macros` también se excluyen, porque `custom-protocol` haría que `tauri dev` sirviera `dist/` en vez de Vite. Por esas exclusiones, `cargo hakari verify` informa diferencias esperadas; para comprobar la unificación real, compará `cargo tree -e features` entre `-p noteka-desktop` y `-p noteka-core -p noteka-cli`.
+
 `noteka-core` compila sin Tauri. El build de frontend falla si los contratos generados están desactualizados. Después de modificar DTOs Rust, ejecutá `npm run contracts:generate` y revisá tanto JSON Schema como tipos TypeScript.
 
 ### UI sin ocupar la pantalla (predeterminado)

@@ -9,7 +9,8 @@ custom-protocol = ["tauri/custom-protocol"]
 
 [lib]
 name = "noteka_desktop"
-crate-type = ["lib", "cdylib", "staticlib"]
+# Solo escritorio. Tauri móvil requeriría volver a agregar "cdylib" y "staticlib".
+crate-type = ["lib"]
 
 [dependencies]
 noteka-core = { path = "../crates/noteka-core" }
@@ -17,6 +18,7 @@ noteka-providers = { path = "../crates/noteka-providers" }
 serde_json.workspace = true
 tauri = { version = "2", features = [] }
 rusqlite = { workspace = true, optional = true }
+noteka-workspace-hack = { version = "0.1", path = "../crates/noteka-workspace-hack" }
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

@@ -2,6 +2,9 @@
 name = "noteka-cli"
 version.workspace = true
 edition.workspace = true
+# Un solo binario de integración: cada archivo de tests/ es un módulo de
+# tests/main.rs. Evita enlazar el crate completo una vez por archivo.
+autotests = false
 
 [[bin]]
 name = "noteka"
@@ -11,7 +14,12 @@ path = "src/main.rs"
 noteka-core = { path = "../noteka-core" }
 serde_json.workspace = true
 clap = { version = "4", features = ["derive"] }
+noteka-workspace-hack = { version = "0.1", path = "../noteka-workspace-hack" }
 
 [dev-dependencies]
 tempfile.workspace = true
 rusqlite.workspace = true
+
+[[test]]
+name = "integration"
+path = "tests/main.rs"

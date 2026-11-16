@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/noteka-core", "crates/noteka-cli", "crates/noteka-providers", "crates/noteka-pdf-protocol", "crates/noteka-pdf-worker", "crates/noteka-pdfium-protocol", "crates/noteka-pdfium-worker", "crates/noteka-mcp", "crates/noteka-parser-runtime", "crates/noteka-xlsx-protocol", "crates/noteka-xlsx-worker", "crates/noteka-ocr-protocol", "crates/noteka-pdfkit-protocol", "crates/noteka-pdfkit-runtime", "src-tauri", "crates/noteka-pdf-table"]
+members = ["crates/noteka-core", "crates/noteka-cli", "crates/noteka-providers", "crates/noteka-pdf-protocol", "crates/noteka-pdf-worker", "crates/noteka-pdfium-protocol", "crates/noteka-pdfium-worker", "crates/noteka-mcp", "crates/noteka-parser-runtime", "crates/noteka-workspace-hack", "crates/noteka-xlsx-protocol", "crates/noteka-xlsx-worker", "crates/noteka-ocr-protocol", "crates/noteka-pdfkit-protocol", "crates/noteka-pdfkit-runtime", "src-tauri", "crates/noteka-pdf-table"]
 default-members = ["crates/noteka-core", "crates/noteka-cli"]
 resolver = "2"
 
@@ -15,3 +15,8 @@ rusqlite = { version = "0.41", features = ["bundled", "backup", "hooks"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 tempfile = "3"
+
+# Desarrollo: sin info de depuración en dependencias externas. Los crates del
+# workspace conservan la info completa para lldb y backtraces.
+[profile.dev.package."*"]
+debug = false

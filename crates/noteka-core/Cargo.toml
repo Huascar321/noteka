@@ -2,6 +2,9 @@
 name = "noteka-core"
 version.workspace = true
 edition.workspace = true
+# Un solo binario de integración: cada archivo de tests/ es un módulo de
+# tests/main.rs. Evita enlazar el crate completo una vez por archivo.
+autotests = false
 
 [dependencies]
 noteka-pdf-table = { path = "../noteka-pdf-table" }
@@ -25,8 +28,13 @@ chrono-tz = "0.10"
 base64 = "0.22"
 crc32fast = "1.5.2"
 libc = "0.2"
+noteka-workspace-hack = { version = "0.1", path = "../noteka-workspace-hack" }
 
 # sha2 0.10 habilita su backend ARM con detección runtime sólo con `asm`.
 # El fallback portable y el algoritmo/formato SHA-256 no cambian.
 [target.'cfg(target_arch = "aarch64")'.dependencies]
 sha2 = { version = "0.10", features = ["asm"] }
+
+[[test]]
+name = "integration"
+path = "tests/main.rs"
